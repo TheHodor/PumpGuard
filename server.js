@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const cors = require('cors');
 
-const PumpFunCalc = require('./utils/pumpFunFetch.js');
+const PumpFunFetch = require('./utils/pumpFunFetch.js');
 const {
     DBSetup
 } = require('./utils/DB_setup.js');
@@ -43,7 +43,7 @@ async function serverStarted() {
 
     // fetch top coins on pump.fun
     setInterval(async () => {
-        topCoinsOnPumpfun = await PumpFunCalc.updateTopCoins()
+        topCoinsOnPumpfun = await PumpFunFetch.updateTopCoins()
     }, 1000 * 5)
 }
 
