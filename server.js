@@ -6,7 +6,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const cors = require('cors');
 
-const PumpFunCalc = require('./utils/pumpFunCalc.js');
+const PumpFunCalc = require('./utils/pumpFunFetch.js');
 const {
     DBSetup
 } = require('./utils/DB_setup.js');
@@ -26,14 +26,14 @@ app.use(cors());
 
 
 let topCoinsOnPumpfun, _Collections, _DBs
-startServer()
+
 
 
 const startServer = async () => {
     console.log("Server Started :D")
     serverStarted()
 }
-
+startServer()
 
 async function serverStarted() {
     // setUp DB
