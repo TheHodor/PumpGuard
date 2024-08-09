@@ -11,7 +11,8 @@ const {
     DBSetup
 } = require('./utils/DB_setup.js');
 const {
-    getCoinLockAddress
+    getCoinLockAddress,
+    updateLockAddressBalance
 } = require('./utils/guardCoins.js');
 
 
@@ -63,14 +64,18 @@ app.post('/get_top_coins', async (req, res) => {
 
 // user request to get lock address for a coin
 app.post('/get_coin_lock_address', async (req, res) => {
-    const _address = await getCoinLockAddress(req.body.ca)
-console.log(_address)
-
-    res.json({
-        address: _address
-    })
+    const _addressAndData = await getCoinLockAddress(req.body.ca)
+    res.send(_addressAndData)
 });
 
+// user request for update of lock address balance of a coin
+app.post('/update_lock_address_balance', async (req, res) => {
+    const _balance = await updateLockAddressBalance(req.body.ca)
+
+    res.json({
+        balance: _balance
+    })
+});
 
 
 
