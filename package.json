@@ -6,6 +6,7 @@
   "dependencies": {
     "@ankr.com/ankr.js": "^0.3.1",
     "@metamask/eth-sig-util": "^5.1.0",
+    "@solana/web3.js": "^1.95.2",
     "abi-decoder": "^2.4.0",
     "axios": "^1.4.0",
     "body-parser": "^1.20.2",
