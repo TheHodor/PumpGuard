@@ -10,6 +10,9 @@ const PumpFunFetch = require('./utils/pumpFunFetch.js');
 const {
     DBSetup
 } = require('./utils/DB_setup.js');
+const {
+    getCoinLockAddress
+} = require('./utils/guardCoins.js');
 
 
 // ----- setting express app ----- //
@@ -58,6 +61,15 @@ app.post('/get_top_coins', async (req, res) => {
     res.json(topCoinsOnPumpfun);
 });
 
+// user request to get lock address for a coin
+app.post('/get_coin_lock_address', async (req, res) => {
+    const _address = await getCoinLockAddress(req.body.ca)
+console.log(_address)
+
+    res.json({
+        address: _address
+    })
+});
 
 
 
