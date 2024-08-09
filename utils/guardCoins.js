@@ -1,7 +1,15 @@
-const { Keypair } = require('@solana/web3.js');
+const {
+    Keypair,
+    PublicKey
+} = require('@solana/web3.js');
+const {
+    RPC_helius,
+    APIKEY_SHYFT,
+    APIKEY_HELIUS,
+    connection_helius,
+} = require("../config.js");
 
 const {
-    _DBs,
     _Collections
 } = require('./DB_setup.js');
 
@@ -25,29 +33,87 @@ async function getCoinLockAddress(_CA) {
 
     if (_theCoinInDB) {
         // lock address for this coin already exists in db, so send it back to ui for user to deposit at
-        return _theCoinInDB.lockAddress
-    } else { 
+        return {
+            lockAddress: _theCoinInDB.lockAddress,
+            symbol: _theCoinInDB.symbol,
+            balance: _theCoinInDB.balance,
+            dev: _theCoinInDB.dev,
+        }
+    } else {
         // no record for this coin exists, so create a lock address for this coin and insert it in db
         const newWallet = Keypair.generate();
         const _walletAddress = await newWallet.publicKey.toString()
         const _privateKeyString = Buffer.from(newWallet.secretKey).toString('hex');
 
+        const _coinData = await fetchCoinData(_CA)
+
         const res = await _Collections.GuardedCoins.insertOne({
             ca: _CA,
-            dev: void 0,
+            symbol: _coinData.symbol,
+            dev: _coinData.creator,
+            balance: 0,
             lockAddress: _walletAddress,
             lockPVK: _privateKeyString,
             creationDate: Date.now(),
-            firstDeposit: -1,
+            firstDeposit: 0,
         })
 
         // successfully inserted
         if (res.acknowledged) {
-            return _walletAddress
+            return {
+                lockAddress: _walletAddress,
+                symbol: _coinData.symbol,
+                balance: 0,
+                dev: _coinData.creator,
+            }
         }
     }
 }
 
+
+
+// when a user creates a lock address for a a short period of 15 minutes or so we automatically check the lock address every couple seconds for a new deposit.
+// however for the sake of wasting less resource (for now) we also provide an option for users to request for manual deposit check
+async function updateLockAddressBalance(_CA) {
+
+    // fetch the lock address for the provided coin ca
+    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        ca: _CA
+    })
+
+    if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
+        console.log("The coin was not found in DB")
+        return
+    }
+
+    // fetch sol balance for the lock address
+    const balance = await getSolBalance(_theCoinInDB.lockAddress)
+
+    if (balance > 0) {
+        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+            ca: _CA
+        })
+
+        let firstDepositDate = _theCoinInDB.firstDeposit
+        if (_theCoinInDB.balance == 0) {
+            firstDepositDate = Date.now()
+        }
+        
+        const res = await _Collections.GuardedCoins.updateOne({
+            ca: _CA
+        }, {
+            $set: {
+                balance: balance,
+                allowedSell: false,
+                firstDeposit: firstDepositDate
+            }
+        })
+    
+        console.log(res)
+    }
+
+    return balance
+}
 
 
 
@@ -72,6 +138,60 @@ async function isPumpFunCoin(_CA) {
 }
 
 
+// fetch developer of a pump.fun coin
+async function fetchCoinData(_CA) {
+    let _data = {}
+
+    try {
+        let response = await fetch(`https://frontend-api.pump.fun/coins/${_CA}`)
+        let data = await response.json()
+
+        if (data.creator && data.creator.length > 39 && data.creator.length < 49) {
+            _data = data
+        }
+    } catch (error) {
+        console.log("E.102: ", error)
+    }
+
+    return _data
+}
+
+
+// get solana balance of an address (through shyft api)
+async function getSolBalance(_address) {
+
+    const balance = await connection_helius.getBalance(new PublicKey(_address))
+
+    if (typeof balance == "number") {
+        return balance
+    }
+
+    // shyft api response for balance chnage is faster than helius but requires a paid api
+
+    // var myHeaders = new Headers();
+    // try {
+    //     const response = await fetch(
+    //         "https://api.shyft.to/sol/v1/wallet/balance?network=mainnet-beta&wallet=" + _address, {
+    //             method: 'GET',
+    //             headers: myHeaders.append("x-api-key", APIKEY_SHYFT),
+    //             redirect: 'follow'
+    //         });
+    //     const result = await response.text();
+    //     const parsedResult = JSON.parse(result);
+    //     console.log(parsedResult, _address)
+    //     if (parsedResult.success) {
+    //         return parseFloat(parsedResult.result.balance) * 1e9
+    //     } else {
+    //         throw new Error("Failed to fetch balance");
+    //     }
+    // } catch (error) {
+    //     console.log("error", error);
+    //     throw error;
+    // }
+}
+
+
 module.exports = {
     getCoinLockAddress,
+    updateLockAddressBalance
 }
