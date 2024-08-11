@@ -10,6 +10,7 @@
     "abi-decoder": "^2.4.0",
     "axios": "^1.4.0",
     "body-parser": "^1.20.2",
+    "dotenv": "^16.4.5",
     "eth-sig-util": "^3.0.1",
     "ethereum-block-by-date": "^1.4.6",
     "ethereumjs-util": "^7.1.5",
