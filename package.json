@@ -22,7 +22,7 @@
     "moment": "^2.29.4",
     "mongodb": "^6.8.0",
     "moralis": "^2.18.4",
-    "node-fetch": "^2.6.9",
+    "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
     "npm": "^9.6.4",
     "server.js": "^1.0.0",
