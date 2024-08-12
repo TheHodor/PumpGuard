@@ -138,6 +138,23 @@ async function updateLockAddressBalance(_CA) {
 
 // }
 
+
+// this checks and returns if a particular coin is guarded or not and it's data if it is
+async function isCoinGuarded(_CA) {
+    let _isGuarded = false
+
+    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        ca: _CA
+    })
+
+    if (_theCoinInDB && _theCoinInDB.balance > 0) _isGuarded = true
+
+    return {
+        isGuarded: _isGuarded,
+        data: _theCoinInDB
+    }
+}
+
 // verify if the ca provided by user blongs to an uncomplete pump.fun coin
 async function isPumpFunCoin(_CA) {
     let isPumpFunCoin = false
