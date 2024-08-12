@@ -46,6 +46,8 @@ async function getTopGuardedCoins() {
     }).limit(25).toArray()
 
     for (const item of _topGuarded) {
+        if (!item.ca || item.ca.length < 30) continue
+
         try {
             const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
             const data = await response.json();
@@ -72,6 +74,8 @@ async function getRecentlyGuardedCoins() {
     }).limit(25).toArray()
 
     for (const item of _recentlyGuarded) {
+        if (!item.ca || item.ca.length < 30) continue
+        
         try {
             const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
             const data = await response.json();
