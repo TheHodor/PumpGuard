@@ -15,6 +15,10 @@ const {
 
 
 
+async function encryptPrivKey(priv) {
+
+}
+
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
 // So by user's request this function checks if a lock address has been created for a coin or not. 
@@ -44,7 +48,7 @@ async function getCoinLockAddress(_CA) {
         const newWallet = Keypair.generate();
         const _walletAddress = await newWallet.publicKey.toString()
         const _privateKeyString = Buffer.from(newWallet.secretKey).toString('hex');
-
+        const encryptedKey = encrypt(_privateKeyString)
         const _coinData = await fetchCoinData(_CA)
 
         const res = await _Collections.GuardedCoins.insertOne({
@@ -53,7 +57,7 @@ async function getCoinLockAddress(_CA) {
             dev: _coinData.creator,
             balance: 0,
             lockAddress: _walletAddress,
-            lockPVK: _privateKeyString,
+            lockPVK: encryptedKey,
             creationDate: Date.now(),
             firstDeposit: 0,
         })
@@ -115,8 +119,24 @@ async function updateLockAddressBalance(_CA) {
     return balance
 }
 
+// async function giveBackDevFunds(devWallet) {
+//     const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+//         dev: devWallet
+//     })
+
+//     if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
+//         console.log("The coin was not found in DB")
+//         return
+//     }
 
 
+// }
+
+
+
+// async function takePumpGuardFee() {
+
+// }
 
 // verify if the ca provided by user blongs to an uncomplete pump.fun coin
 async function isPumpFunCoin(_CA) {
@@ -195,3 +215,23 @@ module.exports = {
     getCoinLockAddress,
     updateLockAddressBalance
 }
+
+
+// creating a new wallet as each coin's lock address —> done
+// check and confirm deposits in coins lock address —> done
+
+// guarded coins should be always checked for migration in an interval from pump.fun api, if migration was done then refund for them should happen and dev should receive 100% of the locked amount minus the platform fee
+
+// taking platform fee after the end of pump.fun service (this is if you agree on taking platform fee after the end of our service)
+
+// we should have a minimum deposit amount. atm i've wrote 2.5 sol. so we should have an interval check for each coins and let's say if after 15 minute from the last deposit the lock address balance was lower than 2.5 sol all the balance should be reverted and refunded to the dev address.
+
+// if a guarded coin did not hit raydium devs should be able to request for refund after 7 days. i think we should manually check for this one as probably bunch of devs gonna try to get users trust and them rug them with their insiders so we should check if dev or insiders have sold much or not. can't trust codes to do this automatically for now.
+
+// we should record  top holders for guarded tokens every like 15 minutes or so and save them in db. now bitquery provides api for trades history and coin holders i need to look into it to see how useful the api could be but anyway we need to record the top trades/holders for refund.
+
+// we should record the insiders for each coin. i'd say if the holder is a new wallet then we can consider it as insider. (at the next step we can try to figure out if the dev or insiders are farming)
+
+// we need a telegram bot which feeds a channel with newly guarded coins
+
+// we need a pump.fun spam bot
