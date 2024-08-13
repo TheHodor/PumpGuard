@@ -8,11 +8,15 @@ const {
     APIKEY_HELIUS,
     connection_helius,
 } = require("../config.js");
-
 const {
     _Collections
 } = require('./DB_setup.js');
-
+const {
+    encrypt
+} = require('eth-sig-util');
+const {
+    TG_alertNewGuard
+} = require('./TG_bot.js');
 
 
 async function encryptPrivKey(priv) {
@@ -92,17 +96,16 @@ async function updateLockAddressBalance(_CA) {
 
     // fetch sol balance for the lock address
     const balance = await getSolBalance(_theCoinInDB.lockAddress)
+    let newlyAddedBalance = 0
 
-    if (balance > 0) {
-        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-            ca: _CA
-        })
+    let firstDepositDate = _theCoinInDB.firstDeposit
+    if (_theCoinInDB.balance == 0) {
+        firstDepositDate = Date.now()
+    } else {
+        newlyAddedBalance = balance - _theCoinInDB.balance
+    }
 
-        let firstDepositDate = _theCoinInDB.firstDeposit
-        if (_theCoinInDB.balance == 0) {
-            firstDepositDate = Date.now()
-        }
-        
+    if (newlyAddedBalance > 0) {
         const res = await _Collections.GuardedCoins.updateOne({
             ca: _CA
         }, {
@@ -112,8 +115,8 @@ async function updateLockAddressBalance(_CA) {
                 firstDeposit: firstDepositDate
             }
         })
-    
-        console.log(res)
+
+        TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
     }
 
     return balance
