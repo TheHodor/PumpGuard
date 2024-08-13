@@ -154,7 +154,8 @@ async function isCoinGuarded(_CA) {
 
     return {
         isGuarded: _isGuarded,
-        data: _theCoinInDB
+        DBdata: _theCoinInDB,
+        coinData: await fetchCoinData(_CA)
     }
 }
 
@@ -233,7 +234,8 @@ async function getSolBalance(_address) {
 
 module.exports = {
     getCoinLockAddress,
-    updateLockAddressBalance
+    updateLockAddressBalance,
+    isCoinGuarded
 }
 
 
