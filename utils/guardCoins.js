@@ -13,6 +13,14 @@ const {
     _Collections
 } = require('./DB_setup.js');
 
+const { initializeKeypair, transferSol } = require('./transferSol')
+
+const {encrypt,  decrypt } = require('./encrypt.js') 
+
+// hardcoded values
+const PLATFORM_FEE = 0.2
+const LONETRADER_WALLET = '123123'
+const LYMN_WALLET = '2131231'
 
 
 async function encryptPrivKey(priv) {
@@ -48,6 +56,7 @@ async function getCoinLockAddress(_CA) {
         const newWallet = Keypair.generate();
         const _walletAddress = await newWallet.publicKey.toString()
         const _privateKeyString = Buffer.from(newWallet.secretKey).toString('hex');
+        console.log('Logging private key: ', _privateKeyString)
         const encryptedKey = encrypt(_privateKeyString)
         const _coinData = await fetchCoinData(_CA)
 
@@ -68,6 +77,7 @@ async function getCoinLockAddress(_CA) {
                 lockAddress: _walletAddress,
                 symbol: _coinData.symbol,
                 balance: 0,
+                stauts: 'unguarded',
                 dev: _coinData.creator,
             }
         }
@@ -119,24 +129,47 @@ async function updateLockAddressBalance(_CA) {
     return balance
 }
 
-// async function giveBackDevFunds(devWallet) {
-//     const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-//         dev: devWallet
-//     })
+async function giveBackDevFunds(ca) {
+    try {
+        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+            ca: ca
+        })
+    
+        if (!_theCoinInDB || !_theCoinInDB.lockAddress || !_theCoinInDB.dev || !_theCoinInDB.lockPVK) {
+            console.log("The coin was not found in DB")
+            return
+        }
+        const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
+        const keyPair = initializeKeypair(decryptedPrivKey)
+        // Take platform fee - 0.2 sol to start
+        const balance = await getSolBalance(_theCoinInDB.lockAddress)
+        const readableSolAmount = balance / 1000000000
+        const amountToReturn = readableSolAmount - PLATFORM_FEE
+        // return to dev
+        const trnxHash = await transferSol(_theCoinInDB.dev, amountToReturn, keyPair)
+        const res = await _Collections.GuardedCoins.updateOne({
+            ca: _CA
+        }, {
+            $set: {
+                status: 'refunded',
+                hash: trnxHash
+            }
+        })
+        // Transfer cash to our wallets
+        console.log(res)
+        await takePumpGuardFee(keyPair)
+    }
+    catch(e) {
+        console.error('Fail during returning dev funds: ', e)
+    }
+}
 
-//     if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
-//         console.log("The coin was not found in DB")
-//         return
-//     }
-
-
-// }
-
-
-
-// async function takePumpGuardFee() {
-
-// }
+async function takePumpGuardFee(keyPair) {
+    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE/2), keyPair)
+    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE/2), keyPair)
+    console.log('Lonetrader hash: ', lonetraderHash)
+    console.log('Lymn Hash: ', lymnHash)
+}
 
 
 // this checks and returns if a particular coin is guarded or not and it's data if it is
