@@ -12,16 +12,14 @@ const {
     _Collections
 } = require('./DB_setup.js');
 const {
-    encrypt
-} = require('eth-sig-util');
-const {
     TG_alertNewGuard
 } = require('./TG_bot.js');
+const {
+    encrypt,
+    decrypt
+} = require('./encrypt.js');
 
 
-async function encryptPrivKey(priv) {
-
-}
 
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
