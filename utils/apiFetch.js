@@ -69,6 +69,7 @@ async function getCoinHolders(_CA) {
         }
 
         const holderCount = allOwners.length
+        console.log(allOwners)
 
         // allOwners = allOwners.sort((a, b) => b.amount - a.amount)
         // allOwners = allOwners.splice(0, 20)
@@ -95,6 +96,7 @@ async function getCoinHolders(_CA) {
 }
 
 
+const holders = getCoinHolders('2fMo86crw3CkpN85g7DrYJJrCEjeEB38JtoA6s7Epump')
 
 
 module.exports = {
