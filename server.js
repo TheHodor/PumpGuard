@@ -15,7 +15,12 @@ const {
     updateLockAddressBalance,
     isCoinGuarded
 } = require('./utils/guardCoins.js');
-const { getCoinHolders } = require('./utils/apiFetch.js');
+const {
+    getCoinHolders
+} = require('./utils/apiFetch.js');
+const {
+    watchGuardedCoinsForMigration
+} = require('./utils/migrationAndRefund.js');
 
 
 // ----- setting express app ----- //
@@ -32,7 +37,7 @@ app.use(cors());
 
 
 let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
-
+const migrationCheckInterval = 60 * 5 // seconds
 
 
 const startServer = async () => {
@@ -49,6 +54,15 @@ async function serverStarted() {
 
     // fetch top coins on pump.fun
     PrepareCoinsForFE()
+
+    // watch all the guarded coins with the provided interval (in seconds) for migration
+    watchGuardedCoinsForMigration(migrationCheckInterval)
+
+    // await _Collections.GuardedCoins.updateMany({}, {
+    //     $set: {
+    //         hasMigrated: false
+    //     }
+    // });
 }
 
 
