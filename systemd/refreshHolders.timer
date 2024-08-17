@@ -1,0 +1,11 @@
+[Unit]
+Description=Fetch holders stats every hour
+
+[Timer]
+OnBootSec=1h
+OnUnitInactiveSec=1h
+AccuracySec=1min
+Unit=refreshHolders.service
+
+[Install]
+WantedBy=timers.target

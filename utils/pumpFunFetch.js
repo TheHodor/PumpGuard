@@ -6,7 +6,7 @@ async function getTopProgressCoins() {
 
     // each time we fetch 50 tokens
     // so... 5 = 250 tokens will be checked
-    const howManyTimes = 7 
+    const howManyTimes = 7
 
     for (let i = 0; i < howManyTimes; i++) {
         let offset = i * 50
@@ -24,7 +24,7 @@ async function getTopProgressCoins() {
 
     // If you want to sort allTopCoins once more globally by usd_market_cap
     allTopCoins.sort((a, b) => b.usd_market_cap - a.usd_market_cap)
- 
+
     //
     //
     // only fetching holders for the top #1 coin for the sake of less api cost for test now
@@ -75,7 +75,7 @@ async function getRecentlyGuardedCoins() {
 
     for (const item of _recentlyGuarded) {
         if (!item.ca || item.ca.length < 30) continue
-        
+
         try {
             const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
             const data = await response.json();
@@ -94,6 +94,70 @@ async function getRecentlyGuardedCoins() {
     return recentlyGuarded.slice(0, 25)
 }
 
+async function getAllTradesPump(ca) {
+    let offset = 0;
+    const allTrades = [];
+    try {
+        while (true) {
+            const response = await fetch(
+                `https://frontend-api.pump.fun/trades/${ca}?limit=200&offset=${offset}`,
+                {
+                    headers: {
+                        accept: '*/*',
+                        'accept-language': 'en-US,en;q=0.8',
+                        'if-none-match': 'W/"12266-/HJ/xj010RRztcqVlXCQtyB5KTs"',
+                        'sec-ch-ua':
+                            '"Brave";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+                        'sec-ch-ua-mobile': '?0',
+                        'sec-ch-ua-platform': '"Windows"',
+                        'sec-fetch-dest': 'empty',
+                        'sec-fetch-mode': 'cors',
+                        'sec-fetch-site': 'cross-site',
+                        'sec-gpc': '1',
+                        Referer: 'https://www.pump.fun/',
+                        'Referrer-Policy': 'strict-origin-when-cross-origin',
+                    },
+                    method: 'GET',
+                }
+            );
+            if (response) {
+                const result = await response.json();
+                if (result.length === 0) {
+                    console.log('got back 0: ', result.length)
+                    break;
+                }
+                allTrades.push(...result);
+                offset = offset + 200;
+            }
+        }
+        // got back all trades
+        console.log('Total trades gotten back: ', allTrades.length)
+
+        const orderedTrades = allTrades.sort((a, b) => {
+            if (a.slot !== b.slot) {
+                return a.slot - b.slot;
+            } else if (a.timestamp !== b.timestamp) {
+                return a.timestamp - b.timestamp;
+            } else {
+                return a.tx_index - b.tx_index;
+            }
+        });
+        // console.log('First trade: ', orderedTrades[0])
+        // console.log('2nd trade: ', orderedTrades[1])
+
+        // console.log('3rd trade: ', orderedTrades[2])
+
+        return orderedTrades
+    } catch (e) {
+        console.log('Error occured: ', e)
+        return []
+    }
+}
+
+
+getAllTradesPump('CCia7XcZSBKuzWyAZvtpYryKgRc3sSj7QLaDuRKMtx8j');
+
+
 
 
 function delay(ms) {
@@ -103,5 +167,6 @@ function delay(ms) {
 module.exports = {
     getTopProgressCoins,
     getTopGuardedCoins,
-    getRecentlyGuardedCoins
+    getRecentlyGuardedCoins,
+    getAllTradesPump
 }
