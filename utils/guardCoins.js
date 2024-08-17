@@ -18,14 +18,22 @@ const {
     encrypt,
     decrypt
 } = require('./encrypt.js');
+const {
+    getSolBalance
+} = require('./helpers.js');
 
-const { initializeKeypair, transferSol } = require('./transferSol')
+const {
+    encrypt,
+    decrypt
+} = require('./encrypt.js')
 
-const { encrypt, decrypt } = require('./encrypt.js')
+const {
+    getAllTradesPump
+} = require('./pumpFunFetch.js')
 
-const { getAllTradesPump } = require('./pumpFunFetch.js')
-
-const { getCoinHolders } = require('./apiFetch.js')
+const {
+    getCoinHolders
+} = require('./apiFetch.js')
 
 // hardcoded values
 const PLATFORM_FEE = 0.2
@@ -79,6 +87,7 @@ async function getCoinLockAddress(_CA) {
             lockPVK: encryptedKey,
             creationDate: Date.now(),
             firstDeposit: 0,
+            hasMigrated: false
         })
 
         // successfully inserted
@@ -121,13 +130,8 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
-        let firstDepositDate = _theCoinInDB.firstDeposit
-        if (_theCoinInDB.balance == 0) {
-            firstDepositDate = Date.now()
-        }
-
-        // Get holders now
-        const allHolders = await getTokenHolders(_CA)
+    // Get holders now
+    const allHolders = await getTokenHolders(_CA)
     if (newlyAddedBalance > 0) {
         const res = await _Collections.GuardedCoins.updateOne({
             ca: _CA
@@ -180,49 +184,6 @@ async function getTokenHolders(_CA) {
         })
     }
     return tokenHolders
-}
-
-
-async function giveBackDevFunds(ca) {
-    try {
-        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-            ca: ca
-        })
-
-        if (!_theCoinInDB || !_theCoinInDB.lockAddress || !_theCoinInDB.dev || !_theCoinInDB.lockPVK) {
-            console.log("The coin was not found in DB")
-            return
-        }
-        const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
-        const keyPair = initializeKeypair(decryptedPrivKey)
-        // Take platform fee - 0.2 sol to start
-        const balance = await getSolBalance(_theCoinInDB.lockAddress)
-        const readableSolAmount = balance / 1000000000
-        const amountToReturn = readableSolAmount - PLATFORM_FEE
-        // return to dev
-        const trnxHash = await transferSol(_theCoinInDB.dev, amountToReturn, keyPair)
-        const res = await _Collections.GuardedCoins.updateOne({
-            ca: _CA
-        }, {
-            $set: {
-                status: 'refunded',
-                hash: trnxHash
-            }
-        })
-        // Transfer cash to our wallets
-        console.log(res)
-        await takePumpGuardFee(keyPair)
-    }
-    catch (e) {
-        console.error('Fail during returning dev funds: ', e)
-    }
-}
-
-async function takePumpGuardFee(keyPair) {
-    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair)
-    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair)
-    console.log('Lonetrader hash: ', lonetraderHash)
-    console.log('Lymn Hash: ', lymnHash)
 }
 
 
@@ -282,42 +243,11 @@ async function fetchCoinData(_CA) {
 }
 
 
-// get solana balance of an address (through shyft api)
-async function getSolBalance(_address) {
-
-    const balance = await connection_helius.getBalance(new PublicKey(_address))
-
-    if (typeof balance == "number") {
-        return balance
-    }
-
-    // shyft api response for balance chnage is faster than helius but requires a paid api
-
-    // var myHeaders = new Headers();
-    // try {
-    //     const response = await fetch(
-    //         "https://api.shyft.to/sol/v1/wallet/balance?network=mainnet-beta&wallet=" + _address, {
-    //             method: 'GET',
-    //             headers: myHeaders.append("x-api-key", APIKEY_SHYFT),
-    //             redirect: 'follow'
-    //         });
-    //     const result = await response.text();
-    //     const parsedResult = JSON.parse(result);
-    //     console.log(parsedResult, _address)
-    //     if (parsedResult.success) {
-    //         return parseFloat(parsedResult.result.balance) * 1e9
-    //     } else {
-    //         throw new Error("Failed to fetch balance");
-    //     }
-    // } catch (error) {
-    //     console.log("error", error);
-    //     throw error;
-    // }
-}
-
 async function parseTokenTrades(_CA) {
     const SOL_DENOM = 1000000000;
-    const _theCoinInDB = await _Collections.GuardedCoins.findOne({ ca: _CA });
+    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        ca: _CA
+    });
 
     // Initialize holders object
     let holders = _theCoinInDB && _theCoinInDB.holders ? _theCoinInDB.holders : {};
@@ -378,11 +308,15 @@ async function parseTokenTrades(_CA) {
         }
 
         // Store the holders data with tags back in the database
-        await _Collections.GuardedCoins.updateOne(
-            { ca: _CA },
-            { $set: { holders: holders } },
-            { upsert: true }
-        );
+        await _Collections.GuardedCoins.updateOne({
+            ca: _CA
+        }, {
+            $set: {
+                holders: holders
+            }
+        }, {
+            upsert: true
+        });
 
         console.log("Holders data with tags updated and stored in the database.");
     } else {
@@ -401,23 +335,3 @@ module.exports = {
     updateLockAddressBalance,
     isCoinGuarded
 }
-
-
-// creating a new wallet as each coin's lock address —> done
-// check and confirm deposits in coins lock address —> done
-
-// guarded coins should be always checked for migration in an interval from pump.fun api, if migration was done then refund for them should happen and dev should receive 100% of the locked amount minus the platform fee
-
-// taking platform fee after the end of pump.fun service (this is if you agree on taking platform fee after the end of our service)
-
-// we should have a minimum deposit amount. atm i've wrote 2.5 sol. so we should have an interval check for each coins and let's say if after 15 minute from the last deposit the lock address balance was lower than 2.5 sol all the balance should be reverted and refunded to the dev address.
-
-// if a guarded coin did not hit raydium devs should be able to request for refund after 7 days. i think we should manually check for this one as probably bunch of devs gonna try to get users trust and them rug them with their insiders so we should check if dev or insiders have sold much or not. can't trust codes to do this automatically for now.
-
-// we should record  top holders for guarded tokens every like 15 minutes or so and save them in db. now bitquery provides api for trades history and coin holders i need to look into it to see how useful the api could be but anyway we need to record the top trades/holders for refund.
-
-// we should record the insiders for each coin. i'd say if the holder is a new wallet then we can consider it as insider. (at the next step we can try to figure out if the dev or insiders are farming)
-
-// we need a telegram bot which feeds a channel with newly guarded coins
-
-// we need a pump.fun spam bot
