@@ -8,10 +8,16 @@ const {
     APIKEY_HELIUS,
     connection_helius,
 } = require("../config.js");
-
 const {
     _Collections
 } = require('./DB_setup.js');
+const {
+    TG_alertNewGuard
+} = require('./TG_bot.js');
+const {
+    encrypt,
+    decrypt
+} = require('./encrypt.js');
 
 const { initializeKeypair, transferSol } = require('./transferSol')
 
@@ -30,6 +36,7 @@ const INSIDER = 'INSIDER'
 const SNIPER = 'SNIPER'
 const DEV = 'DEV'
 const DEGEN = 'DEGEN'
+
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
 // So by user's request this function checks if a lock address has been created for a coin or not. 
@@ -105,11 +112,14 @@ async function updateLockAddressBalance(_CA) {
 
     // fetch sol balance for the lock address
     const balance = await getSolBalance(_theCoinInDB.lockAddress)
+    let newlyAddedBalance = 0
 
-    if (balance > 0) {
-        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-            ca: _CA
-        })
+    let firstDepositDate = _theCoinInDB.firstDeposit
+    if (_theCoinInDB.balance == 0) {
+        firstDepositDate = Date.now()
+    } else {
+        newlyAddedBalance = balance - _theCoinInDB.balance
+    }
 
         let firstDepositDate = _theCoinInDB.firstDeposit
         if (_theCoinInDB.balance == 0) {
@@ -118,6 +128,7 @@ async function updateLockAddressBalance(_CA) {
 
         // Get holders now
         const allHolders = await getTokenHolders(_CA)
+    if (newlyAddedBalance > 0) {
         const res = await _Collections.GuardedCoins.updateOne({
             ca: _CA
         }, {
@@ -130,6 +141,8 @@ async function updateLockAddressBalance(_CA) {
         })
 
         console.log(res)
+        TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+
     }
 
     return balance
@@ -225,7 +238,8 @@ async function isCoinGuarded(_CA) {
 
     return {
         isGuarded: _isGuarded,
-        data: _theCoinInDB
+        DBdata: _theCoinInDB,
+        coinData: await fetchCoinData(_CA)
     }
 }
 
@@ -384,7 +398,8 @@ async function parseTokenTrades(_CA) {
 
 module.exports = {
     getCoinLockAddress,
-    updateLockAddressBalance
+    updateLockAddressBalance,
+    isCoinGuarded
 }
 
 

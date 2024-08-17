@@ -15,6 +15,12 @@ const {
     updateLockAddressBalance,
     isCoinGuarded
 } = require('./utils/guardCoins.js');
+const {
+    getCoinHolders
+} = require('./utils/apiFetch.js');
+const {
+    watchGuardedCoinsForMigration
+} = require('./utils/migrationAndRefund.js');
 
 
 // ----- setting express app ----- //
@@ -31,7 +37,7 @@ app.use(cors());
 
 
 let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
-
+const migrationCheckInterval = 60 * 5 // seconds
 
 
 const startServer = async () => {
@@ -48,6 +54,15 @@ async function serverStarted() {
 
     // fetch top coins on pump.fun
     PrepareCoinsForFE()
+
+    // watch all the guarded coins with the provided interval (in seconds) for migration
+    watchGuardedCoinsForMigration(migrationCheckInterval)
+
+    // await _Collections.GuardedCoins.updateMany({}, {
+    //     $set: {
+    //         hasMigrated: false
+    //     }
+    // });
 }
 
 
@@ -57,13 +72,30 @@ async function PrepareCoinsForFE() {
     allGuardedCoins_byPumpGuard = await _Collections.GuardedCoins.find({}).toArray()
 
     topProgressCoins = addLockedSolForCoins(await PumpFunFetch.getTopProgressCoins())
+    for (const coin of topProgressCoins) {
+        const _tokenHolders = await getCoinHolders(coin.mint);
+        coin.holders = _tokenHolders.holderCount
+        await delay(250) // avoiding rate limit
+    }
 
     setTimeout(async () => {
         topGuardedCoins = addLockedSolForCoins(await PumpFunFetch.getTopGuardedCoins())
+        for (const coin of topGuardedCoins) {
+            const _tokenHolders = await getCoinHolders(coin.mint);
+            coin.holders = _tokenHolders.holderCount
+            await delay(250) // avoiding rate limit
+        }
+
     }, 3000)
 
     setTimeout(async () => {
         recentlyGuardedCoins = addLockedSolForCoins(await PumpFunFetch.getRecentlyGuardedCoins())
+        for (const coin of recentlyGuardedCoins) {
+            const _tokenHolders = await getCoinHolders(coin.mint);
+            coin.holders = _tokenHolders.holderCount
+            await delay(250) // avoiding rate limit
+        }
+
     }, 5000)
 
     // adding locked sol to pump.fun coins for front-end display
@@ -94,10 +126,12 @@ app.post('/get_top_coins', async (req, res) => {
 });
 // front end request to get the top coins - Top Guarded Coins - and Recently guarded coins
 app.post('/get_all_coins', async (req, res) => {
+    if (!topGuardedCoins) return
+
     res.json({
-        topCoins: topProgressCoins.slice(0, 25),
-        topGuarded: topGuardedCoins.slice(0, 25),
-        recentlyGuarded: recentlyGuardedCoins.slice(0, 25),
+        topCoins: topProgressCoins.slice(0, 20),
+        topGuarded: topGuardedCoins.slice(0, 20),
+        recentlyGuarded: recentlyGuardedCoins.slice(0, 20),
     })
 });
 
@@ -122,6 +156,13 @@ app.post('/update_lock_address_balance', async (req, res) => {
     })
 });
 
+
+
+// *************** HELPERS *************** \\
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+// *************** HELPERS *************** \\
 
 
 const server = https.createServer({
