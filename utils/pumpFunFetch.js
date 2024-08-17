@@ -24,17 +24,14 @@ async function getTopProgressCoins() {
 
     // If you want to sort allTopCoins once more globally by usd_market_cap
     allTopCoins.sort((a, b) => b.usd_market_cap - a.usd_market_cap)
- 
-    //
-    //
-    // only fetching holders for the top #1 coin for the sake of less api cost for test now
-    const _tokenHolders = await getCoinHolders(allTopCoins[0].mint)
-    allTopCoins[0].holders = _tokenHolders.holderCount
+    allTopCoins = allTopCoins.slice(0, 20)
+    
+    
     // getCoinTradeVol()
     //
     //
 
-    return allTopCoins.slice(0, 25)
+    return allTopCoins
 }
 
 
@@ -43,7 +40,7 @@ async function getTopGuardedCoins() {
     let topGuarded = []
     const _topGuarded = await _Collections.GuardedCoins.find({}).sort({
         balance: -1
-    }).limit(25).toArray()
+    }).limit(20).toArray()
 
     for (const item of _topGuarded) {
         if (!item.ca || item.ca.length < 30) continue
@@ -63,7 +60,7 @@ async function getTopGuardedCoins() {
         await delay(2000);
     }
 
-    return topGuarded.slice(0, 25)
+    return topGuarded.slice(0, 20)
 }
 
 
@@ -71,7 +68,7 @@ async function getRecentlyGuardedCoins() {
     let recentlyGuarded = []
     const _recentlyGuarded = await _Collections.GuardedCoins.find({}).sort({
         firstDeposit: 1
-    }).limit(25).toArray()
+    }).limit(20).toArray()
 
     for (const item of _recentlyGuarded) {
         if (!item.ca || item.ca.length < 30) continue
@@ -91,7 +88,7 @@ async function getRecentlyGuardedCoins() {
         await delay(2000);
     }
 
-    return recentlyGuarded.slice(0, 25)
+    return recentlyGuarded.slice(0, 20)
 }
 
 
