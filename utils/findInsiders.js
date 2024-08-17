@@ -35,7 +35,9 @@ async function fetchSignatures(address) {
         }
         const lastTransaction = allTransactions[allTransactions.length - 1].signature
         console.log('User Last signature: ', lastTransaction)
-        return lastTransaction
+        const totalTrxns = allTransactions.length
+        console.log('User total transactions count: ', totalTrxns)
+        return [lastTransaction, totalTrxns]
 
     } catch (error) {
         console.error(`Failed to fetch from helius for address ${address}:  ${error}`);
@@ -96,9 +98,9 @@ async function findSuspiciousWallets(walletList) {
     const allPromises = walletList.map(async (wallet) => {
         const firstTrxn = await fetchSignatures(wallet)
         // Most likely a fresh wallet or some insider shit
-        if (firstTrxn) {
+        if (firstTrxn[0]) {
             console.log(`Wallet - ${wallet} is most likely insider.... Checking last trxn/funding status`)
-            const parsedData = await parseAndProcessTransactions(firstTrxn)
+            const parsedData = await parseAndProcessTransactions(firstTrxn[0])
             if (parsedData && parsedData.length > 0) {
                 parsedData.forEach(transaction => {
                     if (transaction.isFreshy) {
@@ -115,11 +117,10 @@ async function findSuspiciousWallets(walletList) {
 
     // Log the list of suspicious wallets after all processing is done
     console.log('List of insider wallets: ', suspiousWallets);
-
 }
 
 // findSuspiciousWallets(walletList)
-
+fetchSignatures('GiLX2Dd8LQYYbgaBLrenG5jTpuno86iKiX8kXKCCn4Qa')
 
 module.exports = {
     findSuspiciousWallets

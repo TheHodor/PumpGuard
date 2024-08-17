@@ -21,13 +21,21 @@ const {
 
 const { initializeKeypair, transferSol } = require('./transferSol')
 
-const {encrypt,  decrypt } = require('./encrypt.js') 
+const { encrypt, decrypt } = require('./encrypt.js')
+
+const { getAllTradesPump } = require('./pumpFunFetch.js')
+
+const { getCoinHolders } = require('./apiFetch.js')
 
 // hardcoded values
 const PLATFORM_FEE = 0.2
 const LONETRADER_WALLET = '123123'
 const LYMN_WALLET = '2131231'
 
+const INSIDER = 'INSIDER'
+const SNIPER = 'SNIPER'
+const DEV = 'DEV'
+const DEGEN = 'DEGEN'
 
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
@@ -113,6 +121,13 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
+        let firstDepositDate = _theCoinInDB.firstDeposit
+        if (_theCoinInDB.balance == 0) {
+            firstDepositDate = Date.now()
+        }
+
+        // Get holders now
+        const allHolders = await getTokenHolders(_CA)
     if (newlyAddedBalance > 0) {
         const res = await _Collections.GuardedCoins.updateOne({
             ca: _CA
@@ -120,22 +135,60 @@ async function updateLockAddressBalance(_CA) {
             $set: {
                 balance: balance,
                 allowedSell: false,
-                firstDeposit: firstDepositDate
+                firstDeposit: firstDepositDate,
+                holders: allHolders
             }
         })
 
+        console.log(res)
         TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+
     }
 
     return balance
 }
+
+
+async function getTokenHolders(_CA) {
+    let tokenHolders = []
+    const tokenData = await getCoinHolders(_CA)
+    // find signatures for all holders
+    const holders = tokenData.allHolders
+    const currentHoldersCount = tokenData.allHolders.length
+    if (holders && currentHoldersCount > 0) {
+        holders.map(async (holder) => {
+            const walletData = await fetchSignatures(holder.owner)
+            let tokenHolder
+            // Need to figure out later on sniper
+            if (walletData[1] < 25) {
+                // definitely dev/insider
+                tokenHolder = {
+                    address: holder.owner,
+                    amount: holder.amount,
+                    tag: INSIDER
+                }
+                tokenHolders.push(tokenHolder)
+            } else {
+                // regular holder - still need to tag em
+                tokenHolder = {
+                    address: holder.owner,
+                    amount: holder.amount,
+                    TAG: DEGEN
+                }
+                tokenHolders.push(tokenHolder)
+            }
+        })
+    }
+    return tokenHolders
+}
+
 
 async function giveBackDevFunds(ca) {
     try {
         const _theCoinInDB = await _Collections.GuardedCoins.findOne({
             ca: ca
         })
-    
+
         if (!_theCoinInDB || !_theCoinInDB.lockAddress || !_theCoinInDB.dev || !_theCoinInDB.lockPVK) {
             console.log("The coin was not found in DB")
             return
@@ -160,14 +213,14 @@ async function giveBackDevFunds(ca) {
         console.log(res)
         await takePumpGuardFee(keyPair)
     }
-    catch(e) {
+    catch (e) {
         console.error('Fail during returning dev funds: ', e)
     }
 }
 
 async function takePumpGuardFee(keyPair) {
-    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE/2), keyPair)
-    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE/2), keyPair)
+    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair)
+    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair)
     console.log('Lonetrader hash: ', lonetraderHash)
     console.log('Lymn Hash: ', lymnHash)
 }
@@ -261,6 +314,86 @@ async function getSolBalance(_address) {
     //     throw error;
     // }
 }
+
+async function parseTokenTrades(_CA) {
+    const SOL_DENOM = 1000000000;
+    const _theCoinInDB = await _Collections.GuardedCoins.findOne({ ca: _CA });
+
+    // Initialize holders object
+    let holders = _theCoinInDB && _theCoinInDB.holders ? _theCoinInDB.holders : {};
+
+    // Fetch all trades related to the CA
+    const allTrades = await getAllTradesPump(_CA);
+
+    if (allTrades && allTrades.length > 0) {
+        // Parse all trades starting from beginning
+        for (let i = 0; i < allTrades.length; i++) {
+            const trade = allTrades[i];
+            const userAddress = trade.user;
+
+            // Initialize or update holder data
+            if (!holders[userAddress]) {
+                holders[userAddress] = {
+                    address: userAddress,
+                    sol_amount: 0,
+                    tokens: 0,
+                    lastTradeHash: trade.signature,
+                    lastTradeType: '',
+                    lastTradeTime: new Date(trade.timestamp * 1000), // Convert timestamp to Date
+                    tag: '',
+                    hasBought: false,
+                    hasSold: false
+                };
+            }
+
+            // Update based on the trade type
+            if (trade.is_buy) {
+                holders[userAddress].tokens += trade.token_amount;
+                holders[userAddress].sol_amount -= trade.sol_amount / SOL_DENOM;
+                holders[userAddress].lastTradeType = 'BUY';
+                holders[userAddress].hasBought = true;
+            } else {
+                holders[userAddress].tokens -= trade.token_amount;
+                holders[userAddress].sol_amount += trade.sol_amount / SOL_DENOM;
+                holders[userAddress].lastTradeType = 'SELL';
+                holders[userAddress].hasSold = true;
+            }
+
+            // Update last trade time and hash
+            holders[userAddress].lastTradeTime = new Date(trade.timestamp * 1000); // Convert timestamp to Date
+            holders[userAddress].lastTradeHash = trade.signature;
+        }
+
+        // Apply tagging logic after processing all trades
+        for (const address in holders) {
+            const holder = holders[address];
+
+            if (holder.hasSold && !holder.hasBought) {
+                holder.tag = 'Transferred/Insider Wallet';
+            } else if (holder.hasBought && !holder.hasSold) {
+                holder.tag = 'Buyer';
+            } else if (holder.hasBought && holder.hasSold) {
+                holder.tag = 'Active Trader';
+            }
+        }
+
+        // Store the holders data with tags back in the database
+        await _Collections.GuardedCoins.updateOne(
+            { ca: _CA },
+            { $set: { holders: holders } },
+            { upsert: true }
+        );
+
+        console.log("Holders data with tags updated and stored in the database.");
+    } else {
+        console.log("No new trades found for the given CA.");
+    }
+}
+
+
+
+
+
 
 
 module.exports = {

@@ -69,7 +69,7 @@ async function getCoinHolders(_CA) {
         }
 
         const holderCount = allOwners.length
-        console.log(allOwners)
+        console.log(holderCount)
 
         // allOwners = allOwners.sort((a, b) => b.amount - a.amount)
         // allOwners = allOwners.splice(0, 20)
@@ -88,16 +88,23 @@ async function getCoinHolders(_CA) {
 
         return ({
             top10HolderPerc: -1,
-            holderCount: holderCount
+            holderCount: holderCount,
+            allHolders: allOwners
         })
+
     } catch (err) {
         console.log(err)
     }
 }
 
 
-const holders = getCoinHolders('2fMo86crw3CkpN85g7DrYJJrCEjeEB38JtoA6s7Epump')
+async function wrapper() {
+    const holders = await getCoinHolders('DUi1v2igBmQNtqXqToi87FL8vU293QSFsu1yKBsCpump')
+    console.log('Holders: ', holders.allHolders)
 
+}
+
+// wrapper()
 
 module.exports = {
     getCoinTradeVol,
