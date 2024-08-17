@@ -5,12 +5,11 @@ After=network.target
 [Service]
 Type=simple
 KillMode=process
-EnvironmentFile=/home/tracker/smart-wallets/alpha-tools/build/smart-wallets/.env
-WorkingDirectory=/home/tracker/smart-wallets/alpha-tools/build/smart-wallets
-ExecStart=/home/tracker/smart-wallets/alpha-tools/build/smart-wallets/start_ws.sh
-ExecStop=/home/tracker/smart-wallets/alpha-tools/build/smart-wallets/graceful_shutdown.sh
-StandardOutput=append:/home/tracker/trackerLogs/trackerLogsFull.log
-StandardError=append:/home/tracker/trackerLogs/trackerLogsErr.log
+WorkingDirectory=/home/root/PumpGuard/
+ExecStart=/home/root/PumpGuard/
+ExecStop=/home/root/PumpGuard/
+StandardOutput=append:/home/root/PumpGuard/
+StandardError=append:/home/root/PumpGuard/
 TimeoutStopSec=30
 Restart=always
 RestartSec=5
