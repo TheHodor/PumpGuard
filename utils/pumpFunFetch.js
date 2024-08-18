@@ -134,7 +134,7 @@ async function getAllTradesPump(ca) {
             }
         }
         // got back all trades
-        console.log('Total trades gotten back: ', allTrades.length)
+        console.log('Total trades gotten back from pump: ', allTrades.length)
 
         const orderedTrades = allTrades.sort((a, b) => {
             if (a.slot !== b.slot) {
@@ -158,7 +158,7 @@ async function getAllTradesPump(ca) {
 }
 
 
-getAllTradesPump('CCia7XcZSBKuzWyAZvtpYryKgRc3sSj7QLaDuRKMtx8j');
+// getAllTradesPump('FnpVAGTn1Tr4hEDzeERs8KGRV4FMjU3AdbAvU6iApump');
 
 
 

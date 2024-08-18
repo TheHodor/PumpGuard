@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const INSIDER_HARD_CAP = 100
+const INSIDER_HARD_CAP = 50
 const RPC_helius = "https://mainnet.helius-rpc.com/?api-key=0923441f-c558-4e0b-8b67-9294161fdfb3"
 
 
@@ -28,17 +28,20 @@ async function fetchSignatures(address) {
         });
 
         const data = await response.json();
+        // console.log('Data returned from helius: ', data)
         const allTransactions = data.result
-        if (allTransactions.length === 0) {
-            console.log('No transactions found for this address.');
-            return null;
-        }
-        const lastTransaction = allTransactions[allTransactions.length - 1].signature
-        console.log('User Last signature: ', lastTransaction)
-        const totalTrxns = allTransactions.length
-        console.log('User total transactions count: ', totalTrxns)
-        return [lastTransaction, totalTrxns]
 
+        if (allTransactions) {
+            if (allTransactions.length === 0) {
+                console.log('No transactions found for this address.');
+                return null;
+            }
+            const lastTransaction = allTransactions[allTransactions.length - 1].signature
+            // console.log('User Last signature: ', lastTransaction)
+            const totalTrxns = allTransactions.length
+            // console.log(`${address} total transactions count: ${totalTrxns}`)
+            return [lastTransaction, totalTrxns]
+        }
     } catch (error) {
         console.error(`Failed to fetch from helius for address ${address}:  ${error}`);
         throw error;
@@ -120,8 +123,9 @@ async function findSuspiciousWallets(walletList) {
 }
 
 // findSuspiciousWallets(walletList)
-fetchSignatures('GiLX2Dd8LQYYbgaBLrenG5jTpuno86iKiX8kXKCCn4Qa')
+// fetchSignatures('GiLX2Dd8LQYYbgaBLrenG5jTpuno86iKiX8kXKCCn4Qa')
 
 module.exports = {
-    findSuspiciousWallets
+    findSuspiciousWallets,
+    fetchSignatures
 }

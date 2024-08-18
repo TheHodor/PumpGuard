@@ -1,6 +1,6 @@
 const express = require('express');
 const http = require('http');
-const https = require('https');
+// const https = require('https');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -13,7 +13,8 @@ const {
 const {
     getCoinLockAddress,
     updateLockAddressBalance,
-    isCoinGuarded
+    isCoinGuarded,
+    parseTokenTrades
 } = require('./utils/guardCoins.js');
 const {
     getCoinHolders
@@ -135,6 +136,11 @@ app.post('/get_all_coins', async (req, res) => {
     })
 });
 
+app.get('/parse_trades', async ( req, res) => {
+    const ca = 'FnpVAGTn1Tr4hEDzeERs8KGRV4FMjU3AdbAvU6iApump'
+    await parseTokenTrades(ca)
+})
+
 // user request to look up a coin and check if it's guarded or not + it's data for front end
 app.post('/is_coin_guarded', async (req, res) => {
     const data = await isCoinGuarded(req.body.ca)
@@ -165,9 +171,9 @@ function delay(ms) {
 // *************** HELPERS *************** \\
 
 
-const server = https.createServer({
-    cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
-    key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
+const server = http.createServer({
+    // cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
+    // key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
 }, app);
 
-server.listen(443);
+server.listen(8080);
