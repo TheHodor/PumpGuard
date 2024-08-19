@@ -8,6 +8,7 @@ const mongo_uri = "mongodb+srv://tom774pau:kuH3E6edKwKg0y2t@pumpguard.dqh9k.mong
 
 let _DBs = {
     Main: void 0,
+    Holders: void 0,
     Etc: void 0,
 }
 
@@ -36,6 +37,8 @@ async function DBSetup() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
     // set up connections to databases and their collection
+    _DBs.Holders = mongoClient.db("Holders")
+
     _DBs.Main = mongoClient.db("Main")
     _Collections.GuardedCoins = _DBs.Main.collection("GuardedCoins")
     
