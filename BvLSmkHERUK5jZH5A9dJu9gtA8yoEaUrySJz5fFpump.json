@@ -1,0 +1,582 @@
+[
+  {
+    "address": "EbQhv4R4uaAr5UHrgZvb5FBxbdTAcFhLECVH1pCAvJUu",
+    "totalSolBought": 1.17509,
+    "totalSolSold": 0,
+    "tokens": 37923694807019,
+    "lastTradeHash": "3fc5n3j6CyjKm8D1G9LLSw4EVRFuZkxAMQrE5zqFqQNBj27SfEEmjkjvgfUm7thPep7DQSEAJ9Mff7Z25PmjBXMN",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "44H9M2uVeLuNuCK9P6HF4Q4XUthNeJLBWtgchdSn9awU",
+    "totalSolBought": 1.93079,
+    "totalSolSold": 0,
+    "tokens": 37437546409991,
+    "lastTradeHash": "5YNWTHrbGtsG8nqgWysxfwBcrG1tnrMdgFCPmNSjGrSqhZfRk9MhNpDvroRa2gGySm5zhynUk5rGzUD7ecxs5Z1f",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "933ohqSrJM46PWDeQJmoGPWnq6AFhKB81TW21XkkWyJ6",
+    "totalSolBought": 1,
+    "totalSolSold": 1.097359493,
+    "tokens": 225806,
+    "lastTradeHash": "3T3tVYu51bKkFtDWrQXsiDY6HMnhY7aNhEgadYTZMsyVXWUgMJ2Up8bwXhNhTohtuZsnWcdZmSmkG1ZPZcQsfRGH",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "79fBgugUvkGQrimDVhAXcuiJ8eVbVmQ7wrpgiBCuoSPA",
+    "totalSolBought": 2.19851,
+    "totalSolSold": 0,
+    "tokens": 25778031636362,
+    "lastTradeHash": "2bYJAMusKp57eB4tCDjkQCaasBV4u7reKX2BxgsnCKhm7RmVRkWQbH2UkbFRvBvFzM82KnpQPW7fgJ74xxBM2UFi",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "2sQAoRhcYiMMYsTSUbDTo24jdRpdTiQK5PhBT6uKDA3N",
+    "totalSolBought": 1.36328,
+    "totalSolSold": 0,
+    "tokens": 33165811637134,
+    "lastTradeHash": "3fc5n3j6CyjKm8D1G9LLSw4EVRFuZkxAMQrE5zqFqQNBj27SfEEmjkjvgfUm7thPep7DQSEAJ9Mff7Z25PmjBXMN",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "9PPgBGA6QaA4ck6nSCuSvBTSsSqEARpMp5GkMC1JQ9ym",
+    "totalSolBought": 2.94136,
+    "totalSolSold": 0,
+    "tokens": 28841772158793,
+    "lastTradeHash": "2bYJAMusKp57eB4tCDjkQCaasBV4u7reKX2BxgsnCKhm7RmVRkWQbH2UkbFRvBvFzM82KnpQPW7fgJ74xxBM2UFi",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "HiZTAPLn1dDFZcba1hkMcVocoqjVEQfaWv2fiubyc4F3",
+    "totalSolBought": 3.87805,
+    "totalSolSold": 0,
+    "tokens": 24516026157044,
+    "lastTradeHash": "4FMGSP6LU7WcJk28wsr38QtqKfaPNsacASNgpHnLy4TFqXfp4PmHMHSq5zFEu2KjFzkcPNmzCw7F4GbjuwVnDdZD",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "3BVrDBiRwz7PSzcZYwU9v1YE7d91qS9UyKyGUnQKjRMH",
+    "totalSolBought": 1.421,
+    "totalSolSold": 0,
+    "tokens": 29959703598249,
+    "lastTradeHash": "5YNWTHrbGtsG8nqgWysxfwBcrG1tnrMdgFCPmNSjGrSqhZfRk9MhNpDvroRa2gGySm5zhynUk5rGzUD7ecxs5Z1f",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "9edcqWcySoqum9ZZrDqQ2uNs1aWGJUtm2dNYc6tkEc2o",
+    "totalSolBought": 1.30662,
+    "totalSolSold": 0,
+    "tokens": 29575529944848,
+    "lastTradeHash": "5YNWTHrbGtsG8nqgWysxfwBcrG1tnrMdgFCPmNSjGrSqhZfRk9MhNpDvroRa2gGySm5zhynUk5rGzUD7ecxs5Z1f",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "FTSpDe2QM1Ga8EHt5krT3qVeCmnSvuzbdbCRizhbzRyK",
+    "totalSolBought": 2.43343,
+    "totalSolSold": 0,
+    "tokens": 38564214107184,
+    "lastTradeHash": "5YNWTHrbGtsG8nqgWysxfwBcrG1tnrMdgFCPmNSjGrSqhZfRk9MhNpDvroRa2gGySm5zhynUk5rGzUD7ecxs5Z1f",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "5f3CDjoWLuHMHFVTyLcd5tAiC2EC9tMWy7ANjpMdekrs",
+    "totalSolBought": 2.43351,
+    "totalSolSold": 0,
+    "tokens": 34714173851802,
+    "lastTradeHash": "2bYJAMusKp57eB4tCDjkQCaasBV4u7reKX2BxgsnCKhm7RmVRkWQbH2UkbFRvBvFzM82KnpQPW7fgJ74xxBM2UFi",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "9RXpVCpuJdqZkTUCHhJ1UXH8kaoZZ9NPxZSP46iKVDYW",
+    "totalSolBought": 3.4721,
+    "totalSolSold": 0,
+    "tokens": 24395161178237,
+    "lastTradeHash": "4FMGSP6LU7WcJk28wsr38QtqKfaPNsacASNgpHnLy4TFqXfp4PmHMHSq5zFEu2KjFzkcPNmzCw7F4GbjuwVnDdZD",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "DCoG7bKE23ZwyRQ13MxpVjKFeRZqYQgKByciXfG8n51V",
+    "totalSolBought": 2.14685,
+    "totalSolSold": 0,
+    "tokens": 37757633114731,
+    "lastTradeHash": "5YNWTHrbGtsG8nqgWysxfwBcrG1tnrMdgFCPmNSjGrSqhZfRk9MhNpDvroRa2gGySm5zhynUk5rGzUD7ecxs5Z1f",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "5pruQ6iJZNmnv7x9oFyb54J1jzzi5Vq7iDNXFZNHqd5g",
+    "totalSolBought": 1.06335,
+    "totalSolSold": 0,
+    "tokens": 32006398569902,
+    "lastTradeHash": "3fc5n3j6CyjKm8D1G9LLSw4EVRFuZkxAMQrE5zqFqQNBj27SfEEmjkjvgfUm7thPep7DQSEAJ9Mff7Z25PmjBXMN",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "E1mUnSEUfLtXuC4eQ5VEqw9GWytokiVWJATVt8Zy9yuj",
+    "totalSolBought": 1.36035,
+    "totalSolSold": 0,
+    "tokens": 35719394100508,
+    "lastTradeHash": "3fc5n3j6CyjKm8D1G9LLSw4EVRFuZkxAMQrE5zqFqQNBj27SfEEmjkjvgfUm7thPep7DQSEAJ9Mff7Z25PmjBXMN",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "2igH7R46EvJNM5aEFJZq2LiA818vTWbyWxX9xnZn8SK4",
+    "totalSolBought": 3.7398,
+    "totalSolSold": 0,
+    "tokens": 29321030179214,
+    "lastTradeHash": "4FMGSP6LU7WcJk28wsr38QtqKfaPNsacASNgpHnLy4TFqXfp4PmHMHSq5zFEu2KjFzkcPNmzCw7F4GbjuwVnDdZD",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "GTNATrSSn3z8kWFWRjKBoyXPpVwuLb7w955vUUXitoNi",
+    "totalSolBought": 3.44787,
+    "totalSolSold": 0,
+    "tokens": 30337437765180,
+    "lastTradeHash": "4FMGSP6LU7WcJk28wsr38QtqKfaPNsacASNgpHnLy4TFqXfp4PmHMHSq5zFEu2KjFzkcPNmzCw7F4GbjuwVnDdZD",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "4PAHF9KHzeSufkp7jZBttMJv1dWs8LuYf7RpKAQJTE3T",
+    "totalSolBought": 1.10135,
+    "totalSolSold": 0,
+    "tokens": 31060473016625,
+    "lastTradeHash": "3fc5n3j6CyjKm8D1G9LLSw4EVRFuZkxAMQrE5zqFqQNBj27SfEEmjkjvgfUm7thPep7DQSEAJ9Mff7Z25PmjBXMN",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "83oETPFuooHkKFNdaZRt24LDRvG5SVKF9ekuWSjEPNuU",
+    "totalSolBought": 4.64243,
+    "totalSolSold": 0,
+    "tokens": 26140917010467,
+    "lastTradeHash": "4FMGSP6LU7WcJk28wsr38QtqKfaPNsacASNgpHnLy4TFqXfp4PmHMHSq5zFEu2KjFzkcPNmzCw7F4GbjuwVnDdZD",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "AJwpSqNnnxCVqBzZDDybBLxjUXNf2EKP868js4uVAnGf",
+    "totalSolBought": 2.57286,
+    "totalSolSold": 0,
+    "tokens": 33120851034978,
+    "lastTradeHash": "2bYJAMusKp57eB4tCDjkQCaasBV4u7reKX2BxgsnCKhm7RmVRkWQbH2UkbFRvBvFzM82KnpQPW7fgJ74xxBM2UFi",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "5g6AYK5QWnMZmue5udsVqYrhfw8ZAKor5EARuDLuEpAj",
+    "totalSolBought": 2.33711,
+    "totalSolSold": 0,
+    "tokens": 25177483123349,
+    "lastTradeHash": "2bYJAMusKp57eB4tCDjkQCaasBV4u7reKX2BxgsnCKhm7RmVRkWQbH2UkbFRvBvFzM82KnpQPW7fgJ74xxBM2UFi",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "64FTL6CVCfAvMMSwr2CvSqxM4ygP6kEzcdoVcQuBPV2f",
+    "totalSolBought": 0.018888241,
+    "totalSolSold": 0,
+    "tokens": 100000000000,
+    "lastTradeHash": "3hJQanGiTKYaEf6wgjYn3vLdLxxFtJu1zxQpXFmVN3z2uYAPiryrB11wQxpHKfdTx8YCtnHPnCtAEayvXbc2xrTy",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "94d8VxSrM2yn3zY5pKN15iEeQqU9uDTUsQhNoMtSWqFq",
+    "totalSolBought": 2.490343181,
+    "totalSolSold": 2.5283158859999997,
+    "tokens": 0,
+    "lastTradeHash": "3vhgxadvNRjwBNTtzGH9wbEVMJgfpjNKUjV2CjckXntYk6yjN6Sh3S82Fzjw5VM9nXFQTAshYbyYL7h9KRNp6gWb",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "DtXRsUMG8b1cj8Grmaz3K8vPjExj7V9fiEtuwt4UtS3r",
+    "totalSolBought": 2.0545154340000003,
+    "totalSolSold": 2.086284949,
+    "tokens": 0,
+    "lastTradeHash": "2jAWMe9uGaquGb1Pj5aAWXi5pvj9Kj9WRdtMYB676E8uhviE3tCRgy4uLtzCFyDWiUmN34gky259Mn8tpTcnafXK",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "CVg969WUrr7qkxqxHBkB8cprEfskKxvnJMpwByRbn6aR",
+    "totalSolBought": 0.081277396,
+    "totalSolSold": 0.082533208,
+    "tokens": 0,
+    "lastTradeHash": "2ctXMpQSs8aDjHLgxPYyE8H9ea2HQZbA1tedutCQR6otRxaRsSFaPUYHAXxgjvi6ipL7JT6Hjvb6E8xq5HJq7GBX",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "BxUQbqmHFGPNwyQJgUsCjQTuXAY2QcDSukjq38KHQSof",
+    "totalSolBought": 1.662875829,
+    "totalSolSold": 1.7048970739999998,
+    "tokens": 0,
+    "lastTradeHash": "5cq52eoc8r1FxTAcSc9z4BdcyW2PFBFF2q4kt3kS9HYW8Wgv3RiKxZFkjYcUcRJ2kQKhvfFLYPdi6R6b95H6TMDZ",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "AWiaRpNDX4Vo3s9dTLcf5Ve17ERCfqNhMWGA89rJM5py",
+    "totalSolBought": 1.918981745,
+    "totalSolSold": 1.9926693530000004,
+    "tokens": 0,
+    "lastTradeHash": "4jiY9vfYtRMKJuNpccv82vWuTgbGnJBXihPTHA9FdF2dqWiiy91X5sT89vrwaGjb6UJyZJZF2PmoVWW8RL2jWWR2",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "F3Vps5bnMiTBgfafdBPAgXneqgeB1Q9k2CZ9EHNUz7Eo",
+    "totalSolBought": 2.199052644,
+    "totalSolSold": 0.313674033,
+    "tokens": 0,
+    "lastTradeHash": "3Lv7HyXaqEZQrjYkkYCnXq5JxWTf9i3VzkxcY3MZwqye6nJdNpoULuWe6DTNK96o9tJHVH22gYdyuqgdsEd6pS5y",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "581pT2o191nDr7q5XPsJnWFmFC6cbHS4JmBv2ynwmyhu",
+    "totalSolBought": 1.7625497260000003,
+    "totalSolSold": 1.834002242,
+    "tokens": 0,
+    "lastTradeHash": "41mdWUWWMMnjF15hbVR2uTNd7sxshBFTDqLf6pK4JHavk79azTEo7yczwWNFUG6dMgbQubKuVNgKB5DNT75qhS26",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "Hi1nEhZZXhnACrNzPbrBa7pCm92JF8pQwKhsGAKDbWkp",
+    "totalSolBought": 1.7501394470000002,
+    "totalSolSold": 1.7950788469999999,
+    "tokens": 0,
+    "lastTradeHash": "2mBAZEGqyC1jHEKqpW214iN4E7qVXXzZjsp2eV8zkBqDMdst1LsPGx8m6XeWvnEc1C1f6U7gSAUWEkpjba96cXu8",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "B2KefXBC54rvNnx459544AmavEmrbtSLU3pZjeWS9RvD",
+    "totalSolBought": 1.491654094,
+    "totalSolSold": 1.4053754139999999,
+    "tokens": 0,
+    "lastTradeHash": "3j6xXMc8Vw8KGfTnzn6uZkQMJgiFzdNx5TYmqXmJsjLx43AVSVhnGu8HGvFgo6uhoLvB3EbQ5gTN4FhJRcU64ozy",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "3XquFArNEqNWAqwfAj8Da3oXc1SYSM1GASREtH5sqYb1",
+    "totalSolBought": 2.639581921,
+    "totalSolSold": 0.364203305,
+    "tokens": 0,
+    "lastTradeHash": "4m3PCv2CA6QVubdYGGsPL2gx5byNvZSrqPHoPfEDz2ZLoEV13UrScumqfBL5fV5gLVH8CR1ghQzYcuaX7bBvKhM2",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "4drpbBcMvpTvibz42vBDQ8U1rLRNkHVAw9D4yd7fwJbb",
+    "totalSolBought": 3.6670980019999995,
+    "totalSolSold": 0.52860956,
+    "tokens": 0,
+    "lastTradeHash": "3t2PGdcvJrQtKtxDi4j7ksZaESkwXJs2ap8RfFz4v95u66nSCp1oruYw7qTmhkUhMbh1PDwULPzLqpGcHd3Mogpq",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "9WLHXm4McqMHKt7rGyV1kGXsNb4fJQ7CJTAPyGQiyweA",
+    "totalSolBought": 0.071299747,
+    "totalSolSold": 0.010094932,
+    "tokens": 0,
+    "lastTradeHash": "CU9MoSoAvXsDNuA3pegx1ziKH4MSTusFEc9Qf3GsmaJykAeMcXpJMapEFZF2UPovFGdrUQbuVRqRh9PhUWAeFyh",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "EodwYAE6U7ZuWHFX2uL9cBGKhwvKjzgGnn9MrGUEEF78",
+    "totalSolBought": 0.100052985,
+    "totalSolSold": 0.017572022,
+    "tokens": 0,
+    "lastTradeHash": "3qGG5FQnvdcrWGMWVVAoBzGjmuW4oGCumn2NDZsgye2tij6CEM7N86TQD8XrBCmQTPwwjeNPoCRS5cxr4aG77V8E",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "EQ6gcmZm6zvQ2fyGsDc5Msn6QVJNffyUNyWrtVz78CCt",
+    "totalSolBought": 0.720486709,
+    "totalSolSold": 0.765502611,
+    "tokens": 271385,
+    "lastTradeHash": "2uDLpVxwqsoFF4h7rsdDaLVxwpNoc2ed948a6K9Z962U2taEcWaDYdfMu3NbCCBsWaWMT1447QN6kkxBqFeWX7vH",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "HkfdTXmcVygHjoJHR9nU2Nz4UUqhXLRXV7mE4cYZr8cd",
+    "totalSolBought": 0.998652034,
+    "totalSolSold": 0.157198073,
+    "tokens": 11438,
+    "lastTradeHash": "46DVsTiqRBQvVrmMGikqUCn6DX3EMFSsYv4dxXEzzg1MSQSL7xc2Cnhd8Aq3bV9eXWPhpFvTzJH1QE9Urw8Y9edc",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "Be4FLnmg3JFUh9xoD5etJ2wCfGhyYwPerdiuKRpbPgS6",
+    "totalSolBought": 1.477581918,
+    "totalSolSold": 0.194542701,
+    "tokens": 746901,
+    "lastTradeHash": "DmUZzJHUKAqaEsjUWgijV4vcvCuL8bZAc12rab3zDFdD7Xh27Qjd5jQTHbq9AUba6QMiVqbCmzz4oGW3qFQcaHV",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "EkYLmhzyTB3sHTFffLPF3uvSWt1yTj9v847Hv3t76Q76",
+    "totalSolBought": 0.206984806,
+    "totalSolSold": 0.027421926,
+    "tokens": 0,
+    "lastTradeHash": "4pKzRnqhfcSA6dBM1FVbehbNW14NwQoNfKRUYL2UvrKnuyTrD3BcJi4DB4h8FP6xag5caUA9Gbn6Pj6YKEbJMzBG",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "5TPfX5mzxv6Rj69MfKgpwAWP78VQcWT946nwp7Znrw3L",
+    "totalSolBought": 0.010054935,
+    "totalSolSold": 0,
+    "tokens": 45732089001,
+    "lastTradeHash": "3s1GXupqukzVHwFEtg8Yeb6CZDyPmBV5JkXiv4LEQ6cU3yJC9fNzVNh1mCRukSNCJnqb8oYn2SHxFVWerVTPVSb",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "84QhTjYQVao5KkuTn51r3EopSjmJXGLYMQqJDbNcsadY",
+    "totalSolBought": 1.00834154,
+    "totalSolSold": 0.132977426,
+    "tokens": 8380,
+    "lastTradeHash": "5yfAiXquHVRAYM3UwrMERP1W9MPYUF1dJAwiUH7RmaN5MnDjXz41CErEFswv4spxaMAymW3cGnQABWkaoBedmvSe",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "HsPN2xv7D5rUfEcudrV4L1D5yYGcArdjvFPdwXy5euYr",
+    "totalSolBought": 3.029800158,
+    "totalSolSold": 0.384875988,
+    "tokens": 446791,
+    "lastTradeHash": "4pHXpPGTMUojwMyooboyDMUZrEYEXEeKQy8fNFwo5y3AAyXc7r5RqwpsgdP46sjFcEtet8hspt6s6hdGmGEMwEf3",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "t9RpZAwNx2ysx9PtmhoSZRE4D6qg95uTG5n38z5454R",
+    "totalSolBought": 0.0490099,
+    "totalSolSold": 0.048852768,
+    "tokens": 0,
+    "lastTradeHash": "3QmAin5UcRVK1KEzuz1JH2hshSCGB98p76VgmiATxWHKg9XesRBZze7vPnCg8bk8HHfpRS69iC6wB9axNEm3fuZf",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "HoFG3gk4odHSfgyJMZpS2nqD8KFLFRTYHbRiiD9cErkd",
+    "totalSolBought": 0.100932769,
+    "totalSolSold": 0.012660205,
+    "tokens": 0,
+    "lastTradeHash": "3t1AevbRmQjcF2GBrVJC5d7oyzVNPw39KmqY5ysVV8h6LfQG3kt6cZK63pr4fjDH5DzxNH1VY49FEQYztou7TUdW",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "JAWKwGc1KMBV3264Tmn7zfkSHhRvcdCwCMFWVjhh2Sjh",
+    "totalSolBought": 1.107121501,
+    "totalSolSold": 0.132382413,
+    "tokens": 90382,
+    "lastTradeHash": "4aYvZz3B3xFVuwmTMCBAu4EiRuwzEJrdzKkMRdNqLHdE9zfiL6k6EJEYwvPmfRbGJ3kReZiUcR1on6boDo92aSyY",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "CqBDr3yaxNvQuHeZZdo1VvRvDUcWWN5JZtYJ1qrXZHud",
+    "totalSolBought": 0.049798222,
+    "totalSolSold": 0,
+    "tokens": 196836164014,
+    "lastTradeHash": "2qXL6tyN8s8gVbNajpWFYoCaZve4hkDRqUJkSt6wzwpZTyjEyacY9npz2krsPKRraqQYKGb4EiBAHUMWxoDLYy8J",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "9jN9KwgYTLmWix655jdsuDb3SxGdNQtjgXNPyF4RJEzZ",
+    "totalSolBought": 0.100120502,
+    "totalSolSold": 0,
+    "tokens": 384022019194,
+    "lastTradeHash": "2hz5UV5v1mkU39RpJgbjEvJAE9v1ZCmPV3eyaoc1wJALZE9e85eMoQBSssEB35pcXt9r7ZQm1ds2iN9uX8JZpHA8",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "7cNYmaue3LKLoETjwMTwAdt3Pitfw6QRuMH3epSvMgr7",
+    "totalSolBought": 0.490099008,
+    "totalSolSold": 0.051276197,
+    "tokens": 0,
+    "lastTradeHash": "5FRaz1wJ3b4ggdQXxgeGg1mTW39t6LLsjEPcxhAarerEFDvz4Lv3bP6UeSEb8hgB5Tw6HoMiVWW5hgwDwr6FsNEE",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "BYBeVAYwxbPX5b6bhBsJoHydC5bYaioEw3gzXo13bd69",
+    "totalSolBought": 0.050136909,
+    "totalSolSold": 0.026256411,
+    "tokens": 0,
+    "lastTradeHash": "4kweiJzV5R1vuR6N5x8dCwUxgxHtDYAQ1dmhgab2YZfPq7g69NoSfPaV6v1f71tTFULfbYHrtPwtvU3cSmuvhxts",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "4oUgikEAqtSFnwDeQoGGiZ42AJBX7dVZCgBvrqGt2Vpa",
+    "totalSolBought": 2.521559407,
+    "totalSolSold": 0.260285351,
+    "tokens": 122429,
+    "lastTradeHash": "2qbop8dc28TmfYHM3jRkGC4NCj1X2U1YuTypVYTLYpCtpScYrus32wj1c5Fbucc8P8C7JuaCdBwoJshdYwtFuVPx",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "GoG6HMXgAxKSBNUkxFKQUKqW8nxDkpdMKkafK3S5FKCi",
+    "totalSolBought": 0.54199253,
+    "totalSolSold": 0.063422436,
+    "tokens": 0,
+    "lastTradeHash": "5or15kS5saWW8nu2nU7XBUcqQacXUKNqJS7z5YHeR4t9vqibizVxtKd42NZDWwxN2b2vQXJvSaxXfmJzRLE9MZ9w",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "8DcS4Up888fVh1AtZommGo2r5rFay5s9xhwFWS4kJb5G",
+    "totalSolBought": 1.002471422,
+    "totalSolSold": 0.101184587,
+    "tokens": 872202,
+    "lastTradeHash": "5gqzyBKG3i7C9UPNd7Axw2khrFQqyiQ3mwnhavNy5RaiAANW8vgJNTha1jLzU1h8XNvbrobZBBnpyP86aCLoGCrH",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "L88GCxQ7qApuffCJvGsuAZyJkLDqgN8ZBoaQmfqjHU9",
+    "totalSolBought": 0.0495,
+    "totalSolSold": 0,
+    "tokens": 161947082009,
+    "lastTradeHash": "5SnFBfRyzK6PLi4goq82gGMkLLHNqPkV54bLqL4gARVFgHGAGprk3fngzdCZMfMF2fYZvHTt7CpD42wkTw12YKr3",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "By6UiqM1QuwMMZT8vruHiDEdqfWciejLFYWXgmCN7wgg",
+    "totalSolBought": 0.040270873,
+    "totalSolSold": 0,
+    "tokens": 130748326449,
+    "lastTradeHash": "5DqTsFvu8br4bjUFc8Jf8DiK2DR2mjRx2et5jSMyn4orWHSJj1ZBkJQApE9RbPDsV54rTPyJkRsBGCAK6gqeRzHT",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "4UVcKSVJDjRN1E6DCUAvNmv94QUBTtgm9574D8NUyjyq",
+    "totalSolBought": 0.059372191,
+    "totalSolSold": 0,
+    "tokens": 194190876479,
+    "lastTradeHash": "3c8hPZFLV6cra7PyiinMh86W2K3EFBTYF2xPqw8nsn6syBEKMfQHbJvSbkwukeww79LFzPu3JjAV7YyhfLKmtCSV",
+    "tag": "HOLDER",
+    "hasBought": true,
+    "hasSold": false
+  },
+  {
+    "address": "BV8mHibcVCMS6ZG7XHZ5LApJELLZjoxEWRBAMa998rkA",
+    "totalSolBought": 0,
+    "totalSolSold": 65.34758129,
+    "tokens": -625513283401617,
+    "lastTradeHash": "31KE8vXB8mA7pjybWpDL9ZJu3cWHAZqMgS2M2DrJQqPjYNLp6C5tipa4m33XdR9k6XUBdQd9bD1gtVZbwgXyQBv7",
+    "tag": "TRANSFER",
+    "hasBought": false,
+    "hasSold": true
+  },
+  {
+    "address": "27io2PPQGGVjXikU5MeJazm4K195uiWUBbhoU8CXDjta",
+    "totalSolBought": 0.028709834,
+    "totalSolSold": 0.022845793,
+    "tokens": 102921,
+    "lastTradeHash": "4H3Z8rRuVLzT89yfqsLvPL5oXZMkCxRpMcgjaF423r7Vqu2CpkTB34WfS69qnCvCndVXWyDZZG3XuzabyfzroLge",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  },
+  {
+    "address": "AKzeCjPZNcPxV5rz7vF6WQM7E3Q5pBCQDksEd6QkPfDv",
+    "totalSolBought": 0.048266766,
+    "totalSolSold": 0.040714586,
+    "tokens": 252814,
+    "lastTradeHash": "N6rx7oaY67q3McnwrzDpugiNMAyey9ajMyapXX4tV8Ae4zpTYzGRbvb2XGjoTmGptq55wrwRtBxXrNEGuzAqbPM",
+    "tag": "DEGEN",
+    "hasBought": true,
+    "hasSold": true
+  }
+]

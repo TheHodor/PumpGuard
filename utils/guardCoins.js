@@ -262,6 +262,7 @@ async function parseTokenTrades(_CA) {
     const allTrades = await getAllTradesPump(_CA);
     let snipers = []
     const sniperSlot = allTrades[0].slot
+    const devWallet = _theCoinInDB.dev
     if (allTrades && allTrades.length > 0) {
         for (const trade of allTrades) {
             const userAddress = trade.user;
@@ -284,6 +285,9 @@ async function parseTokenTrades(_CA) {
 
             if (isBuy) {
                 // find snipers
+                if(trade.user == devWallet) {
+                    holder.tag = DEV
+                }
                 if (trade.slot == sniperSlot) {
                     holder.tag = SNIPER
                 }
@@ -291,6 +295,12 @@ async function parseTokenTrades(_CA) {
                 holder.totalSolBought += trade.sol_amount / SOL_DENOM;
                 holder.hasBought = true;
             } else {
+                if(trade.user == devWallet) {
+                    holder.tag = DEV
+                }
+                if (trade.slot == sniperSlot) {
+                    holder.tag = SNIPER
+                }
                 holder.tokens -= trade.token_amount;
                 holder.totalSolSold += trade.sol_amount / SOL_DENOM;
                 holder.hasSold = true;
@@ -298,11 +308,7 @@ async function parseTokenTrades(_CA) {
         }
 
         holders.forEach(holder => {
-            if(holder.tag == SNIPER) {
-                console.log(`SNIPER address: ${holder.address} - Bought: ${holder.totalSolBought} - Sold: ${holder.totalSolSold}`)
-            }
             if (holder.hasSold && !holder.hasBought) {
-                console.log(`TRANSFER address: ${holder.address} - Bought: ${holder.totalSolBought} - Sold: ${holder.totalSolSold}`)
                 holder.tag = TRANSFER;
             } else if (holder.hasBought && !holder.hasSold) {
                 holder.tag = HOLDER;
@@ -310,9 +316,27 @@ async function parseTokenTrades(_CA) {
                 holder.tag = DEGEN;
             }
         });
+        const dev = holders.filter(holder => holder.tag == DEV)
+        console.log('dev: ', dev)
 
-        const filteredHolders = holders.filter((holder) => holder.tag !== DEGEN)
-        console.log('All filtered holders: ', filteredHolders)
+        const sniperWallets = holders.filter(holder => holder.tag == SNIPER)
+        console.log('Snipers: ', sniperWallets)
+
+        const transferWallets = holders.filter(holder => holder.tag == TRANSFER)
+        console.log('transfers: ', transferWallets)
+
+        // Convert holders array to JSON string
+        const data = JSON.stringify(holders, null, 2);
+        var fs = require('fs');
+
+        // Write the JSON string to a file
+        fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
+            if (err) {
+                console.error('Error writing file:', err);
+            } else {
+                console.log('File has been saved.');
+            }
+        });
         // const res = await _Collections.GuardedCoins.updateOne({
         //     ca: _CA
         // }, {

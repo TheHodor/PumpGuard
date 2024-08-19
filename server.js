@@ -136,20 +136,31 @@ app.post('/get_all_coins', async (req, res) => {
     })
 });
 
-app.get('/parse_trades', async ( req, res) => {
-    const ca = 'FnpVAGTn1Tr4hEDzeERs8KGRV4FMjU3AdbAvU6iApump'
-    await parseTokenTrades(ca)
-})
+app.get('/parse_trades', async (req, res) => {
+    const ca = req.query.ca;
+
+    if (!ca) {
+        return res.status(400).send('Contract address (ca) is required.');
+    }
+
+    try {
+        await parseTokenTrades(ca);
+        res.send(`Trades parsed for contract address: ${ca}`);
+    } catch (error) {
+        console.error('Error parsing token trades:', error);
+        res.status(500).send('An error occurred while parsing token trades.');
+    }
+});
 
 // user request to look up a coin and check if it's guarded or not + it's data for front end
-app.post('/is_coin_guarded', async (req, res) => {
-    const data = await isCoinGuarded(req.body.ca)
+app.get('/is_coin_guarded', async (req, res) => {
+    const data = await isCoinGuarded(req.query.ca)
     res.send(data)
 });
 
 // user request to get lock address for a coin
-app.post('/get_coin_lock_address', async (req, res) => {
-    const _addressAndData = await getCoinLockAddress(req.body.ca)
+app.get('/get_coin_lock_address', async (req, res) => {
+    const _addressAndData = await getCoinLockAddress(req.query.ca)
     res.send(_addressAndData)
 });
 
