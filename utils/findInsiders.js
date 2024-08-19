@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const INSIDER_HARD_CAP = 50
+const INSIDER_HARD_CAP = 100
 const RPC_helius = "https://mainnet.helius-rpc.com/?api-key=0923441f-c558-4e0b-8b67-9294161fdfb3"
 
 
@@ -74,7 +74,7 @@ async function parseAndProcessTransactions(trxn) {
 
             const timeDifference = currentTime - date;
             const hoursDifference = timeDifference / (1000 * 60 * 60);
-            const isFreshy = hoursDifference < 48;
+            const isFreshy = hoursDifference < 24;
 
             console.log('Transaction Date:', date.toUTCString());
             console.log('Funding wallet:', fundingWallet);
@@ -94,7 +94,10 @@ async function parseAndProcessTransactions(trxn) {
     return validResults;
 }
 
-const walletList = ['126vudNs2ezwk5EQ8XEXAd2U25crGQ86AWS1mcVYN9fU']
+const walletList = ['7a9bjyVUopiRkQkdePSv1GGqkS5hAvcrEJNZGLSpvjNE', // not insider
+    'D18pTvQre5FHvZp3eNFZQT9wyMunSDMUymhSJdq91GgF' //  insider
+]
+
 // pass holders into this
 async function findSuspiciousWallets(walletList) {
     let suspiousWallets = []
@@ -126,6 +129,7 @@ async function findSuspiciousWallets(walletList) {
 // fetchSignatures('GiLX2Dd8LQYYbgaBLrenG5jTpuno86iKiX8kXKCCn4Qa')
 
 module.exports = {
+    parseAndProcessTransactions,
     findSuspiciousWallets,
     fetchSignatures
 }
