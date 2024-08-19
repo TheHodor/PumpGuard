@@ -9,7 +9,8 @@ const {
     connection_helius,
 } = require("../config.js");
 const {
-    _Collections
+    _Collections,
+    _DBs
 } = require('./DB_setup.js');
 const {
     TG_alertNewGuard
@@ -31,7 +32,8 @@ const {
 } = require('./apiFetch.js')
 
 const {
-    fetchSignatures
+    fetchSignatures,
+    parseAndProcessTransactions
 } = require('./findInsiders.js')
 var fs = require('fs');
 
@@ -47,6 +49,7 @@ const DEGEN = 'DEGEN'
 const TRANSFER = 'TRANSFER'
 const HOLDER = 'HOLDER'
 
+const totalSupply = 1e9
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
 // So by user's request this function checks if a lock address has been created for a coin or not. 
@@ -261,7 +264,7 @@ async function parseTokenTrades(_CA) {
     const sniperSlot = allTrades[0].slot
     const devWallet = _theCoin.creator
     const _tokenPriceSol = _theCoin.market_cap / 1e9
-    
+
     let holders = {}
 
     for (var i = 0; i < allTrades.length; i++) {
@@ -277,26 +280,21 @@ async function parseTokenTrades(_CA) {
             TXs: [],
             tag: '',
             hasBought: false,
-            hasSold: false
+            hasSold: false,
+            isInsider: void 0
         }
 
         if (allTrades[i].is_buy) {
             // find snipers
-            if (trade.user == devWallet) {
-                holders[trade.user].tag = DEV
-            }
             if (trade.slot == sniperSlot) {
-                holders[trade.user].tag = SNIPER
+                holders[trade.user].tag = "SNIPER"
             }
             holders[trade.user].tokens += trade.token_amount;
             holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
             holders[trade.user].hasBought = true;
         } else {
-            if (trade.user == devWallet) {
-                holders[trade.user].tag = DEV
-            }
             if (trade.slot == sniperSlot) {
-                holders[trade.user].tag = SNIPER
+                holders[trade.user].tag = "SNIPER"
             }
             holders[trade.user].tokens -= trade.token_amount;
             holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
@@ -315,28 +313,70 @@ async function parseTokenTrades(_CA) {
             holders[addr].tag = DEGEN;
         }
 
-        holders[addr].worthOfTokensSol =  (holders[addr].tokens / 1e6) * _tokenPriceSol
-        holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr].worthOfTokensSol
+        if (holders[addr].address == devWallet) holders[addr].tag = "DEV"
+
+        holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
+        holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
+            .worthOfTokensSol
     }
 
-
     // Convert the object to an array of values (objects)
-    const holdersArray = Object.values(holders);
+    let holdersArray = Object.values(holders);
 
-    // Sort the array based on the hasBought property
-    const sortedHolders = holdersArray.sort((a, b) => b.PnL - a.PnL);
+    // Sort the array based on PnL (bigger losers first)
+    const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
 
-    console.log(sortedHolders)
+    const maxInsiderCheck = 20
+    let insidersChecked = 0
+    // check if top pnl losers are insiders or not
+    for (const addr in holders) {
+        if (insidersChecked >= maxInsiderCheck) continue
 
-    const data = JSON.stringify(holders, null, 2);
-    // Write the JSON string to a file
-    fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
-        if (err) {
-            console.error('Error writing file:', err);
+        const walletData = await fetchSignatures(holders[addr].address);
+        if (walletData && walletData[1] !== undefined && walletData[1] < 25) {
+            // definitely dev/insider
+            let tokenHolder = {
+                address: holders[addr].address,
+                amount: holders[addr].tokens / 1e6,
+                supplyOwned: ((holders[addr].tokens / 1e6 / totalSupply) * 100).toFixed(2),
+                tag: 'INSIDER',
+            }
+
+            holders[addr].isInsider = true
         } else {
-            console.log('File has been saved.');
+            holders[addr].isInsider = false
         }
-    });
+
+        insidersChecked++
+    }
+
+    console.log("-- Finished fetching data for coin: ", _CA)
+
+    const collection = _DBs.Holders.collection(_CA)
+    const collectionExists = await collection.estimatedDocumentCount() > 0
+    if (!collectionExists) {
+        // If the collection doesn't exist, create it
+        await _DBs.Holders.createCollection(_CA)
+    } else {
+        // If the collection does exist, clear all the old doucments (holders) and enter new ones
+        await collection.deleteMany({});
+    }
+
+    holdersArray = Object.values(holders);
+    const result = await collection.insertMany(holdersArray);
+
+
+
+    // const data = JSON.stringify(holders, null, 2);
+    // // Write the JSON string to a file
+    // fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
+    //     if (err) {
+    //         console.error('Error writing file:', err);
+    //     } else {
+    //         console.log('File has been saved.');
+    //     }
+    // });
+    // console.log(sortedHolders)
 }
 
 const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'
