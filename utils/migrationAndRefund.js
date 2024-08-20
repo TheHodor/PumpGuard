@@ -5,7 +5,6 @@ const {
 } = require("./helpers");
 
 
-
 async function watchGuardedCoinsForMigration(intervalInSec) {
     setInterval(async () => {
         doCheck()
@@ -71,9 +70,7 @@ async function hasCoinMigrated(_CA) {
     }
 }
 
-
-
 module.exports = {
     watchGuardedCoinsForMigration,
-    hasCoinMigrated,
+    hasCoinMigrated
 }

@@ -1,5 +1,22 @@
-const { getCoinTradeVol, getCoinHolders } = require("./apiFetch")
-const { _Collections } = require("./DB_setup")
+const {
+    getCoinTradeVol,
+    getCoinHolders
+} = require("./apiFetch")
+const {
+    _Collections
+} = require("./DB_setup")
+
+let holdersCount = {
+    // "00000000..0000": {
+    //     count: 100,
+    //     lastFetched: Date.now()
+    // }
+}
+let volume1h = {}
+
+const HOLDERS_UPDATERATE_MIN = 10
+const VOLUME_UPDATERATE_MIN = 20
+
 
 async function getTopProgressCoins() {
     let allTopCoins = []
@@ -10,7 +27,8 @@ async function getTopProgressCoins() {
 
     for (let i = 0; i < howManyTimes; i++) {
         let offset = i * 50
-        let _URL = `https://frontend-api.pump.fun/coins?offset=${offset}&limit=50&sort=last_trade_timestamp&order=DESC&includeNsfw=true&complete=false`
+        let _URL =
+            `https://frontend-api.pump.fun/coins?offset=${offset}&limit=50&sort=last_trade_timestamp&order=DESC&includeNsfw=true&complete=false`
 
         try {
             let response = await fetch(_URL)
@@ -25,24 +43,13 @@ async function getTopProgressCoins() {
     // If you want to sort allTopCoins once more globally by usd_market_cap
     allTopCoins.sort((a, b) => b.usd_market_cap - a.usd_market_cap)
 
-
-    //
-    //
-    // only fetching holders for the top #1 coin for the sake of less api cost for test now
-    const _tokenHolders = await getCoinHolders(allTopCoins[0].mint)
-    allTopCoins[0].holders = _tokenHolders.holderCount
-    allTopCoins = allTopCoins.slice(0, 20)
-
-    // getCoinTradeVol()
-    //
-    //
-
+    allTopCoins = await setHolders(allTopCoins)
+    allTopCoins = await setVolume(allTopCoins)
     return allTopCoins
 }
 
 
 async function getTopGuardedCoins() {
-
     let topGuarded = []
     const _topGuarded = await _Collections.GuardedCoins.find({}).sort({
         balance: -1
@@ -66,6 +73,8 @@ async function getTopGuardedCoins() {
         await delay(2000);
     }
 
+    topGuarded = await setHolders(topGuarded)
+    topGuarded = await setVolume(topGuarded)
     return topGuarded.slice(0, 20)
 }
 
@@ -94,8 +103,71 @@ async function getRecentlyGuardedCoins() {
         await delay(2000);
     }
 
+    recentlyGuarded = await setHolders(recentlyGuarded)
+    recentlyGuarded = await setVolume(recentlyGuarded)
     return recentlyGuarded.slice(0, 20)
 }
+
+
+async function setHolders(coins) {
+    for (var i = 0; i < coins.length; i++) {
+        // find coin holders
+        const __ca = coins[i].mint
+        const keyExists = Object.keys(holdersCount).includes(__ca)
+        let _tokenHolders
+
+        // if holders count already exists and it's not too old
+        if (keyExists && holdersCount[__ca].lastFetched < Date.now() - 1000 * HOLDERS_UPDATERATE_MIN) {
+            _tokenHolders = holdersCount[__ca].count
+        } else {
+            _tokenHolders = await getCoinHolders(__ca)
+            if (!_tokenHolders) continue
+
+            holdersCount[__ca] = {
+                count: _tokenHolders,
+                lastFetched: Date.now()
+            }
+        }
+
+        coins[i].holders = _tokenHolders
+    }
+
+    return coins
+}
+let _____calc = false
+async function setVolume(coins) {return 0
+    for (var i = 0; i < coins.length; i++) {if (_____calc) block
+        // find coin holders
+        const __ca = coins[i].mint
+        const keyExists = Object.keys(volume1h).includes(__ca)
+        let _volume1h
+
+        // if volume amount already exists and it's not too old
+        if (keyExists && volume1h[__ca].lastFetched < Date.now() - 1000 * VOLUME_UPDATERATE_MIN) {
+            _volume1h = volume1h[__ca].amount
+        } else {
+            const coinTrades = await getAllTradesPump(__ca)
+            console.log(__ca, "__ca", coinTrades)
+            _____calc = true
+            if (!coinTrades) continue
+
+            volume1h[__ca] = {
+                amount: _volume1h,
+                lastFetched: Date.now()
+            }
+        }
+
+        coins[i].volume1h = _volume1h
+    }
+
+    return coins
+}
+
+
+
+
+
+
 
 async function getAllTradesPump(ca) {
     let offset = 0;
@@ -103,14 +175,12 @@ async function getAllTradesPump(ca) {
     try {
         while (true) {
             const response = await fetch(
-                `https://frontend-api.pump.fun/trades/${ca}?limit=200&offset=${offset}`,
-                {
+                `https://frontend-api.pump.fun/trades/${ca}?limit=200&offset=${offset}`, {
                     headers: {
                         accept: '*/*',
                         'accept-language': 'en-US,en;q=0.8',
                         'if-none-match': 'W/"12266-/HJ/xj010RRztcqVlXCQtyB5KTs"',
-                        'sec-ch-ua':
-                            '"Brave";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+                        'sec-ch-ua': '"Brave";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
                         'sec-ch-ua-mobile': '?0',
                         'sec-ch-ua-platform': '"Windows"',
                         'sec-fetch-dest': 'empty',
@@ -134,8 +204,6 @@ async function getAllTradesPump(ca) {
             }
         }
         // got back all trades
-        console.log('Total trades gotten back: ', allTrades.length)
-
         const orderedTrades = allTrades.sort((a, b) => {
             if (a.slot !== b.slot) {
                 return a.slot - b.slot;
@@ -145,6 +213,7 @@ async function getAllTradesPump(ca) {
                 return a.tx_index - b.tx_index;
             }
         });
+        console.log(`Total trades for ca ${ca} - ${orderedTrades.length}`)
         // console.log('First trade: ', orderedTrades[0])
         // console.log('2nd trade: ', orderedTrades[1])
 
@@ -158,7 +227,7 @@ async function getAllTradesPump(ca) {
 }
 
 
-getAllTradesPump('CCia7XcZSBKuzWyAZvtpYryKgRc3sSj7QLaDuRKMtx8j');
+// getAllTradesPump('FnpVAGTn1Tr4hEDzeERs8KGRV4FMjU3AdbAvU6iApump');
 
 
 

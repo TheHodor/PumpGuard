@@ -9,7 +9,8 @@ const {
     connection_helius,
 } = require("../config.js");
 const {
-    _Collections
+    _Collections,
+    _DBs
 } = require('./DB_setup.js');
 const {
     TG_alertNewGuard
@@ -23,11 +24,6 @@ const {
 } = require('./helpers.js');
 
 const {
-    encrypt,
-    decrypt
-} = require('./encrypt.js')
-
-const {
     getAllTradesPump
 } = require('./pumpFunFetch.js')
 
@@ -35,16 +31,22 @@ const {
     getCoinHolders
 } = require('./apiFetch.js')
 
+const {
+    fetchSignatures,
+    parseAndProcessTransactions
+} = require('./findInsiders.js')
+
+const { initializeKeypair } = require('./transferSol.js')
+
 // hardcoded values
 const PLATFORM_FEE = 0.2
 const LONETRADER_WALLET = '123123'
 const LYMN_WALLET = '2131231'
 
-const INSIDER = 'INSIDER'
-const SNIPER = 'SNIPER'
-const DEV = 'DEV'
-const DEGEN = 'DEGEN'
+const SUPPLY_RUG_THRESHOLD = 10
 
+
+const totalSupply = 1e9
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
 // So by user's request this function checks if a lock address has been created for a coin or not. 
@@ -82,6 +84,7 @@ async function getCoinLockAddress(_CA) {
             ca: _CA,
             symbol: _coinData.symbol,
             dev: _coinData.creator,
+            totalSupply: _coinData.total_supply,
             balance: 0,
             lockAddress: _walletAddress,
             lockPVK: encryptedKey,
@@ -96,7 +99,7 @@ async function getCoinLockAddress(_CA) {
                 lockAddress: _walletAddress,
                 symbol: _coinData.symbol,
                 balance: 0,
-                stauts: 'unguarded',
+                status: 'unguarded',
                 dev: _coinData.creator,
             }
         }
@@ -130,9 +133,9 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
-    // Get holders now
-    const allHolders = await getTokenHolders(_CA)
     if (newlyAddedBalance > 0) {
+        // Get holders now
+        // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
         const res = await _Collections.GuardedCoins.updateOne({
             ca: _CA
         }, {
@@ -144,7 +147,7 @@ async function updateLockAddressBalance(_CA) {
             }
         })
 
-        console.log(res)
+        console.log('updateLockAddressBalance res: ', res)
         TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
 
     }
@@ -153,37 +156,44 @@ async function updateLockAddressBalance(_CA) {
 }
 
 
-async function getTokenHolders(_CA) {
-    let tokenHolders = []
-    const tokenData = await getCoinHolders(_CA)
-    // find signatures for all holders
-    const holders = tokenData.allHolders
-    const currentHoldersCount = tokenData.allHolders.length
-    if (holders && currentHoldersCount > 0) {
-        holders.map(async (holder) => {
-            const walletData = await fetchSignatures(holder.owner)
-            let tokenHolder
-            // Need to figure out later on sniper
-            if (walletData[1] < 25) {
-                // definitely dev/insider
-                tokenHolder = {
-                    address: holder.owner,
-                    amount: holder.amount,
-                    tag: INSIDER
+
+async function getTokenHolders(_CA, totalSupply) {
+    try {
+
+        let tokenHolders = []
+        const tokenData = await getCoinHolders(_CA)
+        // find signatures for all holders
+        const holders = tokenData.allHolders
+        const currentHoldersCount = tokenData.allHolders.length
+        if (holders && currentHoldersCount > 0) {
+            const holderPromises = holders.map(async (holder) => {
+                const walletData = await fetchSignatures(holder.owner);
+                let tokenHolder;
+
+                if (walletData && walletData[1] !== undefined && walletData[1] < 25) {
+                    // definitely dev/insider
+                    tokenHolder = {
+                        address: holder.owner,
+                        amount: holder.amount,
+                        supplyOwned: ((holder.amount / totalSupply) * 100).toFixed(2),
+                        tag: 'INSIDER',
+                    };
+                    return tokenHolder;
+                } else {
+                    // regular holder - ignore
+                    return null
                 }
-                tokenHolders.push(tokenHolder)
-            } else {
-                // regular holder - still need to tag em
-                tokenHolder = {
-                    address: holder.owner,
-                    amount: holder.amount,
-                    TAG: DEGEN
-                }
-                tokenHolders.push(tokenHolder)
-            }
-        })
+            });
+
+            // Wait for all promises to resolve
+            tokenHolders = await Promise.all(holderPromises);
+            tokenHolders = tokenHolders.filter(holder => holder !== null && holder !== undefined);
+
+        }
+        return tokenHolders
+    } catch (e) {
+        console.log('Outer error block: ', e)
     }
-    return tokenHolders
 }
 
 
@@ -242,96 +252,345 @@ async function fetchCoinData(_CA) {
     return _data
 }
 
+async function verifyIfRugged(_CA) {
+    try {
+        // const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        //     ca: _CA
+        // })
 
-async function parseTokenTrades(_CA) {
-    const SOL_DENOM = 1000000000;
-    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-        ca: _CA
-    });
+        // if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
+        //     console.log("The coin was not found in DB")
+        //     return
+        // }        
+        // const totalSupply = _theCoinInDB.totalSupply
+        const holders = _DBs.Holders.collection(_CA)
 
-    // Initialize holders object
-    let holders = _theCoinInDB && _theCoinInDB.holders ? _theCoinInDB.holders : {};
+        const traders = await holders.find({}).toArray();
+        let totalTokensBought = 0
+        let totalSolBought = 0
+        let totalSolSold = 0
+        let totalTokensSold = 0
+        const totalSupply = 1000000000000000
+        let refundWallets = [];
 
-    // Fetch all trades related to the CA
-    const allTrades = await getAllTradesPump(_CA);
-
-    if (allTrades && allTrades.length > 0) {
-        // Parse all trades starting from beginning
-        for (let i = 0; i < allTrades.length; i++) {
-            const trade = allTrades[i];
-            const userAddress = trade.user;
-
-            // Initialize or update holder data
-            if (!holders[userAddress]) {
-                holders[userAddress] = {
-                    address: userAddress,
-                    sol_amount: 0,
-                    tokens: 0,
-                    lastTradeHash: trade.signature,
-                    lastTradeType: '',
-                    lastTradeTime: new Date(trade.timestamp * 1000), // Convert timestamp to Date
-                    tag: '',
-                    hasBought: false,
-                    hasSold: false
-                };
+        if (traders.length > 0) {
+            for (let i = 0; i < traders.length; i++) {
+                const currentUser = traders[i]
+                // Add up all insider data
+                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'INSIDER' || currentUser.tag == 'DEV' || currentUser.tag == 'TRANSFER') {
+                    totalTokensBought += currentUser.totalTokensBought
+                    totalSolBought += currentUser.totalSolBought
+                    totalSolSold += currentUser.totalSolSold
+                    totalTokensSold += currentUser.totalTokensSold
+                }
+                else {
+                    refundWallets.push(currentUser);
+                }
             }
 
-            // Update based on the trade type
-            if (trade.is_buy) {
-                holders[userAddress].tokens += trade.token_amount;
-                holders[userAddress].sol_amount -= trade.sol_amount / SOL_DENOM;
-                holders[userAddress].lastTradeType = 'BUY';
-                holders[userAddress].hasBought = true;
-            } else {
-                holders[userAddress].tokens -= trade.token_amount;
-                holders[userAddress].sol_amount += trade.sol_amount / SOL_DENOM;
-                holders[userAddress].lastTradeType = 'SELL';
-                holders[userAddress].hasSold = true;
-            }
+            refundWallets.sort((a, b) => {
+                if (isNaN(a.PnL) && !isNaN(b.PnL)) return 1;
+                if (!isNaN(a.PnL) && isNaN(b.PnL)) return -1;
+                if (!isNaN(a.PnL) && !isNaN(b.PnL)) return a.PnL - b.PnL;
+                // If PnL is NaN, sort by totalSolBought
+                return b.totalSolBought - a.totalSolBought;
+            });
 
-            // Update last trade time and hash
-            holders[userAddress].lastTradeTime = new Date(trade.timestamp * 1000); // Convert timestamp to Date
-            holders[userAddress].lastTradeHash = trade.signature;
+            const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
+            const totalDevTeamSupplySold = Math.abs((totalTokensSold / totalSupply) * 100).toFixed(2)
+
+            console.log('Total Team Supply Owned: ', totalDevTeamSupplyOwned)
+            console.log('Total Team Supply Sold: ', totalDevTeamSupplySold)
+            console.log('Total Team Sol bought: ', totalSolBought.toFixed(2))
+            console.log('Total Team Sol Sold: ', totalSolSold.toFixed(2))
+            // RUG Condition
+            if (totalDevTeamSupplySold > SUPPLY_RUG_THRESHOLD) {
+                console.log(`${_CA} was rugged. Processing refunds....`)
+                // Refund other wallets
+                const refunded = await refundHolders(refundWallets, _CA)
+                return 'RUGGED'
+            }
+            else 
+            return 'Not Rugged'
+
+        } else {
+            console.log('No data found for the given contract address:', _CA);
         }
-
-        // Apply tagging logic after processing all trades
-        for (const address in holders) {
-            const holder = holders[address];
-
-            if (holder.hasSold && !holder.hasBought) {
-                holder.tag = 'Transferred/Insider Wallet';
-            } else if (holder.hasBought && !holder.hasSold) {
-                holder.tag = 'Buyer';
-            } else if (holder.hasBought && holder.hasSold) {
-                holder.tag = 'Active Trader';
-            }
-        }
-
-        // Store the holders data with tags back in the database
-        await _Collections.GuardedCoins.updateOne({
-            ca: _CA
-        }, {
-            $set: {
-                holders: holders
-            }
-        }, {
-            upsert: true
-        });
-
-        console.log("Holders data with tags updated and stored in the database.");
-    } else {
-        console.log("No new trades found for the given CA.");
+    } catch (error) {
+        console.error('Error fetching data from DB:', error);
     }
 }
 
 
+async function parseTokenTrades(_CA) {
+    try {
+        const _theCoin = await fetchCoinData(_CA)
+        const allTrades = await getAllTradesPump(_CA)
+
+        const sniperSlot = allTrades[0].slot
+        const devWallet = _theCoin.creator
+        const _tokenPriceSol = _theCoin.market_cap / 1e9
+
+        let holders = {}
+
+        for (var i = 0; i < allTrades.length; i++) {
+            const trade = allTrades[i]
+
+            if (!holders[allTrades[i].user])
+                holders[allTrades[i].user] = {
+                    address: allTrades[i].user,
+                    totalSolBought: 0,
+                    totalSolSold: 0,
+                    PnL: 0,
+                    totalTokensBought: 0,
+                    totalTokensSold: 0,
+                    worthOfTokensSol: 0,
+                    TXs: [],
+                    tag: '',
+                    hasBought: false,
+                    hasSold: false,
+                    isInsider: void 0
+                }
+
+            if (allTrades[i].is_buy) {
+                // find snipers
+                if (trade.slot == sniperSlot) {
+                    console.log('Sniper Bought: ', trade.user)
+                    holders[trade.user].tag = 'SNIPER'
+                }
+                holders[trade.user].totalTokensBought += trade.token_amount;
+                holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
+                holders[trade.user].hasBought = true;
+            } else {
+                if (trade.slot == sniperSlot) {
+                    console.log('Sniper Sold: ', trade.user)
+
+                    holders[trade.user].tag = 'SNIPER'
+                }
+                holders[trade.user].totalTokensSold -= trade.token_amount;
+                holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
+                holders[trade.user].hasSold = true;
+            }
+
+            holders[trade.user].TXs.push(allTrades[i].signature)
+        }
+
+        for (const addr in holders) {
+            if (holders[addr].hasSold && !holders[addr].hasBought) {
+                if (holders[addr].tag == 'SNIPER') {
+                    continue
+                }
+                holders[addr].tag = 'TRANSFER';
+                console.log('Found Transfer: ', holders[addr].address)
+
+            } else if (holders[addr].hasBought && !holders[addr].hasSold) {
+                if (holders[addr].tag == 'SNIPER') {
+                    continue
+                }
+                holders[addr].tag = 'HOLDER';
+            } else if (holders[addr].hasBought && holders[addr].hasSold) {
+                if (holders[addr].tag == 'SNIPER') {
+                    continue
+                }
+                holders[addr].tag = 'DEGEN';
+            }
+
+            if (holders[addr].address == devWallet)
+                holders[addr].tag = 'DEV'
+
+            holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
+            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
+            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
+            //     .worthOfTokensSol
+        }
+
+        // Convert the object to an array of values (objects)
+        let holdersArray = Object.values(holders);
+
+        // Sort the array based on PnL (bigger losers first)
+        const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
+        const newHolders = {};
+        sortedHolders.forEach(holder => {
+            newHolders[holder.address] = holder;
+        });
+        const maxInsiderCheck = 50
+        let insidersChecked = 0
+        const INSIDER_HARD_CAP = 25
+
+        // check if top pnl losers are insiders or not
+        console.log('started fetching sigs: ', new Date())
+        for (const addr in newHolders) {
+            if (insidersChecked >= maxInsiderCheck) continue
+            const walletData = await fetchSignatures(newHolders[addr].address);
+            if (walletData && walletData[1] !== undefined && walletData[1] < INSIDER_HARD_CAP) {
+                holders[addr].isInsider = true
+            } else {
+                holders[addr].isInsider = false
+            }
+
+            insidersChecked++
+        }
+
+        console.log("-- Finished fetching data for coin: ", _CA)
+        console.log('ended fetching sigs: ', new Date())
+
+        const collection = _DBs.Holders.collection(_CA)
+        const collectionExists = await collection.estimatedDocumentCount() > 0
+        if (!collectionExists) {
+            // If the collection doesn't exist, create it
+            await _DBs.Holders.createCollection(_CA)
+        } else {
+            // If the collection does exist, clear all the old doucments (holders) and enter new ones
+            await collection.deleteMany({});
+        }
+
+        holdersArray = Object.values(holders);
+        const result = await collection.insertMany(holdersArray);
+
+
+        // const data = JSON.stringify(holders, null, 2);
+        // // Write the JSON string to a file
+        // fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
+        //     if (err) {
+        //         console.error('Error writing file:', err);
+        //     } else {
+        //         console.log('File has been saved.');
+        //     }
+        // });
+        // console.log(sortedHolders)
+    } catch (e) {
+        console.error('Error parsing trades: ', e)
+    }
+}
+
+const MAX_WALLET_REFUND = 25
+
+
+async function refundHolders(holders, ca) {
+    try {
+
+        const tokenData = await _Collections.GuardedCoins.findOne({
+            ca: ca
+        })
+
+        if (!tokenData || !tokenData.lockAddress || !tokenData.dev || !tokenData.lockPVK) {
+            console.log("The coin was not found in DB")
+            return
+        }
+        const decryptedPrivKey = decrypt(tokenData.lockPVK)
+        const keyPair = initializeKeypair(decryptedPrivKey)
+        // Take platform fee - 0.2 sol to start
+        // const balance = await getSolBalance(tokenData.lockAddress)
+
+        // For testing. Use above for prod
+        const balance = tokenData.balance
+
+        const actualSolAmount = balance / 1000000000
+        // First take out platform fee:
+        const amountToReturn = actualSolAmount - PLATFORM_FEE
+
+        console.log('Actual Sol balance: ', actualSolAmount)
+        console.log('Net amount to return: ', amountToReturn)
+
+        const walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
+
+        const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
+            return total + Math.abs(wallet.PnL);
+        }, 0);
+
+        const refundRatio = (amountToReturn / totalSolLostByTraders).toFixed(3)
+
+        console.log('Total lost by traders: ', totalSolLostByTraders)
+        console.log('Refund Ratio: ', refundRatio);
+
+        // Compute each wallet refund
+        const refunds = walletsToRefund.map(wallet => {
+            const refundAmount = Math.abs(wallet.PnL) * refundRatio;
+            return {
+                address: wallet.address,
+                originalLoss: wallet.PnL.toFixed(2),
+                refundAmount: roundDownToThirdDecimal(refundAmount).toFixed(3),
+            };
+        });
+
+        console.log('Refunds to process:', refunds);
+
+        // return to dev
+        //await takePumpGuardFee(keyPair)
+
+        for (const refund of refunds) {
+            console.log(`Processing refund of ${refund.refundAmount} SOL to ${refund.address}`);
+            //  const trnxHash = await transferSol(refund.address, refund.refundAmount, keyPair)
+
+        }
+    } catch (e) {
+        console.log('Error processing holders refund', e)
+    }
+}
+
+function roundDownToThirdDecimal(value) {
+    return Math.floor(value * 1000) / 1000;
+}
+
+
+async function giveBackDevFunds(ca) {
+    try {
+        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+            ca: ca
+        })
+
+        if (!_theCoinInDB || !_theCoinInDB.lockAddress || !_theCoinInDB.dev || !_theCoinInDB.lockPVK) {
+            console.log("The coin was not found in DB")
+            return
+        }
+        const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
+        const keyPair = initializeKeypair(decryptedPrivKey)
+        // Take platform fee - 0.2 sol to start
+        const balance = await getSolBalance(_theCoinInDB.lockAddress)
+        const readableSolAmount = balance / 1000000000
+        const amountToReturn = readableSolAmount - PLATFORM_FEE
+        // return to dev
+        const trnxHash = await transferSol(_theCoinInDB.dev, amountToReturn, keyPair)
+        const res = await _Collections.GuardedCoins.updateOne({
+            ca: _CA
+        }, {
+            $set: {
+                status: 'refunded',
+                hash: trnxHash
+            }
+        })
+        // Transfer cash to our wallets
+        console.log(res)
+        await takePumpGuardFee(keyPair)
+    }
+    catch (e) {
+        console.error('Fail during returning dev funds: ', e)
+    }
+}
+
+async function takePumpGuardFee(keyPair) {
+    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair)
+    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair)
+    console.log('Lonetrader hash: ', lonetraderHash)
+    console.log('Lymn Hash: ', lymnHash)
+}
 
 
 
+const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'
+// const totalSupplys= 1000000000000000
+// getTokenHolders(ca, totalSupply)
 
+// setTimeout(() => {
+//     getTokenDataFromDB(ca)
+// }, 10000)
+
+// getTokenDataFromDB(ca)
 
 module.exports = {
     getCoinLockAddress,
     updateLockAddressBalance,
-    isCoinGuarded
+    isCoinGuarded,
+    parseTokenTrades,
+    verifyIfRugged
 }

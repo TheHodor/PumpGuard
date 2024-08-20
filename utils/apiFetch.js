@@ -69,7 +69,7 @@ async function getCoinHolders(_CA) {
         }
 
         const holderCount = allOwners.length
-        console.log(holderCount)
+        // console.log('Holders fetch from helius: ', holderCount)
 
         // allOwners = allOwners.sort((a, b) => b.amount - a.amount)
         // allOwners = allOwners.splice(0, 20)
@@ -99,7 +99,7 @@ async function getCoinHolders(_CA) {
 
 
 async function wrapper() {
-    const holders = await getCoinHolders('DUi1v2igBmQNtqXqToi87FL8vU293QSFsu1yKBsCpump')
+    const holders = await getCoinHolders('JvsH4PneSEnvb32b94ZCnb9aduVPXW1eKFhwSoQpump')
     console.log('Holders: ', holders.allHolders)
 
 }
