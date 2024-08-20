@@ -14,7 +14,8 @@ const {
     getCoinLockAddress,
     updateLockAddressBalance,
     isCoinGuarded,
-    parseTokenTrades
+    parseTokenTrades,
+    verifyIfRugged
 } = require('./utils/guardCoins.js');
 const {
     getCoinHolders
@@ -151,6 +152,21 @@ app.get('/parse_trades', async (req, res) => {
         res.status(500).send('An error occurred while parsing token trades.');
     }
 });
+
+app.get('/verify_rugged', async (req, res) => {
+    const ca = req.query.ca;
+
+    if (!ca) {
+        return res.status(400).send('Contract address (ca) is required.');
+    }
+    try {
+        await verifyIfRugged(ca);
+        res.send(`Trades parsed for contract address: ${ca}`);
+    } catch (error) {
+        console.error('Error parsing token trades:', error);
+        res.status(500).send('An error occurred while checking rug.');
+    }
+})
 
 // user request to look up a coin and check if it's guarded or not + it's data for front end
 app.get('/is_coin_guarded', async (req, res) => {

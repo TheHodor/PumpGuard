@@ -257,55 +257,65 @@ async function fetchCoinData(_CA) {
     return _data
 }
 
-async function getTokenDataFromDB(_CA) {
+async function verifyIfRugged(_CA) {
     try {
         // const _theCoinInDB = await _Collections.GuardedCoins.findOne({
         //     ca: _CA
         // })
-    
+
         // if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
         //     console.log("The coin was not found in DB")
         //     return
         // }        
         // const totalSupply = _theCoinInDB.totalSupply
         const holders = _DBs.Holders.collection(_CA)
-        // console.log('collection: ', collection)
 
-        // If you want to find all documents in the collection
-        const traders = await holders.find({}).toArray(); // Fetches all documents in the collection
-        let totalTokensBought = 0 
+        const traders = await holders.find({}).toArray();
+        let totalTokensBought = 0
         let totalSolBought = 0
         let totalSolSold = 0
         let totalTokensSold = 0
         const totalSupply = 1000000000000000
+        let otherWallets = [];
 
         if (traders.length > 0) {
-            for(let i = 0; i < traders.length; i++) {
+            for (let i = 0; i < traders.length; i++) {
                 const currentUser = traders[i]
                 // Add up all insider data
-                if(currentUser.tag == SNIPER || currentUser.tag == INSIDER || currentUser.tag == DEV) {
-                    totalTokensBought += currentUser.totalTokensBought 
-                    totalSolBought += currentUser.totalSolBought 
+                if (currentUser.tag == SNIPER || currentUser.tag == INSIDER || currentUser.tag == DEV || currentUser.tag == TRANSFER) {
+                    totalTokensBought += currentUser.totalTokensBought
+                    totalSolBought += currentUser.totalSolBought
                     totalSolSold += currentUser.totalSolSold
                     totalTokensSold += currentUser.totalTokensSold
                 }
-                const totalDevTeamSupplyOwned = ((totalTokensBought/totalSupply) * 100).toFixed(2)
-                const totalDevTeamSupplySold = ((totalTokensSold/totalSupply) * 100).toFixed(2)
-                console.log('Total Supply Owned: ', totalDevTeamSupplyOwned)
-                console.log('Total Supply Sold: ', totalDevTeamSupplySold)
-
-
-                console.log('Total Sol bought: ', totalSolBought)
-                console.log('Total Sol Sold: ', totalSolSold)
-                process.exit(0)
-                // console.log('data: ', user[i])
+                else {
+                    otherWallets.push(currentUser);
+                }
             }
-        } else {
-            console.log('No data found for the given contract address:', _CA);
-        }
-    } catch (error) {
-        console.error('Error fetching data from DB:', error);
+
+            // Sort the other wallets by PnL (ascending, so the biggest losers come first)
+            otherWallets.sort((a, b) => {
+                if (isNaN(a.PnL) && !isNaN(b.PnL)) return 1;
+                if (!isNaN(a.PnL) && isNaN(b.PnL)) return -1;
+                if (!isNaN(a.PnL) && !isNaN(b.PnL)) return a.PnL - b.PnL;
+                // If PnL is NaN, sort by totalSolBought
+                return b.totalSolBought - a.totalSolBought;
+            });
+
+        const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
+        const totalDevTeamSupplySold = ((totalTokensSold / totalSupply) * 100).toFixed(2)
+        console.log('Total Supply Owned: ', totalDevTeamSupplyOwned)
+        console.log('Total Supply Sold: ', totalDevTeamSupplySold)
+
+
+        console.log('Total Sol bought: ', totalSolBought)
+        console.log('Total Sol Sold: ', totalSolSold)
+    } else {
+        console.log('No data found for the given contract address:', _CA);
     }
+} catch (error) {
+    console.error('Error fetching data from DB:', error);
+}
 }
 
 async function parseTokenTrades(_CA) {
@@ -350,8 +360,8 @@ async function parseTokenTrades(_CA) {
                 if (trade.slot == sniperSlot) {
                     holders[trade.user].tag = SNIPER
                 }
-                holders[trade.user].tokens -= trade.token_amount;
-                holders[trade.user].totalTokensSold += trade.sol_amount / 1e9;
+                holders[trade.user].totalTokensSold -= trade.token_amount;
+                holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
                 holders[trade.user].hasSold = true;
             }
 
@@ -360,10 +370,19 @@ async function parseTokenTrades(_CA) {
 
         for (const addr in holders) {
             if (holders[addr].hasSold && !holders[addr].hasBought) {
+                if (holders[addr].tag == SNIPER) {
+                    continue
+                }
                 holders[addr].tag = TRANSFER;
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
+                if (holders[addr].tag == SNIPER) {
+                    continue
+                }
                 holders[addr].tag = HOLDER;
             } else if (holders[addr].hasBought && holders[addr].hasSold) {
+                if (holders[addr].tag == SNIPER) {
+                    continue
+                }
                 holders[addr].tag = DEGEN;
             }
 
@@ -371,8 +390,9 @@ async function parseTokenTrades(_CA) {
                 holders[addr].tag = DEV
 
             holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
-            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
-                .worthOfTokensSol
+            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
+            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
+            //     .worthOfTokensSol
         }
 
         // Convert the object to an array of values (objects)
@@ -418,7 +438,6 @@ async function parseTokenTrades(_CA) {
         holdersArray = Object.values(holders);
         const result = await collection.insertMany(holdersArray);
 
-        console.log('DB Insert res: ', result)
 
         // const data = JSON.stringify(holders, null, 2);
         // // Write the JSON string to a file
@@ -449,5 +468,6 @@ module.exports = {
     getCoinLockAddress,
     updateLockAddressBalance,
     isCoinGuarded,
-    parseTokenTrades
+    parseTokenTrades,
+    verifyIfRugged
 }
