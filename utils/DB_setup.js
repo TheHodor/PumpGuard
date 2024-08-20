@@ -14,6 +14,7 @@ let _DBs = {
 
 let _Collections = {
     GuardedCoins: void 0,
+    UsersRefunds: void 0,
     Stats: void 0
 }
 
@@ -41,6 +42,7 @@ async function DBSetup() {
 
     _DBs.Main = mongoClient.db("Main")
     _Collections.GuardedCoins = _DBs.Main.collection("GuardedCoins")
+    _Collections.UsersRefunds = _DBs.Main.collection("UsersRefunds")
     
     _DBs.Etc = mongoClient.db("Etc")
     _Collections.Stats = _DBs.Main.collection("Stats")
