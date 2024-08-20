@@ -36,6 +36,8 @@ const {
     parseAndProcessTransactions
 } = require('./findInsiders.js')
 
+const { initializeKeypair } = require('./transferSol.js')
+
 // hardcoded values
 const PLATFORM_FEE = 0.2
 const LONETRADER_WALLET = '123123'
@@ -97,7 +99,7 @@ async function getCoinLockAddress(_CA) {
                 lockAddress: _walletAddress,
                 symbol: _coinData.symbol,
                 balance: 0,
-                stauts: 'unguarded',
+                status: 'unguarded',
                 dev: _coinData.creator,
             }
         }
@@ -462,19 +464,109 @@ const MAX_WALLET_REFUND = 25
 
 
 async function refundHolders(holders, ca) {
+    try {
 
-    const tokenData = await getCoinLockAddress(_CA)
-    const lockedAmount = tokenData.balance
-    console.log('Balance locked: ', lockedAmount)
-    const walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
+        const tokenData = await _Collections.GuardedCoins.findOne({
+            ca: ca
+        })
 
-    const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
-        return total + Math.abs(wallet.PnL); 
-    }, 0);
+        if (!tokenData || !tokenData.lockAddress || !tokenData.dev || !tokenData.lockPVK) {
+            console.log("The coin was not found in DB")
+            return
+        }
+        const decryptedPrivKey = decrypt(tokenData.lockPVK)
+        const keyPair = initializeKeypair(decryptedPrivKey)
+        // Take platform fee - 0.2 sol to start
+        // const balance = await getSolBalance(tokenData.lockAddress)
 
-    // Compute each wallet refund
-    console.log('Wallets To refund: ', walletsToRefund)
+        // For testing. Use above for prod
+        const balance = tokenData.balance
+        
+        const actualSolAmount = balance / 1000000000
+        // First take out platform fee:
+        const amountToReturn = actualSolAmount - PLATFORM_FEE
+
+        console.log('Actual Sol balance: ', actualSolAmount)
+        console.log('Net amount to return: ', amountToReturn)
+
+        const walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
+
+        const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
+            return total + Math.abs(wallet.PnL);
+        }, 0);
+
+        const refundRatio = (amountToReturn / totalSolLostByTraders).toFixed(2)
+
+        console.log('Total lost by traders: ', totalSolLostByTraders)
+        console.log('Refund Ratio: ', refundRatio)
+
+        // Compute each wallet refund
+        const refunds = walletsToRefund.map(wallet => {
+            const refundAmount = Math.abs(wallet.PnL) * refundRatio;
+            return {
+                address: wallet.address,
+                originalLoss: wallet.PnL.toFixed(2),
+                refundAmount: refundAmount.toFixed(2),
+            };
+        });
+
+        console.log('Refunds to process:', refunds);
+
+        // return to dev
+        //await takePumpGuardFee(keyPair)
+
+        for (const refund of refunds) {
+            console.log(`Processing refund of ${refund.refundAmount} SOL to ${refund.address}`);
+            //  const trnxHash = await transferSol(refund.address, refund.refundAmount, keyPair)
+
+        }
+    } catch (e) {
+        console.log('Error processing holders refund', e)
+    }
 }
+
+async function giveBackDevFunds(ca) {
+    try {
+        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+            ca: ca
+        })
+
+        if (!_theCoinInDB || !_theCoinInDB.lockAddress || !_theCoinInDB.dev || !_theCoinInDB.lockPVK) {
+            console.log("The coin was not found in DB")
+            return
+        }
+        const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
+        const keyPair = initializeKeypair(decryptedPrivKey)
+        // Take platform fee - 0.2 sol to start
+        const balance = await getSolBalance(_theCoinInDB.lockAddress)
+        const readableSolAmount = balance / 1000000000
+        const amountToReturn = readableSolAmount - PLATFORM_FEE
+        // return to dev
+        const trnxHash = await transferSol(_theCoinInDB.dev, amountToReturn, keyPair)
+        const res = await _Collections.GuardedCoins.updateOne({
+            ca: _CA
+        }, {
+            $set: {
+                status: 'refunded',
+                hash: trnxHash
+            }
+        })
+        // Transfer cash to our wallets
+        console.log(res)
+        await takePumpGuardFee(keyPair)
+    }
+    catch (e) {
+        console.error('Fail during returning dev funds: ', e)
+    }
+}
+
+async function takePumpGuardFee(keyPair) {
+    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair)
+    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair)
+    console.log('Lonetrader hash: ', lonetraderHash)
+    console.log('Lymn Hash: ', lymnHash)
+}
+
 
 
 const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'

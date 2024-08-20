@@ -12,8 +12,36 @@ require('dotenv').config();
 
 const API_KEY = "0923441f-c558-4e0b-8b67-9294161fdfb3"
 
+const privKey = 'f2688ca910a4d8eb592291851ed7e7f942bd328ccbb51e2e5cb4408f58583de2b7161286fb0ed704c09f7fd09ed80de2fc27b172de72dfc450d95dd95f429225'
+
+function hexToUint8Array(hexString) {
+  if (hexString.length % 2 !== 0) {
+    throw new Error('Invalid hexString');
+  }
+  const uint8Array = new Uint8Array(hexString.length / 2);
+  for (let i = 0; i < hexString.length; i += 2) {
+    uint8Array[i / 2] = parseInt(hexString.substr(i, 2), 16);
+  }
+  return uint8Array;
+}
+
 function initializeKeypair(privKey) {
-  const privateKey = new Uint8Array(bs58.decode(privKey));
+  let privateKey;
+  
+  try {
+    privateKey = bs58.decode(privKey);
+    // console.log('Decoded Base58 private key');
+  } catch (base58Error) {
+    // console.log('Failed to decode as Base58, trying hex format...');
+    
+    // Attempt to decode as hexadecimal
+    try {
+      privateKey = hexToUint8Array(privKey);
+      // console.log('Decoded hex private key');
+    } catch (hexError) {
+      throw new Error('Invalid private key format: Not Base58 or valid hex');
+    }
+  }
   const keypair = Keypair.fromSecretKey(privateKey);
   console.log(`Initialized Keypair: Public Key - ${keypair.publicKey.toString()}`);
   return keypair;
@@ -93,6 +121,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
 
 // const testPair = initializeKeypair(process.env.PRIVATE_KEY)
 // transferSOL('4YofY9785L7MMeqdbB3YTKGTM7TnPqe9WRxMt7GrYNXn', 0.1, testPair);
+// initializeKeypair(privKey)
 
 module.exports = {
   initializeKeypair,
