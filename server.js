@@ -15,7 +15,8 @@ const {
     updateLockAddressBalance,
     isCoinGuarded,
     parseTokenTrades,
-    verifyIfRugged
+    verifyIfRugged,
+    isCoinGuarded
 } = require('./utils/guardCoins.js');
 const {
     getCoinHolders
@@ -23,6 +24,17 @@ const {
 const {
     watchGuardedCoinsForMigration
 } = require('./utils/migrationAndRefund.js');
+const {
+    findSuspiciousWallets
+} = require('./utils/findInsiders.js');
+
+const {
+    decrypt
+} = require('./encrypt.js');
+
+const {
+    transferSOL
+} = require('./utils/transferSol.js');
 
 
 // ----- setting express app ----- //
@@ -39,7 +51,8 @@ app.use(cors());
 
 
 let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
-const migrationCheckInterval = 60 * 5 // seconds
+const ONE_MINUTE = 1000 * 60
+const ONE_HOUR = 1000 * 60 * 60
 
 
 const startServer = async () => {
@@ -58,7 +71,9 @@ async function serverStarted() {
     PrepareCoinsForFE()
 
     // watch all the guarded coins with the provided interval (in seconds) for migration
-    watchGuardedCoinsForMigration(migrationCheckInterval)
+    setInterval(() => {
+        watchGuardedCoinsForMigration()
+    }, ONE_HOUR * 2)
 
     await _Collections.GuardedCoins.updateMany({}, {
         $set: {
@@ -187,6 +202,63 @@ app.post('/update_lock_address_balance', async (req, res) => {
     res.json({
         balance: _balance
     })
+});
+
+// user request to get status of a coin
+app.post('/get_coin_status', async (req, res) => {
+    const _theCoin = await _Collections.GuardedCoins.findOne({
+        ca: req.body.ca
+    })
+    res.send(_theCoin)
+});
+
+// user request to get all their refunds
+app.post('/get_coin_status', async (req, res) => {
+    const _res = await _Collections.GuardedCoins.findOne({
+        address: req.body.address
+    })
+    res.send(_res)
+});
+
+// user request to be paid for one of their refunds
+app.post('/get_coin_status', async (req, res) => {
+    const _res = await _Collections.UsersRefunds.findOne({
+        address: req.body.address
+    })
+
+    for (var i = 0; i < _res.refunds; i++) {
+        if (_res.refunds[i].ca == req.body.ca) {
+            if (_res.refunds[i].refundAmount && _res.refunds[i].paid == false) {
+
+                // get the refund lock address
+                const _theCoin = await _Collections.GuardedCoins.findOne({
+                    address: req.body.ca
+                })
+
+                const decryptedPrivKey = decrypt(_theCoin.lockPVK)
+                const keyPair = initializeKeypair(decryptedPrivKey)
+
+                const transferResTX = await transferSOL(req.body.address, _res.refunds[i].refundAmount * 1e9, keyPair)
+
+                // if transfer was successful update the user's refund state
+                if (transferResTX && transferResTX.length > 30) {
+                    await _Collections.UsersRefunds.updateOne({
+                        address: req.body.address,
+                        'refunds.ca': {
+                            $eq: _CA
+                        }
+                    }, {
+                        $addToSet: {
+                            refunds: {
+                                paid: true,
+                                paymentTx: transferResTX,
+                            },
+                        },
+                    });
+                }
+            }
+        }
+    }
 });
 
 
