@@ -55,16 +55,16 @@ async function serverStarted() {
     _DBs = _DBSetup.DBs
 
     // fetch top coins on pump.fun
-    // PrepareCoinsForFE()
+    PrepareCoinsForFE()
 
     // watch all the guarded coins with the provided interval (in seconds) for migration
-    // watchGuardedCoinsForMigration(migrationCheckInterval)
+    watchGuardedCoinsForMigration(migrationCheckInterval)
 
-    // await _Collections.GuardedCoins.updateMany({}, {
-    //     $set: {
-    //         hasMigrated: false
-    //     }
-    // });
+    await _Collections.GuardedCoins.updateMany({}, {
+        $set: {
+            hasMigrated: false
+        }
+    });
 }
 
 
@@ -114,9 +114,9 @@ async function PrepareCoinsForFE() {
         return pumpfunCoins
     }
 
-    // setTimeout(() => {
-    //     PrepareCoinsForFE()
-    // }, 1000 * 30)
+    setTimeout(() => {
+        PrepareCoinsForFE()
+    }, 1000 * 30)
 }
 
 
@@ -160,8 +160,8 @@ app.get('/verify_rugged', async (req, res) => {
         return res.status(400).send('Contract address (ca) is required.');
     }
     try {
-        await verifyIfRugged(ca);
-        res.send(`Trades parsed for contract address: ${ca}`);
+        const response = await verifyIfRugged(ca);
+        res.send(`Response ${response} for contract address: ${ca}`);
     } catch (error) {
         console.error('Error parsing token trades:', error);
         res.status(500).send('An error occurred while checking rug.');

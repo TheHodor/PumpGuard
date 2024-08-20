@@ -308,7 +308,10 @@ async function verifyIfRugged(_CA) {
                 console.log(`${_CA} was rugged. Processing refunds....`)
                 // Refund other wallets
                 const refunded = await refundHolders(refundWallets, _CA)
+                return 'RUGGED'
             }
+            else 
+            return 'Not Rugged'
 
         } else {
             console.log('No data found for the given contract address:', _CA);
@@ -481,7 +484,7 @@ async function refundHolders(holders, ca) {
 
         // For testing. Use above for prod
         const balance = tokenData.balance
-        
+
         const actualSolAmount = balance / 1000000000
         // First take out platform fee:
         const amountToReturn = actualSolAmount - PLATFORM_FEE
@@ -495,10 +498,10 @@ async function refundHolders(holders, ca) {
             return total + Math.abs(wallet.PnL);
         }, 0);
 
-        const refundRatio = (amountToReturn / totalSolLostByTraders).toFixed(2)
+        const refundRatio = (amountToReturn / totalSolLostByTraders).toFixed(3)
 
         console.log('Total lost by traders: ', totalSolLostByTraders)
-        console.log('Refund Ratio: ', refundRatio)
+        console.log('Refund Ratio: ', refundRatio);
 
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
@@ -506,7 +509,7 @@ async function refundHolders(holders, ca) {
             return {
                 address: wallet.address,
                 originalLoss: wallet.PnL.toFixed(2),
-                refundAmount: refundAmount.toFixed(2),
+                refundAmount: roundDownToThirdDecimal(refundAmount).toFixed(3),
             };
         });
 
@@ -524,6 +527,11 @@ async function refundHolders(holders, ca) {
         console.log('Error processing holders refund', e)
     }
 }
+
+function roundDownToThirdDecimal(value) {
+    return Math.floor(value * 1000) / 1000;
+}
+
 
 async function giveBackDevFunds(ca) {
     try {
