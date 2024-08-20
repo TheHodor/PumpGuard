@@ -35,19 +35,14 @@ const {
     fetchSignatures,
     parseAndProcessTransactions
 } = require('./findInsiders.js')
-var fs = require('fs');
 
 // hardcoded values
 const PLATFORM_FEE = 0.2
 const LONETRADER_WALLET = '123123'
 const LYMN_WALLET = '2131231'
 
-const INSIDER = 'INSIDER'
-const SNIPER = 'SNIPER'
-const DEV = 'DEV'
-const DEGEN = 'DEGEN'
-const TRANSFER = 'TRANSFER'
-const HOLDER = 'HOLDER'
+const SUPPLY_RUG_THRESHOLD = 10
+
 
 const totalSupply = 1e9
 
@@ -138,7 +133,7 @@ async function updateLockAddressBalance(_CA) {
 
     if (newlyAddedBalance > 0) {
         // Get holders now
-        const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
+        // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
         const res = await _Collections.GuardedCoins.updateOne({
             ca: _CA
         }, {
@@ -193,8 +188,6 @@ async function getTokenHolders(_CA, totalSupply) {
             tokenHolders = tokenHolders.filter(holder => holder !== null && holder !== undefined);
 
         }
-
-        console.log('All Insider holders: ', tokenHolders);
         return tokenHolders
     } catch (e) {
         console.log('Outer error block: ', e)
@@ -276,25 +269,24 @@ async function verifyIfRugged(_CA) {
         let totalSolSold = 0
         let totalTokensSold = 0
         const totalSupply = 1000000000000000
-        let otherWallets = [];
+        let refundWallets = [];
 
         if (traders.length > 0) {
             for (let i = 0; i < traders.length; i++) {
                 const currentUser = traders[i]
                 // Add up all insider data
-                if (currentUser.tag == SNIPER || currentUser.tag == INSIDER || currentUser.tag == DEV || currentUser.tag == TRANSFER) {
+                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'INSIDER' || currentUser.tag == 'DEV' || currentUser.tag == 'TRANSFER') {
                     totalTokensBought += currentUser.totalTokensBought
                     totalSolBought += currentUser.totalSolBought
                     totalSolSold += currentUser.totalSolSold
                     totalTokensSold += currentUser.totalTokensSold
                 }
                 else {
-                    otherWallets.push(currentUser);
+                    refundWallets.push(currentUser);
                 }
             }
 
-            // Sort the other wallets by PnL (ascending, so the biggest losers come first)
-            otherWallets.sort((a, b) => {
+            refundWallets.sort((a, b) => {
                 if (isNaN(a.PnL) && !isNaN(b.PnL)) return 1;
                 if (!isNaN(a.PnL) && isNaN(b.PnL)) return -1;
                 if (!isNaN(a.PnL) && !isNaN(b.PnL)) return a.PnL - b.PnL;
@@ -302,21 +294,28 @@ async function verifyIfRugged(_CA) {
                 return b.totalSolBought - a.totalSolBought;
             });
 
-        const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
-        const totalDevTeamSupplySold = ((totalTokensSold / totalSupply) * 100).toFixed(2)
-        console.log('Total Supply Owned: ', totalDevTeamSupplyOwned)
-        console.log('Total Supply Sold: ', totalDevTeamSupplySold)
+            const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
+            const totalDevTeamSupplySold = Math.abs((totalTokensSold / totalSupply) * 100).toFixed(2)
 
+            console.log('Total Team Supply Owned: ', totalDevTeamSupplyOwned)
+            console.log('Total Team Supply Sold: ', totalDevTeamSupplySold)
+            console.log('Total Team Sol bought: ', totalSolBought.toFixed(2))
+            console.log('Total Team Sol Sold: ', totalSolSold.toFixed(2))
+            // RUG Condition
+            if (totalDevTeamSupplySold > SUPPLY_RUG_THRESHOLD) {
+                console.log(`${_CA} was rugged. Processing refunds....`)
+                // Refund other wallets
+                const refunded = await refundHolders(refundWallets, _CA)
+            }
 
-        console.log('Total Sol bought: ', totalSolBought)
-        console.log('Total Sol Sold: ', totalSolSold)
-    } else {
-        console.log('No data found for the given contract address:', _CA);
+        } else {
+            console.log('No data found for the given contract address:', _CA);
+        }
+    } catch (error) {
+        console.error('Error fetching data from DB:', error);
     }
-} catch (error) {
-    console.error('Error fetching data from DB:', error);
 }
-}
+
 
 async function parseTokenTrades(_CA) {
     try {
@@ -351,14 +350,17 @@ async function parseTokenTrades(_CA) {
             if (allTrades[i].is_buy) {
                 // find snipers
                 if (trade.slot == sniperSlot) {
-                    holders[trade.user].tag = SNIPER
+                    console.log('Sniper Bought: ', trade.user)
+                    holders[trade.user].tag = 'SNIPER'
                 }
                 holders[trade.user].totalTokensBought += trade.token_amount;
                 holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
                 holders[trade.user].hasBought = true;
             } else {
                 if (trade.slot == sniperSlot) {
-                    holders[trade.user].tag = SNIPER
+                    console.log('Sniper Sold: ', trade.user)
+
+                    holders[trade.user].tag = 'SNIPER'
                 }
                 holders[trade.user].totalTokensSold -= trade.token_amount;
                 holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
@@ -370,24 +372,26 @@ async function parseTokenTrades(_CA) {
 
         for (const addr in holders) {
             if (holders[addr].hasSold && !holders[addr].hasBought) {
-                if (holders[addr].tag == SNIPER) {
+                if (holders[addr].tag == 'SNIPER') {
                     continue
                 }
-                holders[addr].tag = TRANSFER;
+                holders[addr].tag = 'TRANSFER';
+                console.log('Found Transfer: ', holders[addr].address)
+
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
-                if (holders[addr].tag == SNIPER) {
+                if (holders[addr].tag == 'SNIPER') {
                     continue
                 }
-                holders[addr].tag = HOLDER;
+                holders[addr].tag = 'HOLDER';
             } else if (holders[addr].hasBought && holders[addr].hasSold) {
-                if (holders[addr].tag == SNIPER) {
+                if (holders[addr].tag == 'SNIPER') {
                     continue
                 }
-                holders[addr].tag = DEGEN;
+                holders[addr].tag = 'DEGEN';
             }
 
             if (holders[addr].address == devWallet)
-                holders[addr].tag = DEV
+                holders[addr].tag = 'DEV'
 
             holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
             holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
@@ -453,6 +457,25 @@ async function parseTokenTrades(_CA) {
         console.error('Error parsing trades: ', e)
     }
 }
+
+const MAX_WALLET_REFUND = 25
+
+
+async function refundHolders(holders, ca) {
+
+    const tokenData = await getCoinLockAddress(_CA)
+    const lockedAmount = tokenData.balance
+    console.log('Balance locked: ', lockedAmount)
+    const walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
+
+    const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
+        return total + Math.abs(wallet.PnL); 
+    }, 0);
+
+    // Compute each wallet refund
+    console.log('Wallets To refund: ', walletsToRefund)
+}
+
 
 const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'
 // const totalSupplys= 1000000000000000
