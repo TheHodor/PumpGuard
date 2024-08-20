@@ -36,17 +36,17 @@ const {
     parseAndProcessTransactions
 } = require('./findInsiders.js')
 
-const { initializeKeypair } = require('./transferSol.js')
+const {
+    initializeKeypair
+} = require('./transferSol.js')
 
 // hardcoded values
 const PLATFORM_FEE = 0.2
-const LONETRADER_WALLET = '123123'
-const LYMN_WALLET = '2131231'
 
 const SUPPLY_RUG_THRESHOLD = 10
+const MAX_WALLET_REFUND = 25
 
-
-const totalSupply = 1e9
+const TOTALSUPPLY = 1e9
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
 // So by user's request this function checks if a lock address has been created for a coin or not. 
@@ -264,27 +264,29 @@ async function verifyIfRugged(_CA) {
         // }        
         // const totalSupply = _theCoinInDB.totalSupply
         const holders = _DBs.Holders.collection(_CA)
+        const traders = await holders.find({}).toArray()
 
-        const traders = await holders.find({}).toArray();
         let totalTokensBought = 0
         let totalSolBought = 0
         let totalSolSold = 0
         let totalTokensSold = 0
-        const totalSupply = 1000000000000000
-        let refundWallets = [];
+        const totalSupply = TOTALSUPPLY * 1e6
+        let refundWallets = []
 
         if (traders.length > 0) {
             for (let i = 0; i < traders.length; i++) {
                 const currentUser = traders[i]
+
                 // Add up all insider data
-                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'INSIDER' || currentUser.tag == 'DEV' || currentUser.tag == 'TRANSFER') {
+                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'INSIDER' || currentUser.tag == 'DEV' ||
+                    currentUser.tag == 'TRANSFER') {
+
                     totalTokensBought += currentUser.totalTokensBought
                     totalSolBought += currentUser.totalSolBought
                     totalSolSold += currentUser.totalSolSold
                     totalTokensSold += currentUser.totalTokensSold
-                }
-                else {
-                    refundWallets.push(currentUser);
+                } else {
+                    refundWallets.push(currentUser)
                 }
             }
 
@@ -299,19 +301,19 @@ async function verifyIfRugged(_CA) {
             const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
             const totalDevTeamSupplySold = Math.abs((totalTokensSold / totalSupply) * 100).toFixed(2)
 
-            console.log('Total Team Supply Owned: ', totalDevTeamSupplyOwned)
-            console.log('Total Team Supply Sold: ', totalDevTeamSupplySold)
+            console.log('Rug Check For: ', _CA, " ==>")
+            console.log('Total Team Supply Owned: ', totalDevTeamSupplyOwned + "%")
+            console.log('Total Team Supply Sold: ', totalDevTeamSupplySold + "%")
             console.log('Total Team Sol bought: ', totalSolBought.toFixed(2))
             console.log('Total Team Sol Sold: ', totalSolSold.toFixed(2))
+
             // RUG Condition
             if (totalDevTeamSupplySold > SUPPLY_RUG_THRESHOLD) {
-                console.log(`${_CA} was rugged. Processing refunds....`)
+                console.log(`Was rugged: ${_CA} ==> calculating refund shares...`)
                 // Refund other wallets
                 const refunded = await refundHolders(refundWallets, _CA)
                 return 'RUGGED'
-            }
-            else 
-            return 'Not Rugged'
+            } else return 'Not Rugged'
 
         } else {
             console.log('No data found for the given contract address:', _CA);
@@ -355,7 +357,7 @@ async function parseTokenTrades(_CA) {
             if (allTrades[i].is_buy) {
                 // find snipers
                 if (trade.slot == sniperSlot) {
-                    console.log('Sniper Bought: ', trade.user)
+                    //console.log('Sniper Bought: ', trade.user)
                     holders[trade.user].tag = 'SNIPER'
                 }
                 holders[trade.user].totalTokensBought += trade.token_amount;
@@ -363,7 +365,7 @@ async function parseTokenTrades(_CA) {
                 holders[trade.user].hasBought = true;
             } else {
                 if (trade.slot == sniperSlot) {
-                    console.log('Sniper Sold: ', trade.user)
+                    //console.log('Sniper Sold: ', trade.user)
 
                     holders[trade.user].tag = 'SNIPER'
                 }
@@ -381,7 +383,7 @@ async function parseTokenTrades(_CA) {
                     continue
                 }
                 holders[addr].tag = 'TRANSFER';
-                console.log('Found Transfer: ', holders[addr].address)
+                //console.log('Found Transfer: ', holders[addr].address)
 
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
                 if (holders[addr].tag == 'SNIPER') {
@@ -447,7 +449,6 @@ async function parseTokenTrades(_CA) {
         holdersArray = Object.values(holders);
         const result = await collection.insertMany(holdersArray);
 
-
         // const data = JSON.stringify(holders, null, 2);
         // // Write the JSON string to a file
         // fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
@@ -463,65 +464,89 @@ async function parseTokenTrades(_CA) {
     }
 }
 
-const MAX_WALLET_REFUND = 25
 
 
-async function refundHolders(holders, ca) {
+async function refundHolders(holders, _CA) {
     try {
-
         const tokenData = await _Collections.GuardedCoins.findOne({
-            ca: ca
+            ca: _CA
         })
 
         if (!tokenData || !tokenData.lockAddress || !tokenData.dev || !tokenData.lockPVK) {
-            console.log("The coin was not found in DB")
+            console.log("The coin was not found in DB: ", _CA)
             return
         }
-        const decryptedPrivKey = decrypt(tokenData.lockPVK)
-        const keyPair = initializeKeypair(decryptedPrivKey)
-        // Take platform fee - 0.2 sol to start
-        // const balance = await getSolBalance(tokenData.lockAddress)
 
         // For testing. Use above for prod
         const balance = tokenData.balance
+        const actualSolAmount = balance / 1e9
 
-        const actualSolAmount = balance / 1000000000
         // First take out platform fee:
         const amountToReturn = actualSolAmount - PLATFORM_FEE
 
-        console.log('Actual Sol balance: ', actualSolAmount)
+        console.log('Locked Sol balance: ', actualSolAmount)
         console.log('Net amount to return: ', amountToReturn)
 
-        const walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
+        let walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
+        // only pick users for refund if their pnl is negative
+
+        walletsToRefund = walletsToRefund.filter(wallet => wallet.PnL < 0)
 
         const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
-            return total + Math.abs(wallet.PnL);
-        }, 0);
+            return total + Math.abs(wallet.PnL)
+        }, 0)
 
-        const refundRatio = (amountToReturn / totalSolLostByTraders).toFixed(3)
+        const refundRatio = (amountToReturn / totalSolLostByTraders)
 
         console.log('Total lost by traders: ', totalSolLostByTraders)
-        console.log('Refund Ratio: ', refundRatio);
+        console.log('Refund Ratio: ', refundRatio.toFixed(3))
 
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
-            const refundAmount = Math.abs(wallet.PnL) * refundRatio;
+            const refundAmount = Math.abs(wallet.PnL) * refundRatio
             return {
                 address: wallet.address,
-                originalLoss: wallet.PnL.toFixed(2),
-                refundAmount: roundDownToThirdDecimal(refundAmount).toFixed(3),
+                originalLoss: Math.abs(wallet.PnL.toFixed(3)),
+                refundAmount: parseFloat(roundDownToThirdDecimal(refundAmount).toFixed(3)),
             };
-        });
+        })
 
-        console.log('Refunds to process:', refunds);
-
-        // return to dev
-        //await takePumpGuardFee(keyPair)
+        // console.log('Refunds to process:', refunds)
+        // await takePumpGuardFee(keyPair)
 
         for (const refund of refunds) {
-            console.log(`Processing refund of ${refund.refundAmount} SOL to ${refund.address}`);
-            //  const trnxHash = await transferSol(refund.address, refund.refundAmount, keyPair)
+            let theUser = await _Collections.UsersRefunds.findOne({
+                address: refund.address
+            })
 
+            // if the user doesn't exist, first create it in db
+            if (!theUser) {
+                theUser = await _Collections.UsersRefunds.insertOne({
+                    address: refund.address,
+                    totalClaimedRefunds: 0,
+                    refunds: [],
+                })
+            }
+
+            // store the calced refund data of the coin for this user so they can see it in UI and request to get paid
+            // this query only pushes the object in `refunds` array only if there is already no object with the ca for the user
+            // so if we call this whole function multiple times there wouldn't be duplicates created
+            await _Collections.UsersRefunds.updateOne({
+                address: refund.address,
+                'refunds.ca': {
+                    $ne: _CA
+                }
+            }, {
+                $addToSet: {
+                    refunds: {
+                        ca: _CA,
+                        refundAmount: refund.refundAmount,
+                        originalLoss: refund.originalLoss,
+                        paid: false,
+                        paymentTx: null,
+                    },
+                },
+            });
         }
     } catch (e) {
         console.log('Error processing holders refund', e)
@@ -533,51 +558,7 @@ function roundDownToThirdDecimal(value) {
 }
 
 
-async function giveBackDevFunds(ca) {
-    try {
-        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-            ca: ca
-        })
-
-        if (!_theCoinInDB || !_theCoinInDB.lockAddress || !_theCoinInDB.dev || !_theCoinInDB.lockPVK) {
-            console.log("The coin was not found in DB")
-            return
-        }
-        const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
-        const keyPair = initializeKeypair(decryptedPrivKey)
-        // Take platform fee - 0.2 sol to start
-        const balance = await getSolBalance(_theCoinInDB.lockAddress)
-        const readableSolAmount = balance / 1000000000
-        const amountToReturn = readableSolAmount - PLATFORM_FEE
-        // return to dev
-        const trnxHash = await transferSol(_theCoinInDB.dev, amountToReturn, keyPair)
-        const res = await _Collections.GuardedCoins.updateOne({
-            ca: _CA
-        }, {
-            $set: {
-                status: 'refunded',
-                hash: trnxHash
-            }
-        })
-        // Transfer cash to our wallets
-        console.log(res)
-        await takePumpGuardFee(keyPair)
-    }
-    catch (e) {
-        console.error('Fail during returning dev funds: ', e)
-    }
-}
-
-async function takePumpGuardFee(keyPair) {
-    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair)
-    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair)
-    console.log('Lonetrader hash: ', lonetraderHash)
-    console.log('Lymn Hash: ', lymnHash)
-}
-
-
-
-const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'
+const ca = 'HHtQvS8QrVavE4hsmbzrLFgaucY1NhdYmBtJK824pump'
 // const totalSupplys= 1000000000000000
 // getTokenHolders(ca, totalSupply)
 
@@ -585,8 +566,9 @@ const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'
 //     getTokenDataFromDB(ca)
 // }, 10000)
 
-// getTokenDataFromDB(ca)
-
+setTimeout(() => {
+    verifyIfRugged(ca)
+}, 3000)
 module.exports = {
     getCoinLockAddress,
     updateLockAddressBalance,
