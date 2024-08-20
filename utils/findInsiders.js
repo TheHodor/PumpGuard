@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-const INSIDER_HARD_CAP = 100
+const INSIDER_HARD_CAP = 25
 const RPC_helius = "https://mainnet.helius-rpc.com/?api-key=0923441f-c558-4e0b-8b67-9294161fdfb3"
 
 

@@ -257,135 +257,193 @@ async function fetchCoinData(_CA) {
     return _data
 }
 
+async function getTokenDataFromDB(_CA) {
+    try {
+        // const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        //     ca: _CA
+        // })
+    
+        // if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
+        //     console.log("The coin was not found in DB")
+        //     return
+        // }        
+        // const totalSupply = _theCoinInDB.totalSupply
+        const holders = _DBs.Holders.collection(_CA)
+        // console.log('collection: ', collection)
+
+        // If you want to find all documents in the collection
+        const traders = await holders.find({}).toArray(); // Fetches all documents in the collection
+        let totalTokensBought = 0 
+        let totalSolBought = 0
+        let totalSolSold = 0
+        let totalTokensSold = 0
+        const totalSupply = 1000000000000000
+
+        if (traders.length > 0) {
+            for(let i = 0; i < traders.length; i++) {
+                const currentUser = traders[i]
+                // Add up all insider data
+                if(currentUser.tag == SNIPER || currentUser.tag == INSIDER || currentUser.tag == DEV) {
+                    totalTokensBought += currentUser.totalTokensBought 
+                    totalSolBought += currentUser.totalSolBought 
+                    totalSolSold += currentUser.totalSolSold
+                    totalTokensSold += currentUser.totalTokensSold
+                }
+                const totalDevTeamSupplyOwned = ((totalTokensBought/totalSupply) * 100).toFixed(2)
+                const totalDevTeamSupplySold = ((totalTokensSold/totalSupply) * 100).toFixed(2)
+                console.log('Total Supply Owned: ', totalDevTeamSupplyOwned)
+                console.log('Total Supply Sold: ', totalDevTeamSupplySold)
+
+
+                console.log('Total Sol bought: ', totalSolBought)
+                console.log('Total Sol Sold: ', totalSolSold)
+                process.exit(0)
+                // console.log('data: ', user[i])
+            }
+        } else {
+            console.log('No data found for the given contract address:', _CA);
+        }
+    } catch (error) {
+        console.error('Error fetching data from DB:', error);
+    }
+}
+
 async function parseTokenTrades(_CA) {
-    const _theCoin = await fetchCoinData(_CA)
-    const allTrades = await getAllTradesPump(_CA)
+    try {
+        const _theCoin = await fetchCoinData(_CA)
+        const allTrades = await getAllTradesPump(_CA)
 
-    const sniperSlot = allTrades[0].slot
-    const devWallet = _theCoin.creator
-    const _tokenPriceSol = _theCoin.market_cap / 1e9
+        const sniperSlot = allTrades[0].slot
+        const devWallet = _theCoin.creator
+        const _tokenPriceSol = _theCoin.market_cap / 1e9
 
-    let holders = {}
+        let holders = {}
 
-    for (var i = 0; i < allTrades.length; i++) {
-        const trade = allTrades[i]
+        for (var i = 0; i < allTrades.length; i++) {
+            const trade = allTrades[i]
 
-        if (!holders[allTrades[i].user]) holders[allTrades[i].user] = {
-            address: allTrades[i].user,
-            totalSolBought: 0,
-            totalSolSold: 0,
-            PnL: 0,
-            tokens: 0,
-            worthOfTokensSol: 0,
-            TXs: [],
-            tag: '',
-            hasBought: false,
-            hasSold: false,
-            isInsider: void 0
+            if (!holders[allTrades[i].user])
+                holders[allTrades[i].user] = {
+                    address: allTrades[i].user,
+                    totalSolBought: 0,
+                    totalSolSold: 0,
+                    PnL: 0,
+                    totalTokensBought: 0,
+                    totalTokensSold: 0,
+                    worthOfTokensSol: 0,
+                    TXs: [],
+                    tag: '',
+                    hasBought: false,
+                    hasSold: false,
+                    isInsider: void 0
+                }
+
+            if (allTrades[i].is_buy) {
+                // find snipers
+                if (trade.slot == sniperSlot) {
+                    holders[trade.user].tag = SNIPER
+                }
+                holders[trade.user].totalTokensBought += trade.token_amount;
+                holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
+                holders[trade.user].hasBought = true;
+            } else {
+                if (trade.slot == sniperSlot) {
+                    holders[trade.user].tag = SNIPER
+                }
+                holders[trade.user].tokens -= trade.token_amount;
+                holders[trade.user].totalTokensSold += trade.sol_amount / 1e9;
+                holders[trade.user].hasSold = true;
+            }
+
+            holders[trade.user].TXs.push(allTrades[i].signature)
         }
 
-        if (allTrades[i].is_buy) {
-            // find snipers
-            if (trade.slot == sniperSlot) {
-                holders[trade.user].tag = "SNIPER"
+        for (const addr in holders) {
+            if (holders[addr].hasSold && !holders[addr].hasBought) {
+                holders[addr].tag = TRANSFER;
+            } else if (holders[addr].hasBought && !holders[addr].hasSold) {
+                holders[addr].tag = HOLDER;
+            } else if (holders[addr].hasBought && holders[addr].hasSold) {
+                holders[addr].tag = DEGEN;
             }
-            holders[trade.user].tokens += trade.token_amount;
-            holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
-            holders[trade.user].hasBought = true;
+
+            if (holders[addr].address == devWallet)
+                holders[addr].tag = DEV
+
+            holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
+            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
+                .worthOfTokensSol
+        }
+
+        // Convert the object to an array of values (objects)
+        let holdersArray = Object.values(holders);
+
+        // Sort the array based on PnL (bigger losers first)
+        const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
+        const newHolders = {};
+        sortedHolders.forEach(holder => {
+            newHolders[holder.address] = holder;
+        });
+        const maxInsiderCheck = 50
+        let insidersChecked = 0
+        const INSIDER_HARD_CAP = 25
+
+        // check if top pnl losers are insiders or not
+        console.log('started fetching sigs: ', new Date())
+        for (const addr in newHolders) {
+            if (insidersChecked >= maxInsiderCheck) continue
+            const walletData = await fetchSignatures(newHolders[addr].address);
+            if (walletData && walletData[1] !== undefined && walletData[1] < INSIDER_HARD_CAP) {
+                holders[addr].isInsider = true
+            } else {
+                holders[addr].isInsider = false
+            }
+
+            insidersChecked++
+        }
+
+        console.log("-- Finished fetching data for coin: ", _CA)
+        console.log('ended fetching sigs: ', new Date())
+
+        const collection = _DBs.Holders.collection(_CA)
+        const collectionExists = await collection.estimatedDocumentCount() > 0
+        if (!collectionExists) {
+            // If the collection doesn't exist, create it
+            await _DBs.Holders.createCollection(_CA)
         } else {
-            if (trade.slot == sniperSlot) {
-                holders[trade.user].tag = "SNIPER"
-            }
-            holders[trade.user].tokens -= trade.token_amount;
-            holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
-            holders[trade.user].hasSold = true;
+            // If the collection does exist, clear all the old doucments (holders) and enter new ones
+            await collection.deleteMany({});
         }
 
-        holders[trade.user].TXs.push(allTrades[i].signature)
+        holdersArray = Object.values(holders);
+        const result = await collection.insertMany(holdersArray);
+
+        console.log('DB Insert res: ', result)
+
+        // const data = JSON.stringify(holders, null, 2);
+        // // Write the JSON string to a file
+        // fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
+        //     if (err) {
+        //         console.error('Error writing file:', err);
+        //     } else {
+        //         console.log('File has been saved.');
+        //     }
+        // });
+        // console.log(sortedHolders)
+    } catch (e) {
+        console.error('Error parsing trades: ', e)
     }
-
-    for (const addr in holders) {
-        if (holders[addr].hasSold && !holders[addr].hasBought) {
-            holders[addr].tag = TRANSFER;
-        } else if (holders[addr].hasBought && !holders[addr].hasSold) {
-            holders[addr].tag = HOLDER;
-        } else if (holders[addr].hasBought && holders[addr].hasSold) {
-            holders[addr].tag = DEGEN;
-        }
-
-        if (holders[addr].address == devWallet) holders[addr].tag = "DEV"
-
-        holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
-        holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
-            .worthOfTokensSol
-    }
-
-    // Convert the object to an array of values (objects)
-    let holdersArray = Object.values(holders);
-
-    // Sort the array based on PnL (bigger losers first)
-    const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
-
-    const maxInsiderCheck = 20
-    let insidersChecked = 0
-    // check if top pnl losers are insiders or not
-    for (const addr in holders) {
-        if (insidersChecked >= maxInsiderCheck) continue
-
-        const walletData = await fetchSignatures(holders[addr].address);
-        if (walletData && walletData[1] !== undefined && walletData[1] < 25) {
-            // definitely dev/insider
-            let tokenHolder = {
-                address: holders[addr].address,
-                amount: holders[addr].tokens / 1e6,
-                supplyOwned: ((holders[addr].tokens / 1e6 / totalSupply) * 100).toFixed(2),
-                tag: 'INSIDER',
-            }
-
-            holders[addr].isInsider = true
-        } else {
-            holders[addr].isInsider = false
-        }
-
-        insidersChecked++
-    }
-
-    console.log("-- Finished fetching data for coin: ", _CA)
-
-    const collection = _DBs.Holders.collection(_CA)
-    const collectionExists = await collection.estimatedDocumentCount() > 0
-    if (!collectionExists) {
-        // If the collection doesn't exist, create it
-        await _DBs.Holders.createCollection(_CA)
-    } else {
-        // If the collection does exist, clear all the old doucments (holders) and enter new ones
-        await collection.deleteMany({});
-    }
-
-    holdersArray = Object.values(holders);
-    const result = await collection.insertMany(holdersArray);
-
-
-
-    // const data = JSON.stringify(holders, null, 2);
-    // // Write the JSON string to a file
-    // fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
-    //     if (err) {
-    //         console.error('Error writing file:', err);
-    //     } else {
-    //         console.log('File has been saved.');
-    //     }
-    // });
-    // console.log(sortedHolders)
 }
 
 const ca = 'HAtsjk6h7UHeB88MGhSqwco8WuyjPuVcEB3TzLFDpump'
-// const totalSupply s= 1000000000000000
+// const totalSupplys= 1000000000000000
 // getTokenHolders(ca, totalSupply)
 
-setTimeout(() => {
-    parseTokenTrades(ca)
-}, 2000)
+// setTimeout(() => {
+//     getTokenDataFromDB(ca)
+// }, 10000)
+
+// getTokenDataFromDB(ca)
 
 module.exports = {
     getCoinLockAddress,

@@ -54,10 +54,10 @@ async function serverStarted() {
     _DBs = _DBSetup.DBs
 
     // fetch top coins on pump.fun
-    PrepareCoinsForFE()
+    // PrepareCoinsForFE()
 
     // watch all the guarded coins with the provided interval (in seconds) for migration
-    watchGuardedCoinsForMigration(migrationCheckInterval)
+    // watchGuardedCoinsForMigration(migrationCheckInterval)
 
     // await _Collections.GuardedCoins.updateMany({}, {
     //     $set: {
@@ -113,9 +113,9 @@ async function PrepareCoinsForFE() {
         return pumpfunCoins
     }
 
-    setTimeout(() => {
-        PrepareCoinsForFE()
-    }, 1000 * 30)
+    // setTimeout(() => {
+    //     PrepareCoinsForFE()
+    // }, 1000 * 30)
 }
 
 
