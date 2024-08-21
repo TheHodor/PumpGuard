@@ -19,7 +19,6 @@ const VOLUME_UPDATERATE_MIN = 20
 
 
 async function getTopProgressCoins() {
-    try {
         let allTopCoins = []
 
         // each time we fetch 50 tokens
@@ -38,6 +37,7 @@ async function getTopProgressCoins() {
                 allTopCoins = [...allTopCoins, ...sortedTokens]
             } catch (error) {
                 console.log("E.103", error)
+                return null
             }
         }
 
@@ -47,18 +47,10 @@ async function getTopProgressCoins() {
         allTopCoins = await setHolders(allTopCoins)
         allTopCoins = await setVolume(allTopCoins)
         return allTopCoins
-    }
-    catch (e) {
-        console.log('Failed in getTopProgress :', e)
-        return null
-    }
 }
 
 
 async function getTopGuardedCoins() {
-    try {
-
-
         let topGuarded = []
         const _topGuarded = await _Collections.GuardedCoins.find({}).sort({
             balance: -1
@@ -76,6 +68,7 @@ async function getTopGuardedCoins() {
                 }
             } catch (error) {
                 console.log(`E.104 for ${item.ca}: `, error);
+                return null
             }
 
             // Add a 2-second delay after each fetch
@@ -85,16 +78,12 @@ async function getTopGuardedCoins() {
         topGuarded = await setHolders(topGuarded)
         topGuarded = await setVolume(topGuarded)
         return topGuarded.slice(0, 20)
-    }
-    catch (e) {
-        console.log('Error on getTopGuardedTokens: ', e)
-        return null
-    }
+
 }
 
 
 async function getRecentlyGuardedCoins() {
-    try {
+
         let recentlyGuarded = []
         const _recentlyGuarded = await _Collections.GuardedCoins.find({}).sort({
             firstDeposit: 1
@@ -112,6 +101,7 @@ async function getRecentlyGuardedCoins() {
                 }
             } catch (error) {
                 console.log(`E.104 for ${item.ca}: `, error);
+                return null
             }
 
             // Add a 2-second delay after each fetch
@@ -121,11 +111,6 @@ async function getRecentlyGuardedCoins() {
         recentlyGuarded = await setHolders(recentlyGuarded)
         recentlyGuarded = await setVolume(recentlyGuarded)
         return recentlyGuarded.slice(0, 20)
-    } catch (e) {
-        console.log('getRecentlyGuardedCoins failed: ', e)
-        return null
-    }
-
 }
 
 
