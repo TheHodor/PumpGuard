@@ -88,7 +88,7 @@ async function PrepareCoinsForFE() {
     for (const coin of topProgressCoins) {
         const _tokenHolders = await getCoinHolders(coin.mint);
         coin.holders = _tokenHolders.holderCount
-        await delay(250) // avoiding rate limit
+        await delay(250) // avoiding rate limitWhen 
     }
 
     setTimeout(async () => {
