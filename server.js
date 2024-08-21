@@ -16,7 +16,6 @@ const {
     isCoinGuarded,
     parseTokenTrades,
     verifyIfRugged,
-    isCoinGuarded
 } = require('./utils/guardCoins.js');
 const {
     getCoinHolders
@@ -30,7 +29,7 @@ const {
 
 const {
     decrypt
-} = require('./encrypt.js');
+} = require('./utils/encrypt.js');
 
 const {
     transferSOL
@@ -213,15 +212,15 @@ app.post('/get_coin_status', async (req, res) => {
 });
 
 // user request to get all their refunds
-app.post('/get_coin_status', async (req, res) => {
-    const _res = await _Collections.GuardedCoins.findOne({
+app.post('/get_user_refunds', async (req, res) => {
+    const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.address
     })
     res.send(_res)
 });
 
 // user request to be paid for one of their refunds
-app.post('/get_coin_status', async (req, res) => {
+app.post('/pay_user_refund', async (req, res) => {
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.address
     })
