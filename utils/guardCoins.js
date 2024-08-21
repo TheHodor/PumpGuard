@@ -90,7 +90,9 @@ async function getCoinLockAddress(_CA) {
             lockPVK: encryptedKey,
             creationDate: Date.now(),
             firstDeposit: 0,
-            hasMigrated: false
+            hasMigrated: false,
+            hasRuged: false,
+            rugDetectDate: null
         })
 
         // successfully inserted
@@ -557,6 +559,17 @@ async function refundHolders(holders, _CA) {
                     },
                 },
             });
+
+            // update the db and identify the coin as rugged
+            await _Collections.GuardedCoins.updateOne({
+                ca: _CA,
+                hasRuged: false,
+            }, {
+                $set: {
+                    hasRuged: true,
+                    rugDetectDate: Date.now(),
+                }
+            })
         }
     } catch (e) {
         console.log('Error processing holders refund', e)
