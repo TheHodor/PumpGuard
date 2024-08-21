@@ -109,6 +109,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
     );
 
     if (confirmation.value.err) {
+      return null
       throw new Error('Transaction not confirmed.');
     }
 
@@ -116,6 +117,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
     return txid
   } catch (error) {
     console.error('Transaction failed', error);
+    return null
   }
 }
 
