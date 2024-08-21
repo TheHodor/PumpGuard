@@ -477,6 +477,12 @@ async function refundHolders(holders, _CA) {
             return
         }
 
+        const _coinData = await fetchCoinData(_CA)
+        if (!_coinData) {
+            console.log("The coin was not found in pumpfun api: ", _CA)
+            return
+        }
+
         // For testing. Use above for prod
         const balance = tokenData.balance
         const actualSolAmount = balance / 1e9
@@ -544,6 +550,10 @@ async function refundHolders(holders, _CA) {
                         originalLoss: refund.originalLoss,
                         paid: false,
                         paymentTx: null,
+                        name: _coinData.name,
+                        symbol: _coinData.symbol,
+                        rugDetectDate: Date.now(),
+                        image_uri: _coinData.image_uri,
                     },
                 },
             });
