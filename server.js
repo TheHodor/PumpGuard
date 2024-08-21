@@ -1,6 +1,6 @@
 const express = require('express');
 const http = require('http');
-// const https = require('https');
+const https = require('https');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -183,14 +183,14 @@ app.get('/verify_rugged', async (req, res) => {
 })
 
 // user request to look up a coin and check if it's guarded or not + it's data for front end
-app.get('/is_coin_guarded', async (req, res) => {
-    const data = await isCoinGuarded(req.query.ca)
+app.post('/is_coin_guarded', async (req, res) => {
+    const data = await isCoinGuarded(req.body.ca)
     res.send(data)
 });
 
 // user request to get lock address for a coin
-app.get('/get_coin_lock_address', async (req, res) => {
-    const _addressAndData = await getCoinLockAddress(req.query.ca)
+app.post('/get_coin_lock_address', async (req, res) => {
+    const _addressAndData = await getCoinLockAddress(req.body.ca)
     res.send(_addressAndData)
 });
 
@@ -237,7 +237,8 @@ app.post('/pay_user_refund', async (req, res) => {
                 const decryptedPrivKey = decrypt(_theCoin.lockPVK)
                 const keyPair = initializeKeypair(decryptedPrivKey)
 
-                const transferResTX = await transferSOL(req.body.address, _res.refunds[i].refundAmount * 1e9, keyPair)
+                const transferResTX = await transferSOL(req.body.address, _res.refunds[i].refundAmount *
+                    1e9, keyPair)
 
                 // if transfer was successful update the user's refund state
                 if (transferResTX && transferResTX.length > 30) {
@@ -269,9 +270,9 @@ function delay(ms) {
 // *************** HELPERS *************** \\
 
 
-const server = http.createServer({
-    // cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
-    // key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
+const server = https.createServer({
+    cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
+    key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
 }, app);
 
-server.listen(8080);
+server.listen(443);
