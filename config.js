@@ -9,9 +9,10 @@ const RPC_ankr = "https://rpc.ankr.com/solana/2e1fb918cf30776f49ab4ef7151c6ca955
 const RPC_helius = "https://mainnet.helius-rpc.com/?api-key=0923441f-c558-4e0b-8b67-9294161fdfb3"
 const RPC_shyft = "https://rpc.shyft.to?api_key=4EzHI9GGU3I9Xqsc"
 
+
 const APIKEY_HELIUS = "0923441f-c558-4e0b-8b67-9294161fdfb3"
 const APIKEY_SHYFT = "4EzHI9GGU3I9Xqsc"
-
+const APIKEY_BITQUERY = "BQYtL5KF6NRtF6KRjNzgowkFwe5YQxUm"
 
 const connection_helius = new Connection(RPC_helius);
 const connection_ankr = new Connection(RPC_ankr);
@@ -46,6 +47,7 @@ module.exports = {
 
     APIKEY_HELIUS,
     APIKEY_SHYFT,
+    APIKEY_BITQUERY,
 
     RPC_helius,
     RPC_ankr,
