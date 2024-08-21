@@ -84,7 +84,12 @@ async function serverStarted() {
 async function PrepareCoinsForFE() {
     allGuardedCoins_byPumpGuard = await _Collections.GuardedCoins.find({}).toArray()
 
-    topProgressCoins = addLockedSolForCoins(await PumpFunFetch.getTopProgressCoins())
+    let topProgress = await PumpFunFetch.getTopProgressCoins()
+    if(!topProgress) {
+        return null;
+    }
+    topProgressCoins = addLockedSolForCoins(topProgress)
+
     for (const coin of topProgressCoins) {
         const _tokenHolders = await getCoinHolders(coin.mint);
         coin.holders = _tokenHolders.holderCount
@@ -92,7 +97,11 @@ async function PrepareCoinsForFE() {
     }
 
     setTimeout(async () => {
-        topGuardedCoins = addLockedSolForCoins(await PumpFunFetch.getTopGuardedCoins())
+        const topGuarded = await PumpFunFetch.getTopGuardedCoins()
+        if(!topGuarded) {
+            return
+        }
+        topGuardedCoins = addLockedSolForCoins(topGuarded)
         for (const coin of topGuardedCoins) {
             const _tokenHolders = await getCoinHolders(coin.mint);
             coin.holders = _tokenHolders.holderCount
@@ -102,7 +111,11 @@ async function PrepareCoinsForFE() {
     }, 3000)
 
     setTimeout(async () => {
-        recentlyGuardedCoins = addLockedSolForCoins(await PumpFunFetch.getRecentlyGuardedCoins())
+        const guardedTokens = await PumpFunFetch.getRecentlyGuardedCoins()
+        if(!guardedTokens) {
+            return
+        }
+        recentlyGuardedCoins = addLockedSolForCoins(guardedTokens)
         for (const coin of recentlyGuardedCoins) {
             const _tokenHolders = await getCoinHolders(coin.mint);
             coin.holders = _tokenHolders.holderCount
@@ -299,8 +312,8 @@ function delay(ms) {
 
 
 const server = https.createServer({
-    cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
-    key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
+    cert: fs.readFileSync('../../../../etc/cloudflare-ssl/pumpguard.fun.pem'),
+    key: fs.readFileSync('../../../../etc/cloudflare-ssl/pumpguard.fun.key'),
 }, app);
 
 server.listen(443);
