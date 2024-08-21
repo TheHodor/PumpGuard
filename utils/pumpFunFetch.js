@@ -19,93 +19,113 @@ const VOLUME_UPDATERATE_MIN = 20
 
 
 async function getTopProgressCoins() {
-    let allTopCoins = []
+    try {
+        let allTopCoins = []
 
-    // each time we fetch 50 tokens
-    // so... 5 = 250 tokens will be checked
-    const howManyTimes = 7
+        // each time we fetch 50 tokens
+        // so... 5 = 250 tokens will be checked
+        const howManyTimes = 7
 
-    for (let i = 0; i < howManyTimes; i++) {
-        let offset = i * 50
-        let _URL =
-            `https://frontend-api.pump.fun/coins?offset=${offset}&limit=50&sort=last_trade_timestamp&order=DESC&includeNsfw=true&complete=false`
+        for (let i = 0; i < howManyTimes; i++) {
+            let offset = i * 50
+            let _URL =
+                `https://frontend-api.pump.fun/coins?offset=${offset}&limit=50&sort=last_trade_timestamp&order=DESC&includeNsfw=true&complete=false`
 
-        try {
-            let response = await fetch(_URL)
-            let data = await response.json()
-            let sortedTokens = data.slice().sort((a, b) => b.usd_market_cap - a.usd_market_cap)
-            allTopCoins = [...allTopCoins, ...sortedTokens]
-        } catch (error) {
-            console.log("E.103", error)
+            try {
+                let response = await fetch(_URL)
+                let data = await response.json()
+                let sortedTokens = data.slice().sort((a, b) => b.usd_market_cap - a.usd_market_cap)
+                allTopCoins = [...allTopCoins, ...sortedTokens]
+            } catch (error) {
+                console.log("E.103", error)
+            }
         }
+
+        // If you want to sort allTopCoins once more globally by usd_market_cap
+        allTopCoins.sort((a, b) => b.usd_market_cap - a.usd_market_cap)
+
+        allTopCoins = await setHolders(allTopCoins)
+        allTopCoins = await setVolume(allTopCoins)
+        return allTopCoins
     }
-
-    // If you want to sort allTopCoins once more globally by usd_market_cap
-    allTopCoins.sort((a, b) => b.usd_market_cap - a.usd_market_cap)
-
-    allTopCoins = await setHolders(allTopCoins)
-    allTopCoins = await setVolume(allTopCoins)
-    return allTopCoins
+    catch (e) {
+        console.log('Failed in getTopProgress :', e)
+        return null
+    }
 }
 
 
 async function getTopGuardedCoins() {
-    let topGuarded = []
-    const _topGuarded = await _Collections.GuardedCoins.find({}).sort({
-        balance: -1
-    }).limit(20).toArray()
+    try {
 
-    for (const item of _topGuarded) {
-        if (!item.ca || item.ca.length < 30) continue
 
-        try {
-            const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
-            const data = await response.json();
+        let topGuarded = []
+        const _topGuarded = await _Collections.GuardedCoins.find({}).sort({
+            balance: -1
+        }).limit(20).toArray()
 
-            if (data.creator && data.creator.length > 39 && data.creator.length < 49) {
-                topGuarded.push(data);
+        for (const item of _topGuarded) {
+            if (!item.ca || item.ca.length < 30) continue
+
+            try {
+                const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
+                const data = await response.json();
+
+                if (data.creator && data.creator.length > 39 && data.creator.length < 49) {
+                    topGuarded.push(data);
+                }
+            } catch (error) {
+                console.log(`E.104 for ${item.ca}: `, error);
             }
-        } catch (error) {
-            console.log(`E.104 for ${item.ca}: `, error);
+
+            // Add a 2-second delay after each fetch
+            await delay(2000);
         }
 
-        // Add a 2-second delay after each fetch
-        await delay(2000);
+        topGuarded = await setHolders(topGuarded)
+        topGuarded = await setVolume(topGuarded)
+        return topGuarded.slice(0, 20)
     }
-
-    topGuarded = await setHolders(topGuarded)
-    topGuarded = await setVolume(topGuarded)
-    return topGuarded.slice(0, 20)
+    catch (e) {
+        console.log('Error on getTopGuardedTokens: ', e)
+        return null
+    }
 }
 
 
 async function getRecentlyGuardedCoins() {
-    let recentlyGuarded = []
-    const _recentlyGuarded = await _Collections.GuardedCoins.find({}).sort({
-        firstDeposit: 1
-    }).limit(20).toArray()
+    try {
+        let recentlyGuarded = []
+        const _recentlyGuarded = await _Collections.GuardedCoins.find({}).sort({
+            firstDeposit: 1
+        }).limit(20).toArray()
 
-    for (const item of _recentlyGuarded) {
-        if (!item.ca || item.ca.length < 30) continue
+        for (const item of _recentlyGuarded) {
+            if (!item.ca || item.ca.length < 30) continue
 
-        try {
-            const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
-            const data = await response.json();
+            try {
+                const response = await fetch(`https://frontend-api.pump.fun/coins/${item.ca}`);
+                const data = await response.json();
 
-            if (data.creator && data.creator.length > 39 && data.creator.length < 49) {
-                recentlyGuarded.push(data);
+                if (data.creator && data.creator.length > 39 && data.creator.length < 49) {
+                    recentlyGuarded.push(data);
+                }
+            } catch (error) {
+                console.log(`E.104 for ${item.ca}: `, error);
             }
-        } catch (error) {
-            console.log(`E.104 for ${item.ca}: `, error);
+
+            // Add a 2-second delay after each fetch
+            await delay(2000);
         }
 
-        // Add a 2-second delay after each fetch
-        await delay(2000);
+        recentlyGuarded = await setHolders(recentlyGuarded)
+        recentlyGuarded = await setVolume(recentlyGuarded)
+        return recentlyGuarded.slice(0, 20)
+    } catch (e) {
+        console.log('getRecentlyGuardedCoins failed: ', e)
+        return null
     }
 
-    recentlyGuarded = await setHolders(recentlyGuarded)
-    recentlyGuarded = await setVolume(recentlyGuarded)
-    return recentlyGuarded.slice(0, 20)
 }
 
 
@@ -135,8 +155,10 @@ async function setHolders(coins) {
     return coins
 }
 let _____calc = false
-async function setVolume(coins) {return 0
-    for (var i = 0; i < coins.length; i++) {if (_____calc) block
+async function setVolume(coins) {
+    return 0
+    for (var i = 0; i < coins.length; i++) {
+        if (_____calc) block
         // find coin holders
         const __ca = coins[i].mint
         const keyExists = Object.keys(volume1h).includes(__ca)
@@ -176,22 +198,22 @@ async function getAllTradesPump(ca) {
         while (true) {
             const response = await fetch(
                 `https://frontend-api.pump.fun/trades/${ca}?limit=200&offset=${offset}`, {
-                    headers: {
-                        accept: '*/*',
-                        'accept-language': 'en-US,en;q=0.8',
-                        'if-none-match': 'W/"12266-/HJ/xj010RRztcqVlXCQtyB5KTs"',
-                        'sec-ch-ua': '"Brave";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-                        'sec-ch-ua-mobile': '?0',
-                        'sec-ch-ua-platform': '"Windows"',
-                        'sec-fetch-dest': 'empty',
-                        'sec-fetch-mode': 'cors',
-                        'sec-fetch-site': 'cross-site',
-                        'sec-gpc': '1',
-                        Referer: 'https://www.pump.fun/',
-                        'Referrer-Policy': 'strict-origin-when-cross-origin',
-                    },
-                    method: 'GET',
-                }
+                headers: {
+                    accept: '*/*',
+                    'accept-language': 'en-US,en;q=0.8',
+                    'if-none-match': 'W/"12266-/HJ/xj010RRztcqVlXCQtyB5KTs"',
+                    'sec-ch-ua': '"Brave";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+                    'sec-ch-ua-mobile': '?0',
+                    'sec-ch-ua-platform': '"Windows"',
+                    'sec-fetch-dest': 'empty',
+                    'sec-fetch-mode': 'cors',
+                    'sec-fetch-site': 'cross-site',
+                    'sec-gpc': '1',
+                    Referer: 'https://www.pump.fun/',
+                    'Referrer-Policy': 'strict-origin-when-cross-origin',
+                },
+                method: 'GET',
+            }
             );
             if (response) {
                 const result = await response.json();
