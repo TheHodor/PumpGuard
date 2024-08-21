@@ -84,12 +84,10 @@ async function serverStarted() {
 async function PrepareCoinsForFE() {
     allGuardedCoins_byPumpGuard = await _Collections.GuardedCoins.find({}).toArray()
 
-    console.log('All guarded tokens: ', allGuardedCoins_byPumpGuard)
     let topProgress = await PumpFunFetch.getTopProgressCoins()
     if(!topProgress) {
         return null;
     }
-    console.log('All topProgress tokens: ', topProgress)
 
     topProgressCoins = addLockedSolForCoins(topProgress)
 
