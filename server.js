@@ -23,9 +23,6 @@ const {
 const {
     watchGuardedCoinsForMigration
 } = require('./utils/migrationAndRefund.js');
-const {
-    findSuspiciousWallets
-} = require('./utils/findInsiders.js');
 
 const {
     decrypt
