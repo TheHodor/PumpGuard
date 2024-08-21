@@ -1,6 +1,6 @@
 const express = require('express');
 const http = require('http');
-// const https = require('https');
+const https = require('https');
 const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const fs = require('fs');
@@ -15,7 +15,7 @@ const {
     updateLockAddressBalance,
     isCoinGuarded,
     parseTokenTrades,
-    verifyIfRugged
+    verifyIfRugged,
 } = require('./utils/guardCoins.js');
 const {
     getCoinHolders
@@ -23,6 +23,14 @@ const {
 const {
     watchGuardedCoinsForMigration
 } = require('./utils/migrationAndRefund.js');
+
+const {
+    decrypt
+} = require('./utils/encrypt.js');
+
+const {
+    transferSOL
+} = require('./utils/transferSol.js');
 
 
 // ----- setting express app ----- //
@@ -39,7 +47,8 @@ app.use(cors());
 
 
 let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
-const migrationCheckInterval = 60 * 5 // seconds
+const ONE_MINUTE = 1000 * 60
+const ONE_HOUR = 1000 * 60 * 60
 
 
 const startServer = async () => {
@@ -58,7 +67,9 @@ async function serverStarted() {
     PrepareCoinsForFE()
 
     // watch all the guarded coins with the provided interval (in seconds) for migration
-    watchGuardedCoinsForMigration(migrationCheckInterval)
+    setInterval(() => {
+        watchGuardedCoinsForMigration()
+    }, ONE_HOUR * 2)
 
     await _Collections.GuardedCoins.updateMany({}, {
         $set: {
@@ -169,14 +180,14 @@ app.get('/verify_rugged', async (req, res) => {
 })
 
 // user request to look up a coin and check if it's guarded or not + it's data for front end
-app.get('/is_coin_guarded', async (req, res) => {
-    const data = await isCoinGuarded(req.query.ca)
+app.post('/is_coin_guarded', async (req, res) => {
+    const data = await isCoinGuarded(req.body.ca)
     res.send(data)
 });
 
 // user request to get lock address for a coin
-app.get('/get_coin_lock_address', async (req, res) => {
-    const _addressAndData = await getCoinLockAddress(req.query.ca)
+app.post('/get_coin_lock_address', async (req, res) => {
+    const _addressAndData = await getCoinLockAddress(req.body.ca)
     res.send(_addressAndData)
 });
 
@@ -189,6 +200,64 @@ app.post('/update_lock_address_balance', async (req, res) => {
     })
 });
 
+// user request to get status of a coin
+app.post('/get_coin_status', async (req, res) => {
+    const _theCoin = await _Collections.GuardedCoins.findOne({
+        ca: req.body.ca
+    })
+    res.send(_theCoin)
+});
+
+// user request to get all their refunds
+app.post('/get_user_refunds', async (req, res) => {
+    const _res = await _Collections.UsersRefunds.findOne({
+        address: req.body.address
+    })
+    res.send(_res)
+});
+
+// user request to be paid for one of their refunds
+app.post('/pay_user_refund', async (req, res) => {
+    const _res = await _Collections.UsersRefunds.findOne({
+        address: req.body.address
+    })
+
+    for (var i = 0; i < _res.refunds; i++) {
+        if (_res.refunds[i].ca == req.body.ca) {
+            if (_res.refunds[i].refundAmount && _res.refunds[i].paid == false) {
+
+                // get the refund lock address
+                const _theCoin = await _Collections.GuardedCoins.findOne({
+                    address: req.body.ca
+                })
+
+                const decryptedPrivKey = decrypt(_theCoin.lockPVK)
+                const keyPair = initializeKeypair(decryptedPrivKey)
+
+                const transferResTX = await transferSOL(req.body.address, _res.refunds[i].refundAmount *
+                    1e9, keyPair)
+
+                // if transfer was successful update the user's refund state
+                if (transferResTX && transferResTX.length > 30) {
+                    await _Collections.UsersRefunds.updateOne({
+                        address: req.body.address,
+                        'refunds.ca': {
+                            $eq: _CA
+                        }
+                    }, {
+                        $addToSet: {
+                            refunds: {
+                                paid: true,
+                                paymentTx: transferResTX,
+                            },
+                        },
+                    });
+                }
+            }
+        }
+    }
+});
+
 
 
 // *************** HELPERS *************** \\
@@ -198,9 +267,9 @@ function delay(ms) {
 // *************** HELPERS *************** \\
 
 
-const server = http.createServer({
-    // cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
-    // key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
+const server = https.createServer({
+    cert: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.pem'),
+    key: fs.readFileSync('../../etc/cloudflare-ssl/pumpguard.fun.key'),
 }, app);
 
-server.listen(8080);
+server.listen(443);
