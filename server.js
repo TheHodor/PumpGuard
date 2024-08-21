@@ -181,31 +181,62 @@ app.get('/verify_rugged', async (req, res) => {
 
 // user request to look up a coin and check if it's guarded or not + it's data for front end
 app.post('/is_coin_guarded', async (req, res) => {
-    const data = await isCoinGuarded(req.body.ca)
-    res.send(data)
+    if (!req.body.ca) {
+        return res.status(400).json({ error: 'Contract address (ca) is required.' });
+    }
+    try {
+        const data = await isCoinGuarded(req.body.ca);
+        res.status(200).send(data);
+    } catch (error) {
+        console.error('Error checking if coin is guarded:', error);
+        res.status(500).json({ error: 'An error occurred while checking if the coin is guarded.' });
+    }
 });
 
 // user request to get lock address for a coin
 app.post('/get_coin_lock_address', async (req, res) => {
-    const _addressAndData = await getCoinLockAddress(req.body.ca)
-    res.send(_addressAndData)
+    if (!req.body.ca) {
+        return res.status(400).json({ error: 'Contract address (ca) is required.' });
+    }
+    try {
+        const _addressAndData = await getCoinLockAddress(req.body.ca);
+        res.status(200).send(_addressAndData);
+    } catch (error) {
+        console.error('Error getting coin lock address:', error);
+        res.status(500).json({ error: 'An error occurred while retrieving the coin lock address.' });
+    }
 });
 
 // user request for update of lock address balance of a coin
 app.post('/update_lock_address_balance', async (req, res) => {
-    const _balance = await updateLockAddressBalance(req.body.ca)
-
-    res.json({
-        balance: _balance
-    })
+    if (!req.body.ca) {
+        return res.status(400).json({ error: 'Contract address (ca) is required.' });
+    }
+    try {
+        const _balance = await updateLockAddressBalance(req.body.ca);
+        res.status(200).json({ balance: _balance });
+    } catch (error) {
+        console.error('Error updating lock address balance:', error);
+        res.status(500).json({ error: 'An error occurred while updating the lock address balance.' });
+    }
 });
 
 // user request to get status of a coin
 app.post('/get_coin_status', async (req, res) => {
-    const _theCoin = await _Collections.GuardedCoins.findOne({
-        ca: req.body.ca
-    })
-    res.send(_theCoin)
+    if (!req.body.ca) {
+        return res.status(400).json({ error: 'Contract address (ca) is required.' });
+    }
+    try {
+        const _theCoin = await _Collections.GuardedCoins.findOne({ ca: req.body.ca });
+        if (_theCoin) {
+            res.status(200).send(_theCoin);
+        } else {
+            res.status(404).json({ error: 'Coin not found.' });
+        }
+    } catch (error) {
+        console.error('Error getting coin status:', error);
+        res.status(500).json({ error: 'An error occurred while retrieving the coin status.' });
+    }
 });
 
 // user request to get all their refunds
