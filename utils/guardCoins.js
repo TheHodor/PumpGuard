@@ -40,6 +40,8 @@ const {
     initializeKeypair
 } = require('./transferSol.js')
 
+const { takePumpGuardFee } = require('./migrationAndRefund.js')
+
 // hardcoded values
 const PLATFORM_FEE = 0.2
 
@@ -422,7 +424,7 @@ async function parseTokenTrades(_CA) {
         const INSIDER_HARD_CAP = 25
 
         // check if top pnl losers are insiders or not
-        console.log('started fetching sigs: ', new Date())
+        // console.log('started fetching sigs: ', new Date())
         for (const addr in newHolders) {
             if (insidersChecked >= maxInsiderCheck) continue
             const walletData = await fetchSignatures(newHolders[addr].address);
@@ -436,7 +438,7 @@ async function parseTokenTrades(_CA) {
         }
 
         console.log("-- Finished fetching data for coin: ", _CA)
-        console.log('ended fetching sigs: ', new Date())
+        // console.log('ended fetching sigs: ', new Date())
 
         const collection = _DBs.Holders.collection(_CA)
         const collectionExists = await collection.estimatedDocumentCount() > 0
@@ -451,16 +453,6 @@ async function parseTokenTrades(_CA) {
         holdersArray = Object.values(holders);
         const result = await collection.insertMany(holdersArray);
 
-        // const data = JSON.stringify(holders, null, 2);
-        // // Write the JSON string to a file
-        // fs.writeFile(`${_CA}.json`, data, 'utf8', (err) => {
-        //     if (err) {
-        //         console.error('Error writing file:', err);
-        //     } else {
-        //         console.log('File has been saved.');
-        //     }
-        // });
-        // console.log(sortedHolders)
     } catch (e) {
         console.error('Error parsing trades: ', e)
     }
@@ -520,7 +512,7 @@ async function refundHolders(holders, _CA) {
         })
 
         // console.log('Refunds to process:', refunds)
-        // await takePumpGuardFee(keyPair)
+        await takePumpGuardFee(keyPair)
 
         for (const refund of refunds) {
             let theUser = await _Collections.UsersRefunds.findOne({
@@ -581,17 +573,6 @@ function roundDownToThirdDecimal(value) {
 }
 
 
-const ca = 'HHtQvS8QrVavE4hsmbzrLFgaucY1NhdYmBtJK824pump'
-// const totalSupplys= 1000000000000000
-// getTokenHolders(ca, totalSupply)
-
-// setTimeout(() => {
-//     getTokenDataFromDB(ca)
-// }, 10000)
-
-setTimeout(() => {
-    verifyIfRugged(ca)
-}, 3000)
 module.exports = {
     getCoinLockAddress,
     updateLockAddressBalance,

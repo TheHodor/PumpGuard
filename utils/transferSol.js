@@ -110,7 +110,6 @@ async function transferSOL(wallet, amount, fromKeypair) {
 
     if (confirmation.value.err) {
       return null
-      throw new Error('Transaction not confirmed.');
     }
 
     console.log(`Transaction Successfully Confirmed! View on SolScan: https://solscan.io/tx/${txid}`);
