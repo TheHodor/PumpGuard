@@ -154,10 +154,12 @@ async function updateLockAddressBalance(_CA) {
                 firstDeposit: firstDepositDate,
             }
         })
-
-        console.log('updateLockAddressBalance res: ', res)
-        TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
-
+        if (res.matchedCount > 0) {
+            console.log('Updated document ID:', _CA); 
+            TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+        } else {
+            console.log('No document was updated.');
+        }
     }
 
     return balance
@@ -456,9 +458,10 @@ async function parseTokenTrades(_CA) {
 
         holdersArray = Object.values(holders);
         const result = await collection.insertMany(holdersArray);
-
+        return "Trades Parsed"
     } catch (e) {
         console.error('Error parsing trades: ', e)
+        return "Parse Failed"
     }
 }
 
