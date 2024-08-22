@@ -22,7 +22,8 @@ const {
     getCoinHolders
 } = require('./utils/apiFetch.js');
 const {
-    watchGuardedCoinsForMigration
+    watchGuardedCoinsForMigration,
+    hasCoinMigrated
 } = require('./utils/migrationAndRefund.js');
 
 const {
@@ -54,7 +55,7 @@ app.use(cors());
 let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
 const ONE_MINUTE = 1000 * 60
 const ONE_HOUR = 1000 * 60 * 60
-
+const PLATFORM_FEE = 0.2
 
 const startServer = async () => {
     console.log("Server Started :D")
@@ -76,11 +77,11 @@ async function serverStarted() {
         watchGuardedCoinsForMigration()
     }, ONE_HOUR * 2)
 
-    await _Collections.GuardedCoins.updateMany({}, {
-        $set: {
-            hasMigrated: false
-        }
-    });
+    // await _Collections.GuardedCoins.updateMany({}, {
+    //     $set: {
+    //         hasMigrated: false
+    //     }
+    // });
 }
 
 
@@ -292,23 +293,106 @@ app.post('/get_coin_status', async (req, res) => {
             error: 'Passed address must be a solana address'
         });
     }
+
+    let _hasMigrated, verifyRug, devCanClaimLockedSol
     try {
-        const _theCoin = await _Collections.GuardedCoins.findOne({
-            ca: req.body.ca
+        _hasMigrated = await hasCoinMigrated(req.body.ca)
+    } catch (error) {
+        console.error('Error verifying rug:', error);
+        res.status(500).json({
+            error: 'An error occurred while verifying coin rug.'
         });
-        if (_theCoin) {
-            res.status(200).send(_theCoin);
-        } else {
-            res.status(404).json({
-                error: 'Coin not found.'
+    }
+
+    if (!_hasMigrated) {
+        try {
+            verifyRug = await verifyIfRugged(req.body.ca)
+        } catch (error) {
+            console.error('Error verifying rug:', error);
+            res.status(500).json({
+                error: 'An error occurred while verifying coin rug.'
             });
         }
+    }
+
+    try {
+        let _theCoin = await _Collections.GuardedCoins.findOne({
+            ca: req.body.ca
+        })
+        if (!_theCoin) res.status(404).json({
+            error: 'Coin not found.'
+        })
+
+        _theCoin.devCanClaimLockedSol = devCanClaimLockedSol
+
+        // if coin has migrated => dev can claim
+        if (_hasMigrated || _theCoin.hasMigrated) {
+            devCanClaimLockedSol = true
+        }
+        // if coin not migrated but 7 days has passed and COIN HAS NOT RUGGED => dev can claim
+        else if (verifyRug == false && _theCoin.firstDeposit < Date.now() - ONE_HOUR * 24 * 7) {
+            _theCoin.days7PassedWithNoRug = true
+            devCanClaimLockedSol = true
+        }
+
+        if (!_theCoin.hasMigrated) _theCoin.hasMigrated = _hasMigrated
+
+        _theCoin = {
+            verifyRug: verifyRug,
+            ..._theCoin
+        }
+
+        res.status(200).send(_theCoin);
     } catch (error) {
         console.error('Error getting coin status:', error);
         res.status(500).json({
             error: 'An error occurred while retrieving the coin status.'
         });
     }
+});
+
+// dev request to claim their refund 
+app.post('/claim_dev_refund', async (req, res) => {
+    if (!req.body.address) {
+        return res.status(400).json({
+            error: 'Wallet address is required.'
+        });
+    }
+    if (!isSolanaAddress(req.body.address)) {
+        return res.status(400).json({
+            error: 'Passed address must be a valid wallet address'
+        });
+    }
+
+    let _theCoin = await _Collections.GuardedCoins.findOne({
+        ca: req.body.ca
+    })
+
+    if (!authSigner(_theCoin.dev, req.body.signature, req.body.message)) {
+        return res.status(400).json({
+            error: 'Auth Failed!'
+        });
+    }
+
+    // transfer dev's refund
+    const decryptedPrivKey = decrypt(_theCoin.lockPVK)
+    const keyPair = initializeKeypair(decryptedPrivKey)
+
+    const transferResTX = await transferSOL(_theCoin.dev, _theCoin.balance - (PLATFORM_FEE * 1e9), keyPair)
+
+    // if transfer was successful update the user's refund state
+    if (transferResTX && transferResTX.length > 30) {
+        await _Collections.GuardedCoins.updateOne({
+            ca: req.body.ca
+        }, {
+            $set: {
+                devRefundTX: transferResTX,
+                devBeenRefunded: true
+            }
+        })
+    }
+
+    res.send(transferResTX)
 });
 
 // user request to get all their refunds
@@ -345,14 +429,14 @@ app.post('/pay_user_refund', async (req, res) => {
     if (!authSigner(req.body.publicKey, req.body.signature, req.body.message)) {
         return res.status(400).json({
             error: 'Auth Failed!'
-        }); 
+        });
     }
-    
+
 
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.publicKey
     })
-    
+
     for (var i = 0; i < _res.refunds; i++) {
         if (_res.refunds[i].ca == req.body.ca) {
             if (_res.refunds[i].refundAmount && _res.refunds[i].paid == false) {
