@@ -40,7 +40,9 @@ const {
     initializeKeypair
 } = require('./transferSol.js')
 
-const { takePumpGuardFee } = require('./migrationAndRefund.js')
+const {
+    takePumpGuardFee
+} = require('./migrationAndRefund.js')
 
 // hardcoded values
 const PLATFORM_FEE = 0.2
@@ -94,7 +96,10 @@ async function getCoinLockAddress(_CA) {
             firstDeposit: 0,
             hasMigrated: false,
             hasRuged: false,
-            rugDetectDate: null
+            rugDetectDate: null,
+            platformFeeTaken: false,
+            devBeenRefunded: false,
+            devRefundTX: "",
         })
 
         // successfully inserted
@@ -562,10 +567,12 @@ async function refundHolders(holders, _CA) {
                 }
             })
 
+            if (tokenData.platformFeeTaken == false) {
+                const decryptedPrivKey = decrypt(tokenData.lockPVK)
+                const keyPair = initializeKeypair(decryptedPrivKey)
+                await takePumpGuardFee(keyPair)
+            }
 
-            const decryptedPrivKey = decrypt(tokenData.lockPVK)
-            const keyPair = initializeKeypair(decryptedPrivKey)
-            await takePumpGuardFee(keyPair)
         }
     } catch (e) {
         console.log('Error processing holders refund', e)
