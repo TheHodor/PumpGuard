@@ -5,7 +5,8 @@ const fetch = require('node-fetch');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const cors = require('cors');
-
+const bs58 = require("bs58");
+const nacl = require("tweetnacl");
 const PumpFunFetch = require('./utils/pumpFunFetch.js');
 const {
     DBSetup
@@ -331,21 +332,27 @@ app.post('/get_user_refunds', async (req, res) => {
 
 // user request to be paid for one of their refunds
 app.post('/pay_user_refund', async (req, res) => {
-    if (!req.body.address) {
+    if (!req.body.publicKey) {
         return res.status(400).json({
             error: 'Wallet address is required.'
         });
     }
-    if (!isSolanaAddress(req.body.address)) {
+    if (!isSolanaAddress(req.body.publicKey)) {
         return res.status(400).json({
-            error: 'Passed address must be a valid wallet address'
+            error: 'Passed address must be a valid wallet address.'
         });
     }
+    if (!authSigner(req.body.publicKey, req.body.signature, req.body.message)) {
+        return res.status(400).json({
+            error: 'Auth Failed!'
+        }); 
+    }
+    
 
     const _res = await _Collections.UsersRefunds.findOne({
-        address: req.body.address
+        address: req.body.publicKey
     })
-
+    
     for (var i = 0; i < _res.refunds; i++) {
         if (_res.refunds[i].ca == req.body.ca) {
             if (_res.refunds[i].refundAmount && _res.refunds[i].paid == false) {
@@ -358,13 +365,13 @@ app.post('/pay_user_refund', async (req, res) => {
                 const decryptedPrivKey = decrypt(_theCoin.lockPVK)
                 const keyPair = initializeKeypair(decryptedPrivKey)
 
-                const transferResTX = await transferSOL(req.body.address, _res.refunds[i].refundAmount *
+                const transferResTX = await transferSOL(req.body.publicKey, _res.refunds[i].refundAmount *
                     1e9, keyPair)
 
                 // if transfer was successful update the user's refund state
                 if (transferResTX && transferResTX.length > 30) {
                     await _Collections.UsersRefunds.updateOne({
-                        address: req.body.address,
+                        address: req.body.publicKey,
                         'refunds.ca': {
                             $eq: _CA
                         }
@@ -422,6 +429,17 @@ app.post('/get_coin_refund_eligible_users', async (req, res) => {
 
 
 // *************** HELPERS *************** \\
+function authSigner(userAddress, signature, message) {
+    // Verify the signature
+    const verified = nacl.sign.detached.verify(
+        new TextEncoder().encode(message),
+        Buffer.from(signature, 'base64'),
+        bs58.decode(userAddress)
+    )
+
+    return verified ? true : false
+}
+
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
