@@ -32,6 +32,8 @@ const {
     transferSOL
 } = require('./utils/transferSol.js');
 
+const { isSolanaAddress } = require('./utils/helpers.js')
+
 
 // ----- setting express app ----- //
 console.log(`Environment is PROD`);
@@ -168,6 +170,9 @@ app.get('/parse_trades', async (req, res) => {
     if (!ca) {
         return res.status(400).send('Contract address (ca) is required.');
     }
+    if(!isSolanaAddress(ca)) {
+        return res.status(400).send('CA must be valid')
+    }
 
     try {
         await parseTokenTrades(ca);
@@ -184,6 +189,9 @@ app.get('/verify_rugged', async (req, res) => {
     if (!ca) {
         return res.status(400).send('Contract address (ca) is required.');
     }
+    if(!isSolanaAddress(ca)) {
+        return res.status(400).send('CA must be valid')
+    }
     try {
         const response = await verifyIfRugged(ca);
         res.send(`Response ${response} for contract address: ${ca}`);
@@ -198,6 +206,9 @@ app.post('/is_coin_guarded', async (req, res) => {
     if (!req.body.ca) {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
+    if(!isSolanaAddress(ca)) {
+        return res.status(400).send('CA must be valid')
+    }
     try {
         const data = await isCoinGuarded(req.body.ca);
         res.status(200).send(data);
@@ -209,8 +220,12 @@ app.post('/is_coin_guarded', async (req, res) => {
 
 // user request to get lock address for a coin
 app.post('/get_coin_lock_address', async (req, res) => {
+    
     if (!req.body.ca) {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
+    }
+    if(!isSolanaAddress(req.body.ca)) {
+        return res.status(400).send('CA must be valid')
     }
     try {
         const _addressAndData = await getCoinLockAddress(req.body.ca);
@@ -226,6 +241,9 @@ app.post('/update_lock_address_balance', async (req, res) => {
     if (!req.body.ca) {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
+    if(!isSolanaAddress(req.body.ca)) {
+        return res.status(400).send('CA must be valid')
+    }
     try {
         const _balance = await updateLockAddressBalance(req.body.ca);
         res.status(200).json({ balance: _balance });
@@ -239,6 +257,9 @@ app.post('/update_lock_address_balance', async (req, res) => {
 app.post('/get_coin_status', async (req, res) => {
     if (!req.body.ca) {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
+    }
+    if(!isSolanaAddress(req.body.ca)) {
+        return res.status(400).send('CA must be valid')
     }
     try {
         const _theCoin = await _Collections.GuardedCoins.findOne({ ca: req.body.ca });
