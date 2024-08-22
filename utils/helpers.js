@@ -5,7 +5,7 @@ const {
 const { connection_helius } = require('../config');
 
 
-async function isSolanaAddress(_CA) {
+function isSolanaAddress(_CA) {
     try {
         const owner = new PublicKey(_CA);
         return PublicKey.isOnCurve(owner.toString())
