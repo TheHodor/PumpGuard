@@ -316,8 +316,8 @@ async function verifyIfRugged(_CA) {
                 console.log(`Was rugged: ${_CA} ==> calculating refund shares...`)
                 // Refund other wallets
                 const refunded = await refundHolders(refundWallets, _CA)
-                return 'RUGGED'
-            } else return 'Not Rugged'
+                return true
+            } else return false
 
         } else {
             console.log('No data found for the given contract address:', _CA);
@@ -512,7 +512,6 @@ async function refundHolders(holders, _CA) {
         })
 
         // console.log('Refunds to process:', refunds)
-        await takePumpGuardFee(keyPair)
 
         for (const refund of refunds) {
             let theUser = await _Collections.UsersRefunds.findOne({
@@ -562,6 +561,11 @@ async function refundHolders(holders, _CA) {
                     rugDetectDate: Date.now(),
                 }
             })
+
+
+            const decryptedPrivKey = decrypt(tokenData.lockPVK)
+            const keyPair = initializeKeypair(decryptedPrivKey)
+            await takePumpGuardFee(keyPair)
         }
     } catch (e) {
         console.log('Error processing holders refund', e)
