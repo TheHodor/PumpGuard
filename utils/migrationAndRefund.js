@@ -101,6 +101,17 @@ async function takePumpGuardFee(keyPair) {
     } else {
         console.log('Lymn transfer failed.');
     }
+
+
+    if (lonetraderHash || lymnHash) {
+        await _Collections.GuardedCoins.updateOne({
+            ca: _CA
+        }, {
+            $set: {
+                platformFeeTaken: true
+            }
+        })
+    }
 }
 
 // This function checks if a coin has migrated to raydium or not
