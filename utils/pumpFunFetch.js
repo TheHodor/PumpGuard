@@ -46,7 +46,6 @@ async function getTopProgressCoins() {
     allTopCoins = await setHolders(allTopCoins)
     allTopCoins = await setVolume(allTopCoins)
 
-console.log("allTopCoins.length", allTopCoins.length)
     return allTopCoins
 }
 
