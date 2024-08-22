@@ -312,9 +312,8 @@ function delay(ms) {
 // *************** HELPERS *************** \\
 
 
-const server = https.createServer({
-    cert: fs.readFileSync('../../../../etc/cloudflare-ssl/pumpguard.fun.pem'),
-    key: fs.readFileSync('../../../../etc/cloudflare-ssl/pumpguard.fun.key'),
-}, app);
+const server = http.createServer(app);
 
-server.listen(443);
+server.listen(3000, () => {
+    console.log('Server running on port 3000');
+});
