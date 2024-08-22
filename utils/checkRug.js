@@ -1,6 +1,5 @@
 const {
-    _Collections,
-    _DBs
+    DBSetup
 } = require('./DB_setup.js');
 
 // Function to delay execution
@@ -10,17 +9,21 @@ function delay(ms) {
 
 // Function to make the API call
 async function callParseTradesAPI() {
+    const _DBSetup = await DBSetup()
+    const _Collections = _DBSetup.Collections
     const _UnMigratedCoins = await _Collections.GuardedCoins.find({
         hasMigrated: false,
         devRefunded: false,
         hasRuged: false
     }).toArray();
 
+    console.log('Starting to check for total of : ', _UnMigratedCoins.length)
+
     for (const token of _UnMigratedCoins) {
         if (!token.ca) continue;
 
         try {
-            const url = `http://localhost:8080/parse_trades?ca=${token.ca}`;
+            const url = `https://pumpguard.fun/parse_trades?ca=${token.ca}`;
             const response = await fetch(url);
             let data = await response.json();
             console.log(`Response for CA: ${token.ca} - ${data}`);

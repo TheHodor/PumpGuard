@@ -206,7 +206,7 @@ app.post('/is_coin_guarded', async (req, res) => {
     if (!req.body.ca) {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
-    if(!isSolanaAddress(ca)) {
+    if(!isSolanaAddress(req.body.ca)) {
         return res.status(400).send('CA must be valid')
     }
     try {
