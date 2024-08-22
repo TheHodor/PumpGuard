@@ -171,7 +171,7 @@ app.get('/parse_trades', async (req, res) => {
         return res.status(400).send('Contract address (ca) is required.');
     }
     if(!isSolanaAddress(ca)) {
-        return res.status(400).send('CA must be valid')
+        return res.status(400).json({ error: 'Passed address must be a solana address' });
     }
 
     try {
@@ -190,7 +190,7 @@ app.get('/verify_rugged', async (req, res) => {
         return res.status(400).send('Contract address (ca) is required.');
     }
     if(!isSolanaAddress(ca)) {
-        return res.status(400).send('CA must be valid')
+        return res.status(400).json({ error: 'Passed address must be a solana address' });
     }
     try {
         const response = await verifyIfRugged(ca);
@@ -207,7 +207,7 @@ app.post('/is_coin_guarded', async (req, res) => {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
     if(!isSolanaAddress(req.body.ca)) {
-        return res.status(400).send('CA must be valid')
+        return res.status(400).json({ error: 'Passed address must be a solana address' });
     }
     try {
         const data = await isCoinGuarded(req.body.ca);
@@ -225,7 +225,7 @@ app.post('/get_coin_lock_address', async (req, res) => {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
     if(!isSolanaAddress(req.body.ca)) {
-        return res.status(400).send('CA must be valid')
+        return res.status(400).json({ error: 'Passed address must be a solana address' });
     }
     try {
         const _addressAndData = await getCoinLockAddress(req.body.ca);
@@ -242,7 +242,7 @@ app.post('/update_lock_address_balance', async (req, res) => {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
     if(!isSolanaAddress(req.body.ca)) {
-        return res.status(400).send('CA must be valid')
+        return res.status(400).json({ error: 'Passed address must be a solana address' });
     }
     try {
         const _balance = await updateLockAddressBalance(req.body.ca);
@@ -259,7 +259,7 @@ app.post('/get_coin_status', async (req, res) => {
         return res.status(400).json({ error: 'Contract address (ca) is required.' });
     }
     if(!isSolanaAddress(req.body.ca)) {
-        return res.status(400).send('CA must be valid')
+        return res.status(400).json({ error: 'Passed address must be a solana address' });
     }
     try {
         const _theCoin = await _Collections.GuardedCoins.findOne({ ca: req.body.ca });
@@ -276,6 +276,13 @@ app.post('/get_coin_status', async (req, res) => {
 
 // user request to get all their refunds
 app.post('/get_user_refunds', async (req, res) => {
+    if (!req.body.address) {
+        return res.status(400).json({ error: 'Wallet address is required.' });
+    }
+    if(!isSolanaAddress(req.body.address)) {
+        return res.status(400).json({ error: 'Passed address must be a valid wallet address' });
+    }
+
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.address
     })
@@ -284,6 +291,13 @@ app.post('/get_user_refunds', async (req, res) => {
 
 // user request to be paid for one of their refunds
 app.post('/pay_user_refund', async (req, res) => {
+    if (!req.body.address) {
+        return res.status(400).json({ error: 'Wallet address is required.' });
+    }
+    if(!isSolanaAddress(req.body.address)) {
+        return res.status(400).json({ error: 'Passed address must be a valid wallet address' });
+    }
+    
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.address
     })
