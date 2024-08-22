@@ -12,8 +12,6 @@ require('dotenv').config();
 
 const API_KEY = "0923441f-c558-4e0b-8b67-9294161fdfb3"
 
-const privKey = 'f2688ca910a4d8eb592291851ed7e7f942bd328ccbb51e2e5cb4408f58583de2b7161286fb0ed704c09f7fd09ed80de2fc27b172de72dfc450d95dd95f429225'
-
 function hexToUint8Array(hexString) {
   if (hexString.length % 2 !== 0) {
     throw new Error('Invalid hexString');
@@ -126,5 +124,6 @@ async function transferSOL(wallet, amount, fromKeypair) {
 
 module.exports = {
   initializeKeypair,
-  transferSOL
+  transferSOL,
+  initializeConnection
 }
