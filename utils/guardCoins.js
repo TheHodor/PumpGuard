@@ -133,7 +133,7 @@ async function updateLockAddressBalance(_CA) {
 
     // fetch sol balance for the lock address
     const balance = await getSolBalance(_theCoinInDB.lockAddress)
-    let newlyAddedBalance = 0
+    let newlyAddedBalance = balance
 
     let firstDepositDate = _theCoinInDB.firstDeposit
     if (_theCoinInDB.balance == 0) {
@@ -152,7 +152,6 @@ async function updateLockAddressBalance(_CA) {
                 balance: balance,
                 allowedSell: false,
                 firstDeposit: firstDepositDate,
-                holders: allHolders
             }
         })
 
