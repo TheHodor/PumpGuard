@@ -264,15 +264,6 @@ async function fetchCoinData(_CA) {
 
 async function verifyIfRugged(_CA) {
     try {
-        // const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-        //     ca: _CA
-        // })
-
-        // if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
-        //     console.log("The coin was not found in DB")
-        //     return
-        // }        
-        // const totalSupply = _theCoinInDB.totalSupply
         const holders = _DBs.Holders.collection(_CA)
         const traders = await holders.find({}).toArray()
 
@@ -342,7 +333,7 @@ async function parseTokenTrades(_CA) {
         if(!allTrades || !allTrades[0] || !allTrades[0].slot) {
             console.log('Issue with trades fetched....')
             console.log('Printing trade 0 :', allTrades[0])
-            
+            return 'Cant parse'
         }
         const sniperSlot = allTrades[0].slot
         const devWallet = _theCoin.creator
@@ -384,7 +375,7 @@ async function parseTokenTrades(_CA) {
 
                     holders[trade.user].tag = 'SNIPER'
                 }
-                holders[trade.user].totalTokensSold -= trade.token_amount;
+                holders[trade.user].totalTokensSold += trade.token_amount;
                 holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
                 holders[trade.user].hasSold = true;
             }
@@ -393,32 +384,29 @@ async function parseTokenTrades(_CA) {
         }
 
         for (const addr in holders) {
+            // Give priority to the DEV tag
+            if (holders[addr].address == devWallet) {
+                holders[addr].tag = 'DEV';
+                continue; 
+            }
+        
+            if (holders[addr].tag == 'SNIPER') {
+                continue;
+            }
+        
             if (holders[addr].hasSold && !holders[addr].hasBought) {
-                if (holders[addr].tag == 'SNIPER') {
-                    continue
-                }
                 holders[addr].tag = 'TRANSFER';
-                //console.log('Found Transfer: ', holders[addr].address)
-
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
-                if (holders[addr].tag == 'SNIPER') {
-                    continue
-                }
                 holders[addr].tag = 'HOLDER';
             } else if (holders[addr].hasBought && holders[addr].hasSold) {
-                if (holders[addr].tag == 'SNIPER') {
-                    continue
-                }
                 holders[addr].tag = 'DEGEN';
             }
 
-            if (holders[addr].address == devWallet)
-                holders[addr].tag = 'DEV'
-
             holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
-            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
-            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
-            //     .worthOfTokensSol
+            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
+
+            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
+                .worthOfTokensSol
         }
 
         // Convert the object to an array of values (objects)
@@ -463,7 +451,12 @@ async function parseTokenTrades(_CA) {
 
         holdersArray = Object.values(holders);
         const result = await collection.insertMany(holdersArray);
-        return "Trades Parsed"
+        if (result.insertedCount > 0) {
+            console.log('New holders inserted: ', result.insertedCount);
+        } else {
+            console.log('No documents were inserted.');
+            return "No documents were inserted";
+        }
     } catch (e) {
         console.error('Error parsing trades: ', e)
         return "Parse Failed"
