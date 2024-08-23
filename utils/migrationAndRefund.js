@@ -11,7 +11,7 @@ const {
 } = require("./helpers");
 const {
     initializeKeypair,
-    transferSol
+    transferSOL
 } = require('./transferSol')
 
 const LONETRADER_WALLET = 'aPL1kDnMXGoG2UWi3HF1Fyfa35kFsSJCfCq8ajdGx6G'
@@ -66,7 +66,7 @@ async function doDevRefund(devAddress, lockAddress, lockPVK, ca) {
         await takePumpGuardFee(keyPair, ca)
 
         // return to dev
-        const trnxHash = await transferSol(devAddress, amountToReturn_toDev, keyPair)
+        const trnxHash = await transferSOL(devAddress, amountToReturn_toDev, keyPair)
         if (!trnxHash) {
             console.log("Dev Refund Transfer Failed!")
             return false
@@ -87,8 +87,8 @@ async function doDevRefund(devAddress, lockAddress, lockPVK, ca) {
 }
 
 async function takePumpGuardFee(keyPair, _CA) {
-    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
-    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
+    const lonetraderHash = await transferSOL(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
+    const lymnHash = await transferSOL(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
 
     if (!lonetraderHash) {
         console.log('Lonetrader transfer failed.');
