@@ -426,7 +426,7 @@ app.post('/claim_dev_refund', async (req, res) => {
     })
 
     if (!authSigner(_theCoin.dev, req.body.signature, req.body.message)) {
-        return res.status(400).json({
+        return res.status(403).json({
             error: 'Auth Failed!'
         });
     }
