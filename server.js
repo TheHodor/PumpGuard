@@ -403,19 +403,19 @@ app.post('/get_coin_status', async (req, res) => {
 
 // dev request to claim their refund 
 app.post('/claim_dev_refund', async (req, res) => {
-    if (!req.body.address) {
+    if (!req.body.ca) {
         return res.status(400).json({
             error: 'Ca to claim against must be passed'
         });
     }
-    if (!isSolanaAddress(req.body.address)) {
+    if (!isSolanaAddress(req.body.ca)) {
         return res.status(400).json({
             error: 'Passed address must be a valid contract'
         });
     }
 
     let _theCoin = await _Collections.GuardedCoins.findOne({
-        ca: req.body.address
+        ca: req.body.ca
     })
 
     if (!_theCoin) res.status(404).json({
