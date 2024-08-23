@@ -32,7 +32,8 @@ const {
 } = require('./utils/encrypt.js');
 
 const {
-    transferSOL
+    transferSOL,
+    initializeKeypair
 } = require('./utils/transferSol.js');
 
 const {
