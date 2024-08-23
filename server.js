@@ -355,17 +355,21 @@ app.post('/get_coin_status', async (req, res) => {
 app.post('/claim_dev_refund', async (req, res) => {
     if (!req.body.address) {
         return res.status(400).json({
-            error: 'Wallet address is required.'
+            error: 'CA to check is required.'
         });
     }
     if (!isSolanaAddress(req.body.address)) {
         return res.status(400).json({
-            error: 'Passed address must be a valid wallet address'
+            error: 'Passed ca must be a valid ca address.'
         });
     }
 
     let _theCoin = await _Collections.GuardedCoins.findOne({
-        ca: req.body.ca
+        ca: req.body.address
+    })
+
+    if (!_theCoin) res.status(404).json({
+        error: 'Coin not found.'
     })
 
     if (!authSigner(_theCoin.dev, req.body.signature, req.body.message)) {
