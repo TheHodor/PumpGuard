@@ -23,7 +23,6 @@ const {
     getCoinHolders
 } = require('./utils/apiFetch.js');
 const {
-    watchGuardedCoinsForMigration,
     hasCoinMigrated,
     takePumpGuardFee
 } = require('./utils/migrationAndRefund.js');
@@ -88,10 +87,6 @@ async function serverStarted() {
     // fetch top coins on pump.fun
     PrepareCoinsForFE()
 
-    // watch all the guarded coins with the provided interval (in seconds) for migration
-    setInterval(() => {
-        watchGuardedCoinsForMigration()
-    }, ONE_HOUR * 2)
 
     // await _Collections.GuardedCoins.updateMany({}, {
     //     $set: {
