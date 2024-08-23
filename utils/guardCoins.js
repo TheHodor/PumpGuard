@@ -90,6 +90,7 @@ async function getCoinLockAddress(_CA) {
             dev: _coinData.creator,
             totalSupply: _coinData.total_supply,
             balance: 0,
+            balance_allTimeHight: 0,
             lockAddress: _walletAddress,
             lockPVK: encryptedKey,
             creationDate: Date.now(),
@@ -99,6 +100,9 @@ async function getCoinLockAddress(_CA) {
             rugDetectDate: null,
             platformFeeTaken: false,
             devBeenRefunded: false,
+            holdersRefunded: false,
+            devCanClaimLockedSol: false,
+            days7PassedWithNoRug: false,
             devRefundTX: "",
         })
 
@@ -133,7 +137,7 @@ async function updateLockAddressBalance(_CA) {
 
     // fetch sol balance for the lock address
     const balance = await getSolBalance(_theCoinInDB.lockAddress)
-    let newlyAddedBalance = 0
+    let newlyAddedBalance = balance
 
     let firstDepositDate = _theCoinInDB.firstDeposit
     if (_theCoinInDB.balance == 0) {
@@ -150,15 +154,18 @@ async function updateLockAddressBalance(_CA) {
         }, {
             $set: {
                 balance: balance,
+                balance_allTimeHight: Math.max(balance, _theCoinInDB.balance), 
                 allowedSell: false,
                 firstDeposit: firstDepositDate,
-                holders: allHolders
             }
         })
 
-        console.log('updateLockAddressBalance res: ', res)
-        TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
-
+        if (res.matchedCount > 0) {
+            // console.log('Updated document ID:', _CA);
+            TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+        } else {
+            // console.log('No document was updated.');
+        }
     }
 
     return balance
@@ -218,7 +225,12 @@ async function isCoinGuarded(_CA) {
 
     return {
         isGuarded: _isGuarded,
-        DBdata: _theCoinInDB,
+        DBdata: {
+            hasMigrated: _theCoinInDB.hasMigrated,
+            balance: _theCoinInDB.balance,
+            balance_allTimeHight: _theCoinInDB.balance_allTimeHight,
+            lockAddress: _theCoinInDB.lockAddress
+        },
         coinData: await fetchCoinData(_CA)
     }
 }
@@ -263,15 +275,6 @@ async function fetchCoinData(_CA) {
 
 async function verifyIfRugged(_CA) {
     try {
-        // const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-        //     ca: _CA
-        // })
-
-        // if (!_theCoinInDB || !_theCoinInDB.lockAddress) {
-        //     console.log("The coin was not found in DB")
-        //     return
-        // }        
-        // const totalSupply = _theCoinInDB.totalSupply
         const holders = _DBs.Holders.collection(_CA)
         const traders = await holders.find({}).toArray()
 
@@ -287,8 +290,8 @@ async function verifyIfRugged(_CA) {
                 const currentUser = traders[i]
 
                 // Add up all insider data
-                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'INSIDER' || currentUser.tag == 'DEV' ||
-                    currentUser.tag == 'TRANSFER') {
+                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'DEV' ||
+                    currentUser.tag == 'TRANSFER' || currentUser.isInsider == true) {
 
                     totalTokensBought += currentUser.totalTokensBought
                     totalSolBought += currentUser.totalSolBought
@@ -310,6 +313,7 @@ async function verifyIfRugged(_CA) {
             const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
             const totalDevTeamSupplySold = Math.abs((totalTokensSold / totalSupply) * 100).toFixed(2)
 
+            console.log('--------------------------------------------------------')
             console.log('Rug Check For: ', _CA, " ==>")
             console.log('Total Team Supply Owned: ', totalDevTeamSupplyOwned + "%")
             console.log('Total Team Supply Sold: ', totalDevTeamSupplySold + "%")
@@ -338,6 +342,11 @@ async function parseTokenTrades(_CA) {
         const _theCoin = await fetchCoinData(_CA)
         const allTrades = await getAllTradesPump(_CA)
 
+        if (!allTrades || !allTrades[0] || !allTrades[0].slot) {
+            console.log('Issue with trades fetched....')
+            console.log('Printing trade 0 :', allTrades[0])
+            return 'Cant parse'
+        }
         const sniperSlot = allTrades[0].slot
         const devWallet = _theCoin.creator
         const _tokenPriceSol = _theCoin.market_cap / 1e9
@@ -366,7 +375,6 @@ async function parseTokenTrades(_CA) {
             if (allTrades[i].is_buy) {
                 // find snipers
                 if (trade.slot == sniperSlot) {
-                    //console.log('Sniper Bought: ', trade.user)
                     holders[trade.user].tag = 'SNIPER'
                 }
                 holders[trade.user].totalTokensBought += trade.token_amount;
@@ -374,11 +382,9 @@ async function parseTokenTrades(_CA) {
                 holders[trade.user].hasBought = true;
             } else {
                 if (trade.slot == sniperSlot) {
-                    //console.log('Sniper Sold: ', trade.user)
-
                     holders[trade.user].tag = 'SNIPER'
                 }
-                holders[trade.user].totalTokensSold -= trade.token_amount;
+                holders[trade.user].totalTokensSold += trade.token_amount;
                 holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
                 holders[trade.user].hasSold = true;
             }
@@ -387,35 +393,32 @@ async function parseTokenTrades(_CA) {
         }
 
         for (const addr in holders) {
-            if (holders[addr].hasSold && !holders[addr].hasBought) {
-                if (holders[addr].tag == 'SNIPER') {
-                    continue
-                }
-                holders[addr].tag = 'TRANSFER';
-                //console.log('Found Transfer: ', holders[addr].address)
+            const remainingTokens = Number(holders[addr].totalTokensSold) - Number(holders[addr].totalTokensBought)
+            holders[addr].worthOfTokensSol = (remainingTokens / 1e6) * Number(_tokenPriceSol)
 
-            } else if (holders[addr].hasBought && !holders[addr].hasSold) {
-                if (holders[addr].tag == 'SNIPER') {
-                    continue
-                }
-                holders[addr].tag = 'HOLDER';
-            } else if (holders[addr].hasBought && holders[addr].hasSold) {
-                if (holders[addr].tag == 'SNIPER') {
-                    continue
-                }
-                holders[addr].tag = 'DEGEN';
+            holders[addr].PnL = (Number(holders[addr].totalSolSold) - Number(holders[addr].totalSolBought)) + Number(holders[addr].worthOfTokensSol)
+            // console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
+
+            // Give priority to the DEV tag
+            if (holders[addr].address == devWallet) {
+                holders[addr].tag = 'DEV';
+                continue;
             }
 
-            if (holders[addr].address == devWallet)
-                holders[addr].tag = 'DEV'
+            if (holders[addr].tag == 'SNIPER') {
+                continue;
+            }
 
-            holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
-            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
-            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
-            //     .worthOfTokensSol
+            // Added 2nd check incase someone buys to trick the code - relative 
+            if ((holders[addr].hasSold && !holders[addr].hasBought) || (holders[addr].totalSolBought < 0.1 && holders[addr].totalSolSold > 3)) {
+                holders[addr].tag = 'TRANSFER';
+            } else if (holders[addr].hasBought && !holders[addr].hasSold) {
+                holders[addr].tag = 'HOLDER';
+            } else if (holders[addr].hasBought && holders[addr].hasSold) {
+                holders[addr].tag = 'DEGEN';
+            }
         }
 
-        // Convert the object to an array of values (objects)
         let holdersArray = Object.values(holders);
 
         // Sort the array based on PnL (bigger losers first)
@@ -457,9 +460,15 @@ async function parseTokenTrades(_CA) {
 
         holdersArray = Object.values(holders);
         const result = await collection.insertMany(holdersArray);
-
+        if (result.insertedCount > 0) {
+            console.log('New holders inserted: ', result.insertedCount);
+        } else {
+            console.log('No documents were inserted.');
+            return "No documents were inserted";
+        }
     } catch (e) {
         console.error('Error parsing trades: ', e)
+        return "Parse Failed"
     }
 }
 
@@ -489,13 +498,10 @@ async function refundHolders(holders, _CA) {
         // First take out platform fee:
         const amountToReturn = actualSolAmount - PLATFORM_FEE
 
-        console.log('Locked Sol balance: ', actualSolAmount)
-        console.log('Net amount to return: ', amountToReturn)
-
         let walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
         // only pick users for refund if their pnl is negative
 
-        walletsToRefund = walletsToRefund.filter(wallet => wallet.PnL < 0)
+        walletsToRefund = walletsToRefund.filter(wallet => wallet.PnL < 0 && wallet.tag !== 'DEV')
 
         const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
             return total + Math.abs(wallet.PnL)
@@ -503,9 +509,30 @@ async function refundHolders(holders, _CA) {
 
         const refundRatio = (amountToReturn / totalSolLostByTraders)
 
-        console.log('Total lost by traders: ', totalSolLostByTraders)
-        console.log('Refund Ratio: ', refundRatio.toFixed(3))
+        console.log(`Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}`)
+        // update the db and identify the coin as rugged
+        await _Collections.GuardedCoins.updateOne({
+            ca: _CA,
+            hasRuged: false,
+        }, {
+            $set: {
+                hasRuged: true,
+                rugDetectDate: Date.now(),
+            }
+        })
 
+        if (tokenData.platformFeeTaken == false) {
+            // handle platform fee seperately
+            try{
+                const decryptedPrivKey = decrypt(tokenData.lockPVK)
+                const keyPair = initializeKeypair(decryptedPrivKey)
+                await takePumpGuardFee(keyPair, _CA)       
+            }catch(e) {
+                console.error('Error during platform fee transfer:', error.message);
+                return
+            }
+
+        }
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
             const refundAmount = Math.abs(wallet.PnL) * refundRatio
@@ -555,24 +582,6 @@ async function refundHolders(holders, _CA) {
                     },
                 },
             });
-
-            // update the db and identify the coin as rugged
-            await _Collections.GuardedCoins.updateOne({
-                ca: _CA,
-                hasRuged: false,
-            }, {
-                $set: {
-                    hasRuged: true,
-                    rugDetectDate: Date.now(),
-                }
-            })
-
-            if (tokenData.platformFeeTaken == false) {
-                const decryptedPrivKey = decrypt(tokenData.lockPVK)
-                const keyPair = initializeKeypair(decryptedPrivKey)
-                await takePumpGuardFee(keyPair)
-            }
-
         }
     } catch (e) {
         console.log('Error processing holders refund', e)

@@ -205,7 +205,7 @@ async function getAllTradesPump(ca) {
             if (response) {
                 const result = await response.json();
                 if (result.length === 0) {
-                    console.log('got back 0: ', result.length)
+                    // console.log('got back 0: ', result.length)
                     break;
                 }
                 allTrades.push(...result);
@@ -236,10 +236,19 @@ async function getAllTradesPump(ca) {
 }
 
 
-// getAllTradesPump('FnpVAGTn1Tr4hEDzeERs8KGRV4FMjU3AdbAvU6iApump');
+function _getCoinHolders(_CA) {
+    const holders = holdersCount[_CA]
 
+    if (holders) return holders.count.holderCount
+    return "--"
+}
 
+function _getCoinVolume1h(_CA) {
+    const volume = volume1h[_CA]
 
+    if (volume) return volume
+    return "--"
+}
 
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -249,5 +258,7 @@ module.exports = {
     getTopProgressCoins,
     getTopGuardedCoins,
     getRecentlyGuardedCoins,
-    getAllTradesPump
+    getAllTradesPump,
+    _getCoinHolders,
+    _getCoinVolume1h
 }

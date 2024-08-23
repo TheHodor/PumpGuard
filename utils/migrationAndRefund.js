@@ -14,8 +14,8 @@ const {
     transferSol
 } = require('./transferSol')
 
-const LONETRADER_WALLET = '123123'
-const LYMN_WALLET = '2131231'
+const LONETRADER_WALLET = 'aPL1kDnMXGoG2UWi3HF1Fyfa35kFsSJCfCq8ajdGx6G'
+const LYMN_WALLET = '2tiwwLGTFYxLagjqh5m18yfZmmdK8Wpw4ZQMGETPXMW5'
 const PLATFORM_FEE = 0.2
 
 
@@ -34,7 +34,7 @@ async function watchGuardedCoinsForMigration() {
             if (await hasCoinMigrated(item.ca)) {
                 // coin has migrated, proceed to refund the dev
                 console.log(`-- A coin has migrated: ${item.symbol} [${item.ca}].`)
-                doDevRefund(item.dev, item.lockAddress, item.lockPVK)
+                doDevRefund(item.dev, item.lockAddress, item.lockPVK, item.ca)
             } else {
                 // not yet migrated
             }
@@ -49,7 +49,7 @@ async function watchGuardedCoinsForMigration() {
 
 // a coin has migrated to raydium and now we are refunding the dev with 100% of the balance of the locked address
 // send dev address the locked amount
-async function doDevRefund(devAddress, lockAddress, lockPVK) {
+async function doDevRefund(devAddress, lockAddress, lockPVK, ca) {
     const lockAddressBalance = await getSolBalance(lockAddress)
     if (!lockAddressBalance) return
 
@@ -63,7 +63,7 @@ async function doDevRefund(devAddress, lockAddress, lockPVK) {
         const balance = await getSolBalance(lockAddress)
         const amountToReturn_toDev = (balance / 1e9) - PLATFORM_FEE
         // Transfer cash to our wallets
-        await takePumpGuardFee(keyPair)
+        await takePumpGuardFee(keyPair, ca)
 
         // return to dev
         const trnxHash = await transferSol(devAddress, amountToReturn_toDev, keyPair)
@@ -86,32 +86,29 @@ async function doDevRefund(devAddress, lockAddress, lockPVK) {
     }
 }
 
-async function takePumpGuardFee(keyPair) {
-    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair)
-    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair)
+async function takePumpGuardFee(keyPair, _CA) {
+    const lonetraderHash = await transferSol(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
+    const lymnHash = await transferSol(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
 
-    if (lonetraderHash) {
-        console.log('Lonetrader hash: ', lonetraderHash);
-    } else {
+    if (!lonetraderHash) {
         console.log('Lonetrader transfer failed.');
-    }
+        throw new Error('Failed to take platform fee: Lonetrader transfer failed.');
+    } 
 
-    if (lymnHash) {
-        console.log('Lymn Hash: ', lymnHash);
-    } else {
+    if (!lymnHash) {
         console.log('Lymn transfer failed.');
-    }
+        throw new Error('Failed to take platform fee: Lymn transfer failed.');
+    } 
 
+    console.log(`Platform fee taken - Lonetrader Hash: ${lonetraderHash} - Lymn Hash: ${lymnHash}`);
 
-    if (lonetraderHash || lymnHash) {
-        await _Collections.GuardedCoins.updateOne({
-            ca: _CA
-        }, {
-            $set: {
-                platformFeeTaken: true
-            }
-        })
-    }
+    await _Collections.GuardedCoins.updateOne({
+        ca: _CA
+    }, {
+        $set: {
+            platformFeeTaken: true
+        }
+    });
 }
 
 // This function checks if a coin has migrated to raydium or not
