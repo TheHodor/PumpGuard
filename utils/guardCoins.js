@@ -388,7 +388,7 @@ async function parseTokenTrades(_CA) {
             holders[addr].worthOfTokensSol = (remainingTokens / 1e6) * Number(_tokenPriceSol)
 
             holders[addr].PnL = (Number(holders[addr].totalSolSold) - Number(holders[addr].totalSolBought)) + Number(holders[addr].worthOfTokensSol)
-            console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
+            // console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
 
             // Give priority to the DEV tag
             if (holders[addr].address == devWallet) {
@@ -489,13 +489,10 @@ async function refundHolders(holders, _CA) {
         // First take out platform fee:
         const amountToReturn = actualSolAmount - PLATFORM_FEE
 
-        console.log('Locked Sol balance: ', actualSolAmount)
-        console.log('Net amount to return: ', amountToReturn)
-
         let walletsToRefund = holders.slice(0, MAX_WALLET_REFUND)
         // only pick users for refund if their pnl is negative
 
-        walletsToRefund = walletsToRefund.filter(wallet => wallet.PnL < 0)
+        walletsToRefund = walletsToRefund.filter(wallet => wallet.PnL < 0 && wallet.tag !== 'DEV')
 
         const totalSolLostByTraders = walletsToRefund.reduce((total, wallet) => {
             return total + Math.abs(wallet.PnL)
@@ -503,8 +500,7 @@ async function refundHolders(holders, _CA) {
 
         const refundRatio = (amountToReturn / totalSolLostByTraders)
 
-        console.log('Total lost by traders: ', totalSolLostByTraders)
-        console.log('Refund Ratio: ', refundRatio.toFixed(3))
+        console.log(`Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}` )
 
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
