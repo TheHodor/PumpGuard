@@ -146,8 +146,6 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
-    TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
-    console.log("ta da")
     if (newlyAddedBalance > 0) {
         // Get holders now
         // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
@@ -162,12 +160,12 @@ async function updateLockAddressBalance(_CA) {
             }
         })
 
-        // if (res.matchedCount > 0) {
-        //     console.log('Updated document ID:', _CA);
-        //     TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
-        // } else {
-        //     console.log('No document was updated.');
-        // }
+        if (res.matchedCount > 0) {
+            // console.log('Updated document ID:', _CA);
+            TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+        } else {
+            // console.log('No document was updated.');
+        }
     }
 
     return balance
