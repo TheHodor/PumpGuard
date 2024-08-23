@@ -326,7 +326,10 @@ async function verifyIfRugged(_CA) {
                 // Refund other wallets
                 const refunded = await refundHolders(refundWallets, _CA)
                 return true
-            } else return false
+            } else  {
+                console.log('Token has not rugged yet....')
+                return false
+            }
 
         } else {
             console.log('No data found for the given contract address:', _CA);

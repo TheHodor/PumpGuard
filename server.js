@@ -37,7 +37,8 @@ const {
 
 const {
     isSolanaAddress,
-    saveImage
+    saveImage,
+    getSolBalance
 } = require('./utils/helpers.js')
 
 
