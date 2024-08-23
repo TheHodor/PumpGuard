@@ -90,6 +90,7 @@ async function getCoinLockAddress(_CA) {
             dev: _coinData.creator,
             totalSupply: _coinData.total_supply,
             balance: 0,
+            balance_allTimeHight: 0,
             lockAddress: _walletAddress,
             lockPVK: encryptedKey,
             creationDate: Date.now(),
@@ -145,6 +146,8 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
+    TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+    console.log("ta da")
     if (newlyAddedBalance > 0) {
         // Get holders now
         // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
@@ -153,16 +156,18 @@ async function updateLockAddressBalance(_CA) {
         }, {
             $set: {
                 balance: balance,
+                balance_allTimeHight: Math.max(balance, _theCoinInDB.balance), 
                 allowedSell: false,
                 firstDeposit: firstDepositDate,
             }
         })
-        if (res.matchedCount > 0) {
-            console.log('Updated document ID:', _CA);
-            TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
-        } else {
-            console.log('No document was updated.');
-        }
+
+        // if (res.matchedCount > 0) {
+        //     console.log('Updated document ID:', _CA);
+        //     TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+        // } else {
+        //     console.log('No document was updated.');
+        // }
     }
 
     return balance
@@ -222,7 +227,12 @@ async function isCoinGuarded(_CA) {
 
     return {
         isGuarded: _isGuarded,
-        DBdata: _theCoinInDB,
+        DBdata: {
+            hasMigrated: _theCoinInDB.hasMigrated,
+            balance: _theCoinInDB.balance,
+            balance_allTimeHight: _theCoinInDB.balance_allTimeHight,
+            lockAddress: _theCoinInDB.lockAddress
+        },
         coinData: await fetchCoinData(_CA)
     }
 }
