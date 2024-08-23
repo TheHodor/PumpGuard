@@ -401,12 +401,14 @@ async function parseTokenTrades(_CA) {
             } else if (holders[addr].hasBought && holders[addr].hasSold) {
                 holders[addr].tag = 'DEGEN';
             }
-
             holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
             // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
 
             holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
                 .worthOfTokensSol
+            
+                console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
+
         }
 
         // Convert the object to an array of values (objects)
