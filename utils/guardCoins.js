@@ -99,6 +99,8 @@ async function getCoinLockAddress(_CA) {
             rugDetectDate: null,
             platformFeeTaken: false,
             devBeenRefunded: false,
+            holdersRefunded: false,
+            devCanClaimLockedSol: false,
             devRefundTX: "",
         })
 
@@ -279,8 +281,8 @@ async function verifyIfRugged(_CA) {
                 const currentUser = traders[i]
 
                 // Add up all insider data
-                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'INSIDER' || currentUser.tag == 'DEV' ||
-                    currentUser.tag == 'TRANSFER') {
+                if (currentUser.tag == 'SNIPER' || currentUser.tag == 'DEV' ||
+                    currentUser.tag == 'TRANSFER' || currentUser.isInsider == true) {
 
                     totalTokensBought += currentUser.totalTokensBought
                     totalSolBought += currentUser.totalSolBought
@@ -302,6 +304,7 @@ async function verifyIfRugged(_CA) {
             const totalDevTeamSupplyOwned = ((totalTokensBought / totalSupply) * 100).toFixed(2)
             const totalDevTeamSupplySold = Math.abs((totalTokensSold / totalSupply) * 100).toFixed(2)
 
+            console.log('--------------------------------------------------------')
             console.log('Rug Check For: ', _CA, " ==>")
             console.log('Total Team Supply Owned: ', totalDevTeamSupplyOwned + "%")
             console.log('Total Team Supply Sold: ', totalDevTeamSupplySold + "%")
@@ -363,7 +366,6 @@ async function parseTokenTrades(_CA) {
             if (allTrades[i].is_buy) {
                 // find snipers
                 if (trade.slot == sniperSlot) {
-                    //console.log('Sniper Bought: ', trade.user)
                     holders[trade.user].tag = 'SNIPER'
                 }
                 holders[trade.user].totalTokensBought += trade.token_amount;
@@ -371,8 +373,6 @@ async function parseTokenTrades(_CA) {
                 holders[trade.user].hasBought = true;
             } else {
                 if (trade.slot == sniperSlot) {
-                    //console.log('Sniper Sold: ', trade.user)
-
                     holders[trade.user].tag = 'SNIPER'
                 }
                 holders[trade.user].totalTokensSold += trade.token_amount;
@@ -400,7 +400,8 @@ async function parseTokenTrades(_CA) {
                 continue;
             }
 
-            if (holders[addr].hasSold && !holders[addr].hasBought) {
+            // Added 2nd check incase someone buys to trick the code - relative 
+            if ((holders[addr].hasSold && !holders[addr].hasBought) || (holders[addr].totalSolBought < 0.1 && holders[addr].totalSolSold > 3)) {
                 holders[addr].tag = 'TRANSFER';
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
                 holders[addr].tag = 'HOLDER';
@@ -409,7 +410,6 @@ async function parseTokenTrades(_CA) {
             }
         }
 
-        // Convert the object to an array of values (objects)
         let holdersArray = Object.values(holders);
 
         // Sort the array based on PnL (bigger losers first)
