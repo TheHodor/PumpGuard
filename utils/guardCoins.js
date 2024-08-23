@@ -37,7 +37,8 @@ const {
 } = require('./findInsiders.js')
 
 const {
-    initializeKeypair
+    initializeKeypair,
+    transferSOL
 } = require('./transferSol.js')
 
 const {
@@ -49,7 +50,7 @@ const PLATFORM_FEE = 0.2
 
 const SUPPLY_RUG_THRESHOLD = 10
 const MAX_WALLET_REFUND = 25
-
+const MIN_DEPOSIT_SOL = 0.1
 const TOTALSUPPLY = 1e9
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
@@ -138,7 +139,7 @@ async function updateLockAddressBalance(_CA) {
     // fetch sol balance for the lock address
     const balance = await getSolBalance(_theCoinInDB.lockAddress)
     let newlyAddedBalance = balance
-
+    
     let firstDepositDate = _theCoinInDB.firstDeposit
     if (_theCoinInDB.balance == 0) {
         firstDepositDate = Date.now()
@@ -146,27 +147,50 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
-    if (newlyAddedBalance > 0) {
-        // Get holders now
-        // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
-        const res = await _Collections.GuardedCoins.updateOne({
-            ca: _CA
-        }, {
-            $set: {
-                balance: balance,
-                balance_allTimeHight: Math.max(balance, _theCoinInDB.balance), 
-                allowedSell: false,
-                firstDeposit: firstDepositDate,
+    if (balance /1e9 >= MIN_DEPOSIT_SOL) {
+        if (newlyAddedBalance > 0) {
+            // Get holders now
+            // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
+            const res = await _Collections.GuardedCoins.updateOne({
+                ca: _CA
+            }, {
+                $set: {
+                    balance: balance,
+                    balance_allTimeHight: Math.max(balance, _theCoinInDB.balance), 
+                    allowedSell: false,
+                    firstDeposit: firstDepositDate,
+                }
+            })
+    
+            if (res.matchedCount > 0) {
+                // console.log('Updated document ID:', _CA);
+                TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
+            } else {
+                // console.log('No document was updated.');
             }
-        })
+        }
+    } else {
+        console.log("-- Lower than min: Refunding dev...")
+        
+        // refund the user
+        const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
+        const keyPair = initializeKeypair(decryptedPrivKey)
+        const transferResTX = await transferSOL(_theCoinInDB.dev, balance / 1e9, keyPair)
 
-        if (res.matchedCount > 0) {
-            // console.log('Updated document ID:', _CA);
-            TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
-        } else {
-            // console.log('No document was updated.');
+        if (transferResTX) {
+            await _Collections.GuardedCoins.updateOne({
+                ca: _CA
+            }, {
+                $set: {
+                    balance: 0,
+                    balance_allTimeHight: 0, 
+                    allowedSell: false,
+                    firstDeposit: 0,
+                }
+            })
         }
     }
+  
 
     return balance
 }
