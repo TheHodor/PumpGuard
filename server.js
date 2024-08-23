@@ -179,8 +179,13 @@ app.get('/parse_trades', async (req, res) => {
             error: 'Passed address must be a solana address'
         });
     }
-
     try {
+        const data = await isCoinGuarded(ca); 
+        if (!data.isGuarded) {
+            res.status(500).json({
+                error: 'Token not guarded. Not parsing trades.....'
+            })
+        }
         await parseTokenTrades(ca);
         res.send(`Trades parsed for contract address: ${ca}`);
     } catch (error) {
