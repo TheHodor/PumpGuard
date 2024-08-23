@@ -155,7 +155,7 @@ async function updateLockAddressBalance(_CA) {
             }
         })
         if (res.matchedCount > 0) {
-            console.log('Updated document ID:', _CA); 
+            console.log('Updated document ID:', _CA);
             TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
         } else {
             console.log('No document was updated.');
@@ -330,7 +330,7 @@ async function parseTokenTrades(_CA) {
         const _theCoin = await fetchCoinData(_CA)
         const allTrades = await getAllTradesPump(_CA)
 
-        if(!allTrades || !allTrades[0] || !allTrades[0].slot) {
+        if (!allTrades || !allTrades[0] || !allTrades[0].slot) {
             console.log('Issue with trades fetched....')
             console.log('Printing trade 0 :', allTrades[0])
             return 'Cant parse'
@@ -384,16 +384,22 @@ async function parseTokenTrades(_CA) {
         }
 
         for (const addr in holders) {
+            const remainingTokens = Number(holders[addr].totalTokensSold) - Number(holders[addr].totalTokensBought)
+            holders[addr].worthOfTokensSol = (remainingTokens / 1e6) * Number(_tokenPriceSol)
+
+            holders[addr].PnL = (Number(holders[addr].totalSolSold) - Number(holders[addr].totalSolBought)) + Number(holders[addr].worthOfTokensSol)
+            console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
+
             // Give priority to the DEV tag
             if (holders[addr].address == devWallet) {
                 holders[addr].tag = 'DEV';
-                continue; 
+                continue;
             }
-        
+
             if (holders[addr].tag == 'SNIPER') {
                 continue;
             }
-        
+
             if (holders[addr].hasSold && !holders[addr].hasBought) {
                 holders[addr].tag = 'TRANSFER';
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
@@ -401,14 +407,6 @@ async function parseTokenTrades(_CA) {
             } else if (holders[addr].hasBought && holders[addr].hasSold) {
                 holders[addr].tag = 'DEGEN';
             }
-            holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
-            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
-
-            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
-                .worthOfTokensSol
-            
-                console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
-
         }
 
         // Convert the object to an array of values (objects)
