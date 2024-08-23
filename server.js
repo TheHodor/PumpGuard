@@ -35,7 +35,8 @@ const {
 } = require('./utils/transferSol.js');
 
 const {
-    isSolanaAddress
+    isSolanaAddress,
+    saveImage
 } = require('./utils/helpers.js')
 
 
@@ -82,6 +83,9 @@ async function serverStarted() {
     //         hasMigrated: false
     //     }
     // });
+
+   // saveImage("5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump", `https://pump.mypinata.cloud/ipfs/${extractAddress()}`);
+
 }
 
 
@@ -95,7 +99,7 @@ async function PrepareCoinsForFE() {
         return null;
     }
 
-    topProgressCoins = addLockedSolForCoins(topProgress)
+    topProgressCoins = await addLockedSolForCoins_and_saveImg(topProgress)
 
     for (const coin of topProgressCoins) {
         const _tokenHolders = await getCoinHolders(coin.mint);
@@ -108,7 +112,7 @@ async function PrepareCoinsForFE() {
         if (!topGuarded) {
             return
         }
-        topGuardedCoins = addLockedSolForCoins(topGuarded)
+        topGuardedCoins = await addLockedSolForCoins_and_saveImg(topGuarded)
         for (const coin of topGuardedCoins) {
             const _tokenHolders = await getCoinHolders(coin.mint);
             coin.holders = _tokenHolders.holderCount
@@ -122,7 +126,7 @@ async function PrepareCoinsForFE() {
         if (!guardedTokens) {
             return
         }
-        recentlyGuardedCoins = addLockedSolForCoins(guardedTokens)
+        recentlyGuardedCoins = await addLockedSolForCoins_and_saveImg(guardedTokens)
         for (const coin of recentlyGuardedCoins) {
             const _tokenHolders = await getCoinHolders(coin.mint);
             coin.holders = _tokenHolders.holderCount
@@ -132,7 +136,7 @@ async function PrepareCoinsForFE() {
     }, 5000)
 
     // adding locked sol to pump.fun coins for front-end display
-    function addLockedSolForCoins(pumpfunCoins) {
+    async function addLockedSolForCoins_and_saveImg(pumpfunCoins) {
         for (var i = 0; i < pumpfunCoins.length; i++) {
             for (var j = 0; j < allGuardedCoins_byPumpGuard.length; j++) {
 
@@ -140,6 +144,14 @@ async function PrepareCoinsForFE() {
                     pumpfunCoins[i].lockedSol = allGuardedCoins_byPumpGuard[j].balance
                 }
             }
+        }
+
+        for (const coin of pumpfunCoins) {
+          //  saveImage("5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump", `https://pump.mypinata.cloud/ipfs/${"5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump"}`);
+
+          console.log(coin.mint)
+          await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
+
         }
 
         return pumpfunCoins
@@ -362,7 +374,17 @@ app.post('/get_coin_status', async (req, res) => {
             }
         })
 
-        res.status(200).send(_theCoin);
+        res.status(200).send({
+            ca: _theCoin.ca,
+            hasRuged: _theCoin.hasRuged,
+            verifyRug: _theCoin.verifyRug,
+            rugDetectDate: _theCoin.rugDetectDate,
+            symbol: _theCoin.symbol,
+            hasMigrated: _theCoin.hasMigrated,
+            devRefundTX: _theCoin.devRefundTX,
+            image_uri: _theCoin.image_uri,
+            balance: _theCoin.balance,
+        });
     } catch (error) {
         console.error('Error getting coin status:', error);
         res.status(500).json({
@@ -570,6 +592,18 @@ function authSigner(userAddress, signature, message) {
     )
 
     return verified ? true : false
+}
+
+function extractAddress(url) {
+    const urlParts = url.split('/');
+    const addressIndex = urlParts.indexOf('ipfs');
+
+    if (addressIndex === -1) {
+        return null; // Return null if the URL doesn't contain 'ipfs'
+    }
+
+    const address = urlParts[addressIndex + 1];
+    return address;
 }
 
 function delay(ms) {
