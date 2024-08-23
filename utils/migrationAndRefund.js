@@ -19,31 +19,31 @@ const LYMN_WALLET = '2tiwwLGTFYxLagjqh5m18yfZmmdK8Wpw4ZQMGETPXMW5'
 const PLATFORM_FEE = 0.2
 
 
-async function watchGuardedCoinsForMigration() {
-    // fetch all the unmigrated guarded coins from db 
-    const _UnMigratedCoins = await _Collections.GuardedCoins.find({
-        hasMigrated: false,
-        devRefunded: false
-    }).toArray()
+// async function watchGuardedCoinsForMigration() {
+//     // fetch all the unmigrated guarded coins from db 
+//     const _UnMigratedCoins = await _Collections.GuardedCoins.find({
+//         hasMigrated: false,
+//         devRefunded: false
+//     }).toArray()
 
-    // check everyone of them for migration
-    for (const item of _UnMigratedCoins) {
-        if (!item.ca) continue
+//     // check everyone of them for migration
+//     for (const item of _UnMigratedCoins) {
+//         if (!item.ca) continue
 
-        try {
-            if (await hasCoinMigrated(item.ca)) {
-                // coin has migrated, proceed to refund the dev
-                console.log(`-- A coin has migrated: ${item.symbol} [${item.ca}].`)
-                doDevRefund(item.dev, item.lockAddress, item.lockPVK, item.ca)
-            } else {
-                // not yet migrated
-            }
-        } catch (error) {
-            console.log(`E.106 for ${item.ca}: `, error);
-        }
+//         try {
+//             if (await hasCoinMigrated(item.ca)) {
+//                 // coin has migrated, proceed to refund the dev
+//                 console.log(`-- A coin has migrated: ${item.symbol} [${item.ca}].`)
+//                 doDevRefund(item.dev, item.lockAddress, item.lockPVK, item.ca)
+//             } else {
+//                 // not yet migrated
+//             }
+//         } catch (error) {
+//             console.log(`E.106 for ${item.ca}: `, error);
+//         }
 
-    }
-}
+//     }
+// }
 
 
 
@@ -136,7 +136,6 @@ async function hasCoinMigrated(_CA) {
 
 
 module.exports = {
-    watchGuardedCoinsForMigration,
     hasCoinMigrated,
     takePumpGuardFee
 }
