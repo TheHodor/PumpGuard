@@ -68,8 +68,8 @@ async function transferSOL(wallet, amount, fromKeypair) {
   }
 
   const rentExemptMinimum = await connection.getMinimumBalanceForRentExemption(0) / 1e9;
-  
-  const transferAmountInSOL = sourceBalance - rentExemptMinimum - 0.0003; 
+
+  const transferAmountInSOL = sourceBalance - rentExemptMinimum - 0.0001; 
 
   const transferAmountInLamports = Math.floor(transferAmountInSOL * 1e9);
 
