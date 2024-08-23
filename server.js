@@ -24,7 +24,8 @@ const {
 } = require('./utils/apiFetch.js');
 const {
     watchGuardedCoinsForMigration,
-    hasCoinMigrated
+    hasCoinMigrated,
+    takePumpGuardFee
 } = require('./utils/migrationAndRefund.js');
 
 const {
