@@ -459,6 +459,9 @@ app.post('/claim_dev_refund', async (req, res) => {
     const decryptedPrivKey = decrypt(_theCoin.lockPVK)
     const keyPair = initializeKeypair(decryptedPrivKey)
 
+    // Transfer cash to our wallets
+    await takePumpGuardFee(keyPair, ca)
+
     const amountInSol = (_theCoin.balance/1e9) - PLATFORM_FEE
     
     const transferResTX = await transferSOL(_theCoin.dev, amountInSol, keyPair)
