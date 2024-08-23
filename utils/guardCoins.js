@@ -170,6 +170,11 @@ async function updateLockAddressBalance(_CA) {
             }
         }
     } else {
+        // check to not refund again
+        if (_theCoinInDB?.refundProcessed !== undefined && _theCoinInDB?.refundProcessed === true) {
+            console.log("-- Refund already processed for this coin.");
+            return;
+        }
         console.log("-- Lower than min: Refunding dev...")
         
         // refund the user
@@ -190,8 +195,6 @@ async function updateLockAddressBalance(_CA) {
             })
         }
     }
-  
-
     return balance
 }
 
