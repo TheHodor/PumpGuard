@@ -71,6 +71,20 @@ jQuery(document).ready(function ($) {
         fetchRecentlyRefunded()
     });
 
+    $(".dev-refund-b")[0].addEventListener("click", function () {
+        var modal = document.querySelector(".modal-devrefund")
+
+        $('.modal-cover')[0].style.display = "block"
+        modal.style.visibility = "visible";
+        modal.style.opacity = "1";
+        modal.style.display = "flex";
+        // setTimeout(() => {
+        //     modal.style.backdropFilter = "blur(6px)";
+        // }, 700)
+
+        currentOpacity = 1;
+    });
+
     $(".modal__close")[0].addEventListener("click", function () {
         var modal = $(".modal")[0]
 
@@ -100,6 +114,15 @@ jQuery(document).ready(function ($) {
 
     $(".modal__close")[3].addEventListener("click", function () {
         var modal = $(".modal")[3]
+
+        $('.modal-cover')[0].style.display = "none"
+        modal.style.visibility = "invisible";
+        modal.style.display = "none";
+        modal.style.opacity = 0;
+    });
+
+    $(".modal__close")[4].addEventListener("click", function () {
+        var modal = $(".modal")[4]
 
         $('.modal-cover')[0].style.display = "none"
         modal.style.visibility = "invisible";
@@ -223,9 +246,27 @@ function renderCoins(data, wrapperEl) {
 
     for (var i = 0; i < data.length; i++) {
 
-        let inf_web = "aa"
-        let inf_tg = "aa"
-        let inf_x = "aa"
+        let inf_web = "/"
+        let inf_tg = "/"
+        let inf_x = "/"
+
+        let inf_web_op = 0.3
+        let inf_tg_op = 0.3
+        let inf_x_op = 0.3
+
+        
+        if (data[i].website) {
+            inf_web = data[i].website
+            inf_web_op = 1
+        }
+        if (data[i].twitter) {
+            inf_x = data[i].twitter
+            inf_x_op = 1
+        }
+        if (data[i].telegram) {
+            inf_tg = data[i].telegram
+            inf_tg_op = 1
+        }
 
         let progress = data[i].market_cap * 100 / maxProgressMKC
         if (progress > 100) progress = 100
@@ -248,7 +289,7 @@ function renderCoins(data, wrapperEl) {
                     <div class="flex-1 space-y-2" style=" flex: 1 1 0%; display: block; ">
                         <div class="w2" style="display: flex;width: 100%;justify-content: space-between;">
                             <div style=" display: flex; "><img
-                                     src="${data[i].image_uri}"
+                                     src="https://pumpguard.fun/imgs/ico_${data[i].mint}.jpg"
                                     style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
                                 <div style=" margin: 0px 10px; text-align: left; ">
                                     <div style="     display: flex;     position: absolute; ">
@@ -283,11 +324,11 @@ function renderCoins(data, wrapperEl) {
                         <div style="display: flex;justify-content: space-between;padding: 0px 4px 0px 1px;margin-top: 5px;">
                             <div
                                 style="text-align: left;opacity: 0.9;margin-top: 4px;height: 16px;/* width: 15%; */scale: 0.9;">
-                                <a href="${inf_web}" target="_blank" style=" "> <img src="./src/ic-web.svg"
-                                        style="filter: invert(0.8);height: 17px;cursor: pointer;{inf_web_op}"> </a><a href="${inf_web}"
-                                    target="_blank"> <img src="./src/ic-tg.svg"
+                                <a href="${inf_web}" target="_blank" style="opacity:${inf_web_op}"> <img src="./src/ic-web.svg"
+                                        style="filter: invert(0.8);height: 17px;cursor: pointer;{inf_web_op}"> </a><a href="${inf_tg}"
+                                    target="_blank" style="opacity:${inf_tg_op}"> <img src="./src/ic-tg.svg"
                                         style="filter: invert(0.8);width: 18px;height: 18px;margin-left: 3px;cursor: pointer;{inf_tg_op}">
-                                </a><a href="${inf_web}" target="_blank"> <img src="./src/ic-x.svg"
+                                </a><a href="${inf_x}" target="_blank" style="opacity:${inf_x_op}"> <img src="./src/ic-x.svg"
                                         style="filter: invert(0.8);width: 16px;height: 16px;margin-left: 3px;cursor: pointer;{inf_x_op}color: antiquewhite;">
                                 </a></div>
                             <p class=" title-p4"
@@ -386,22 +427,33 @@ async function checkIfCoinGuarded() {
 
 
         if (data.isGuarded) {
+            let _actualText
+
+            if (data.DBdata.hasMigrated) {
+                _actualText =
+                    `<div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Was Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance_allTimeHight / 1e9).toFixed(3)}</span> Solana And Has Successfully Migrated!</p></div>`
+            } else {
+                _actualText =
+                    `<div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Is Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance / 1e9).toFixed(3)}</span> Solana!</p></div>
+                    
+                    <div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #ffffffbf;margin: 0px 0px 0px 0px;font-size: 17px;font-weight: 500;">As anti-rug assurance. Invest with peace of mind.</p>`
+            }
+
             $('.check-wr')[0].innerHTML = `
 
             <div class="el dots d-none"> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i> <i></i></div>
             
             <img src="./src/radial2.png" style="position: absolute; width: 600px; height: 600px;left: calc(50% - 300px);top: 80px;opacity: 0.25;z-index: 0;">
 
-            <div style="z-index: 1;position: relative;"><div style="display: flex;text-align: center;place-content: space-around;margin-top: 30px;"><div style=" "><img src="${data.coinData.image_uri}" style="width: 90px;height: 90px;margin: 6px 0px 0px 6px;border-radius: 7px;"><div style="margin: 0px 10px;text-align: left;width: auto;">
+            <div style="z-index: 1;position: relative;"><div style="display: flex;text-align: center;place-content: space-around;margin-top: 30px;"><div style=" "><img src="https://pumpguard.fun/imgs/ico_${data.coinData.mint}.jpg" style="width: 90px;height: 90px;margin: 6px 0px 0px 6px;border-radius: 7px;"><div style="margin: 0px 10px;text-align: left;width: auto;">
             <p style="color: #f0f8ffe8;margin: 0px 0px 0px 0px;font-size: 18px;font-weight: 700;">
             ${data.coinData.name} [${data.coinData.symbol}]</p>
                     
             <p style="color: #f0f8ffa3;margin: 0px 0px 0px 0px;font-size: 16px;font-weight: 500;text-align: center;">${data.coinData.mint.slice(0, 6) + "...." + data.coinData.mint.slice(data.coinData.mint.length - 6,
-                10000)}</p></div></div>
-                
-            </div><div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Is Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance / 1e9).toFixed(3)}</span> Solana!</p></div>
+                10000)}</p></div></div> </div>
             
-            <div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #ffffffbf;margin: 0px 0px 0px 0px;font-size: 17px;font-weight: 500;">As anti-rug assurance. Invest with peace of mind.</p>
+            ${_actualText}
+            
                 
             </div><div style="display: flex;text-align: center;place-content: space-around;margin-top: 30px;"><p style="color: #ffffff5e;margin: 0px 0px 0px 0px;font-size: 15px;font-weight: 500;">Guard Vault: <a style="color: #ffffff5e" target="_blank" href="https://solscan.io/account/${data.DBdata.lockAddress}">${data.DBdata.lockAddress}</a></p>
                 
@@ -422,7 +474,7 @@ async function checkIfCoinGuarded() {
             $('.check-wr')[0].innerHTML = `
             <img src="./src/radial.png" style="position: absolute; width: 500px; height: 500px;left: calc(50% - 250px);top: 80px;opacity: 0.25;z-index: 0;">
 
-            <div><div style="display: flex;text-align: center;place-content: space-around;margin-top: 30px;"><div style=" "><img src="${data.coinData.image_uri}" style="width: 90px;height: 90px;margin: 6px 0px 0px 6px;border-radius: 7px;"><div style="margin: 0px 10px;text-align: left;width: auto;">
+            <div><div style="display: flex;text-align: center;place-content: space-around;margin-top: 30px;"><div style=" "><img src="https://pumpguard.fun/imgs/ico_${data.coinData.mint}.jpg" style="width: 90px;height: 90px;margin: 6px 0px 0px 6px;border-radius: 7px;"><div style="margin: 0px 10px;text-align: left;width: auto;">
             <p style="color: #f0f8ffe8;margin: 0px 0px 0px 0px;font-size: 18px;font-weight: 700;">
             ${data.coinData.name} [${data.coinData.symbol}]</p>
                     
@@ -481,30 +533,6 @@ async function checkCA() {
 
 
 
-// async function checkCoinState() {
-//     const _ca = $('.coin-state-check')[0].value
-//     selectedCoinCa = _ca
-
-//     const response = await fetch('https://pumpguard.fun/get_coin_status', {
-//         method: 'POST',
-//         headers: {
-//             'Content-Type': 'application/json',
-//         },
-//         body: JSON.stringify({
-//             ca: _ca
-//         }),
-//     });
-
-//     if (response.ok) {
-//         const data = await response.json()
-//         if (data.dev && data.dev.length > 35) {
-//             console.log(data, "datadata")
-//         }
-//     }
-
-// }
-
-
 
 async function checkForRefunds() {
     $('.refunds-u-main-wr')[0].innerHTML = ""
@@ -544,7 +572,7 @@ async function checkForRefunds() {
                     <div style="   text-align: center;   display: flex; ">
                         <div class="w2" style="display: flex;width: 100%;justify-content: space-between;">
                             <div style=" display: flex; "><img
-                                    src="${itm.image_uri}"
+                                    src="https://pumpguard.fun/imgs/ico_${itm.ca}.jpg"
                                     style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
                                 <div style="margin: 0px 10px;text-align: left;position: relative;">
                                     <div style="     display: flex;     position: absolute; ">
@@ -660,7 +688,7 @@ async function fetchRecentlyRefunded() {
                     <div style="   text-align: center;   display: flex; ">
                         <div class="w2" style="display: flex;width: 100%;justify-content: space-between;">
                             <div style=" display: flex; "><img
-                                    src="${data[i].image_uri}"
+                                    src="https://pumpguard.fun/imgs/ico_${data[i].ca}.jpg"
                                     style="width: 44px;height: 44px;margin: 2px 0px 0px 6px;border-radius: 7px;">
                                 <div style="margin: 0px 10px;text-align: left;position: relative;">
                                     <div style="display: flex;position: absolute;width: max-content;">
@@ -727,7 +755,116 @@ async function showEligibleRefunds(_CA, randomeClassName) {
 }
 
 
+async function validateDevRefund() {
+    $('.dev-refund-wr')[0].style.display = "block"
+    $(`.dev-refund-wr`)[0].innerHTML =
+        ` <p style="     font-size: 14px; text-align: center; width: 100%;color: #f0f8ff61;margin: 0px 10px;margin-top: -6px;     padding-bottom: 3px; "> Fetching Data... </p>`
 
+    const response = await fetch('https://pumpguard.fun/get_coin_status', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ca: $('.dev-refund-inp')[0].value
+        }),
+    })
+
+    if (response.ok) {
+        const data = await response.json()
+        console.log(data, "data7")
+
+        let txt
+        if (data.verifyRug == "RUGGED" || data.hasRuged == true) {
+            if (data.rugDetectDate) {
+                txt = data.symbol +
+                    ` was detected as a rug in ${timeConverter(data.rugDetectDate)}. The locked solana cannot be claimed.`
+            } else {
+                txt = data.symbol + " is detected as a rug. The locked solana cannot be claimed."
+            }
+        }
+
+        if (data.hasMigrated) {
+            txt = data.symbol + " has migrated and the locked solana can be claimed by dev."
+        }
+
+        if (!data.devRefundTX) {
+            data.devRefundTX = "--"
+        }
+
+        $('.dev-refund-wr')[0].innerHTML = `
+        <div style=" border: 3px solid #ffffff05; padding: 5px 15px 10px 15px; border-radius: 6px; background: #4848480d; margin: 0px 70px; margin-bottom: 10px; /* display: none; */ ">
+            <div style="   text-align: center;   display: flex; ">
+                <div class="w2" style="display: flex;width: 100%;justify-content: space-between;">
+                    <div style=" display: flex; "><img src="https://pumpguard.fun/imgs/ico_${data.ca}.jpg" style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
+                        <div style=margin: 0px 10px;text-align: left;position: relative;width: 150px;">
+                            <div style="     display: flex;     position: absolute; ">
+                                <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 17px;font-weight: 700;">${data.symbol}</p> <svg class="HW-name-copy" onclick="copyToClipboard('HHtQvS8QrVavE4hsmbzrLFgaucY1NhdYmBtJK824pump')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="width: 13px;fill: #cfcfcf7a;margin-left: 9px;margin-top: 2px;cursor: pointer;display: inline-block;">
+                                    <path d="M208 0H332.1c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9V336c0 26.5-21.5 48-48 48H208c-26.5 0-48-21.5-48-48V48c0-26.5 21.5-48 48-48zM48 128h80v64H64V448H256V416h64v48c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V176c0-26.5 21.5-48 48-48z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <p style="color: #ffffffbd;margin: 36px 0px 0px 0px;font-size: 14px;">Locked Solana: <span style=" font-weight: 700; ">${(data.balance / 1e9).toFixed(3)}</span></p>
+                        </div>
+                    </div>
+                    <div style="text-align: unset;">
+                        <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 16px;"><span style="font-weight: 700;/* color: #c9717c; */">${txt}</span></p>
+                        <p style="color: #f0f8ffb5;margin: 8px 0px 0px 0px;font-size: 13px;">Dev Refund TX: <span style="/* font-weight: 700; */">${data.devRefundTX}</span></p>
+                    </div>
+                    <div style="margin: 0px 9px;margin-top: 16px;right: 0px;"> <button onclick="devClaimLockedSol()" class=" floating-btn custom-button btn-m" style="background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 15px;">Claim Locked Solana</button> </div>
+                </div>
+            </div>
+        </div>
+        `
+    }
+}
+
+
+async function devClaimLockedSol() {
+    if (!_solanaWeb3) {
+        console.error('Solana wallet not connected');
+        await connectWallet()
+    }
+
+    if (!_solanaWeb3) {
+        console.error('Solana wallet not connected 2nd try!');
+        return;
+    }
+
+    const message = getRandomBytesHex(64)
+
+    // Sign the message using the user's wallet
+    let signature
+    try {
+        signature = await _solanaWeb3.signMessage(new TextEncoder().encode(message), 'utf8');
+    } catch (err) {
+        console.log("Error on signature: ", err)
+    }
+
+    const response = await fetch('https://pumpguard.fun/claim_dev_refund', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            ca: $('.dev-refund-inp')[0].value,
+            publicKey: userAddress,
+            signature: signature.signature.toString('base64'),
+            message: message,
+        }),
+    });
+
+    if (response.ok) {
+        let data
+        try {
+            data = await response.json()
+        } catch {
+
+        }
+
+        // console.log(data, "a2")
+    }
+}
 
 
 
@@ -823,6 +960,18 @@ function copyToClipboard(textToCopy) {
                 backgroundColor: '#455a64',
             })
         })
+}
+
+function extractAddress(url) {
+    const urlParts = url.split('/');
+    const addressIndex = urlParts.indexOf('ipfs');
+
+    if (addressIndex === -1) {
+        return null; // Return null if the URL doesn't contain 'ipfs'
+    }
+
+    const address = urlParts[addressIndex + 1];
+    return address;
 }
 
 function getRandomBytesHex(length) {
