@@ -1,18 +1,20 @@
 const TelegramBot = require('node-telegram-bot-api');
+const { _getCoinHolders, _getCoinVolume1h } = require('./pumpFunFetch');
+
 
 // Replace with your bot token and channel name
 const botToken = '7449586246:AAEKIQAuQoruDff49YPte713Orms5dGD4iA';
 const channelName = '@PumpGuardAlert';
 const BUYEMOJIE = "🟢"
 
-async function TG_alertNewGuard(coinsData, lockedSol, totalLockedSolana) {console.log(coinsData)
+async function TG_alertNewGuard(coinsData, lockedSol, totalLockedSolana) {
     // Create a new bot instance
     const bot = new TelegramBot(botToken, {
         polling: false
     });
 
     let _buyEmojies = BUYEMOJIE
-    for (var i = 0; i < (lockedSol / 0.1); i++) {
+    for (var i = 0; i < (lockedSol / 0.002); i++) {
         _buyEmojies += BUYEMOJIE
     }
 
@@ -20,6 +22,9 @@ async function TG_alertNewGuard(coinsData, lockedSol, totalLockedSolana) {consol
     if (coinsData.website) socials += `[Website](${coinsData.website}) `
     if (coinsData.telegram) socials += `[Telegram](${coinsData.telegram}) `
     if (coinsData.twitter) socials += `[Twitter](${coinsData.twitter})`
+
+    const holders = _getCoinHolders(coinsData.mint)
+    const volume1h = _getCoinVolume1h(coinsData.mint)
 
     // Message to send
     const message = `
@@ -29,14 +34,15 @@ async function TG_alertNewGuard(coinsData, lockedSol, totalLockedSolana) {consol
 ${_buyEmojies}
 
 *${coinsData.name}* is now being guarded with ${totalLockedSolana.toFixed(4)} Solana.
+*CA: ${(coinsData.mint).toString()}*
 
 - MarketCap: *${parseInt(coinsData.usd_market_cap).toLocaleString()} USD*
-- Volume.1h: *--*
-- Holders: *--*
+- Volume.1h: *${volume1h}*
+- Holders: *${holders}*
 - Coin Age: *${timeDifference(Date.now(), coinsData.created_timestamp)}*
 - Socials: ${socials}
 
-Follow PumpGuard on [Twitter](https://x.com/google), visit our [Coin Review Channel](https://t.me/google), and be part of our [Chat Group](https://t.me/google).
+Follow PumpGuard on [Twitter](https://x.com/google), visit our [Coin Review Channel](https://t.me/pumpguard), and be part of our [Chat Group](https://t.me/pumpguardchat).
     
 `;
 
