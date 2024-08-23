@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const http = require('http');
 const https = require('https');
 const fetch = require('node-fetch');
@@ -40,11 +41,22 @@ const {
 } = require('./utils/helpers.js')
 
 
+// Create a rate limiter
+const limiter = rateLimit({
+    windowMs: 10 * 60 * 1000, // 1 minutes
+    max: 150, // limit each IP to 100 requests per windowMs
+    message: 'Too many requests from this IP, please try again after 10 minutes',
+    validate: {
+        xForwardedForHeader: false
+    }
+})
+
 // ----- setting express app ----- //
 console.log(`Environment is PROD`);
 const app = express();
 app.use(express.json());
-// app.use('/api', apiRouter);
+// Apply the rate limiter to all requests
+app.use(limiter);
 app.use(express.static(`${__dirname}/main`));
 app.use(bodyParser.urlencoded({
     extended: true
@@ -84,7 +96,7 @@ async function serverStarted() {
     //     }
     // });
 
-   // saveImage("5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump", `https://pump.mypinata.cloud/ipfs/${extractAddress()}`);
+    // saveImage("5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump", `https://pump.mypinata.cloud/ipfs/${extractAddress()}`);
 
 }
 
@@ -147,7 +159,7 @@ async function PrepareCoinsForFE() {
         }
 
         for (const coin of pumpfunCoins) {
-          await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
+            await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
         }
 
         return pumpfunCoins
@@ -188,7 +200,7 @@ app.get('/parse_trades', async (req, res) => {
         });
     }
     try {
-        const data = await isCoinGuarded(ca); 
+        const data = await isCoinGuarded(ca);
         if (!data.isGuarded) {
             return res.status(500).json({
                 error: 'Token not guarded. Not parsing trades.....'
@@ -214,7 +226,7 @@ app.get('/verify_rugged', async (req, res) => {
         });
     }
     try {
-        const data = await isCoinGuarded(ca); 
+        const data = await isCoinGuarded(ca);
         if (!data.isGuarded) {
             return res.status(500).json({
                 error: 'Token not guarded. Not checking any status...'
@@ -412,30 +424,30 @@ app.post('/claim_dev_refund', async (req, res) => {
         });
     }
 
-    if(_theCoin.devCanClaimLockedSol == false || _theCoin.days7PassedWithNoRug == false) {
+    if (_theCoin.devCanClaimLockedSol == false || _theCoin.days7PassedWithNoRug == false) {
         return res.status(500).json({
             error: 'Dev cannot claim sol yet..'
         })
     }
-    if(_theCoin.hasRuged == true) {
+    if (_theCoin.hasRuged == true) {
         return res.status(500).json({
             error: 'Dev rugged. Not valid.'
         })
     }
 
-    if(_theCoin.devBeenRefunded == true) {
+    if (_theCoin.devBeenRefunded == true) {
         return res.status(500).json({
             error: 'Dev has already been refunded.'
         })
     }
-    
+
 
     const walletBalance = await getSolBalance(_theCoin.lockAddress)
-    
-    if(walletBalance < 0.01) {
+
+    if (walletBalance < 0.01) {
         return res.status(500).json({
             error: 'Insufficient Sol balance. '
-        })  
+        })
     }
     // transfer dev's refund
     const decryptedPrivKey = decrypt(_theCoin.lockPVK)
