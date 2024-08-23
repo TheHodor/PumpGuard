@@ -500,8 +500,30 @@ async function refundHolders(holders, _CA) {
 
         const refundRatio = (amountToReturn / totalSolLostByTraders)
 
-        console.log(`Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}` )
+        console.log(`Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}`)
+        // update the db and identify the coin as rugged
+        await _Collections.GuardedCoins.updateOne({
+            ca: _CA,
+            hasRuged: false,
+        }, {
+            $set: {
+                hasRuged: true,
+                rugDetectDate: Date.now(),
+            }
+        })
 
+        if (tokenData.platformFeeTaken == false) {
+            // handle platform fee seperately
+            try{
+                const decryptedPrivKey = decrypt(tokenData.lockPVK)
+                const keyPair = initializeKeypair(decryptedPrivKey)
+                await takePumpGuardFee(keyPair, _CA)       
+            }catch(e) {
+                console.error('Error during platform fee transfer:', error.message);
+                return
+            }
+
+        }
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
             const refundAmount = Math.abs(wallet.PnL) * refundRatio
@@ -551,24 +573,6 @@ async function refundHolders(holders, _CA) {
                     },
                 },
             });
-
-            // update the db and identify the coin as rugged
-            await _Collections.GuardedCoins.updateOne({
-                ca: _CA,
-                hasRuged: false,
-            }, {
-                $set: {
-                    hasRuged: true,
-                    rugDetectDate: Date.now(),
-                }
-            })
-
-            if (tokenData.platformFeeTaken == false) {
-                const decryptedPrivKey = decrypt(tokenData.lockPVK)
-                const keyPair = initializeKeypair(decryptedPrivKey)
-                await takePumpGuardFee(keyPair)
-            }
-
         }
     } catch (e) {
         console.log('Error processing holders refund', e)

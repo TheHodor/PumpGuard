@@ -70,7 +70,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
   const transferAmountInSOL = amount - 0.001; // fees
   const transferAmountInLamports = Math.floor(transferAmountInSOL * 1e9);
 
-  const PRIORITY_RATE = 20000;
+  const PRIORITY_RATE = 10000;
   const PRIORITY_FEE_INSTRUCTIONS = ComputeBudgetProgram.setComputeUnitPrice({
     microLamports: PRIORITY_RATE,
   });
