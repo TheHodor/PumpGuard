@@ -155,7 +155,7 @@ async function updateLockAddressBalance(_CA) {
             }
         })
         if (res.matchedCount > 0) {
-            console.log('Updated document ID:', _CA);
+            console.log('Updated document ID:', _CA); 
             TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
         } else {
             console.log('No document was updated.');
@@ -339,128 +339,131 @@ async function parseTokenTrades(_CA) {
         const _theCoin = await fetchCoinData(_CA)
         const allTrades = await getAllTradesPump(_CA)
 
-        if (allTrades && allTrades[0] && allTrades[0].slot) {
-            const sniperSlot = allTrades[0].slot
-            const devWallet = _theCoin.creator
-            const _tokenPriceSol = _theCoin.market_cap / 1e9
-
-            let holders = {}
-
-            for (var i = 0; i < allTrades.length; i++) {
-                const trade = allTrades[i]
-
-                if (!holders[allTrades[i].user])
-                    holders[allTrades[i].user] = {
-                        address: allTrades[i].user,
-                        totalSolBought: 0,
-                        totalSolSold: 0,
-                        PnL: 0,
-                        totalTokensBought: 0,
-                        totalTokensSold: 0,
-                        worthOfTokensSol: 0,
-                        TXs: [],
-                        tag: '',
-                        hasBought: false,
-                        hasSold: false,
-                        isInsider: void 0
-                    }
-
-                if (allTrades[i].is_buy) {
-                    // find snipers
-                    if (trade.slot == sniperSlot) {
-                        //console.log('Sniper Bought: ', trade.user)
-                        holders[trade.user].tag = 'SNIPER'
-                    }
-                    holders[trade.user].totalTokensBought += trade.token_amount;
-                    holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
-                    holders[trade.user].hasBought = true;
-                } else {
-                    if (trade.slot == sniperSlot) {
-                        //console.log('Sniper Sold: ', trade.user)
-
-                        holders[trade.user].tag = 'SNIPER'
-                    }
-                    holders[trade.user].totalTokensSold -= trade.token_amount;
-                    holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
-                    holders[trade.user].hasSold = true;
-                }
-
-                holders[trade.user].TXs.push(allTrades[i].signature)
-            }
-
-            for (const addr in holders) {
-                if (holders[addr].hasSold && !holders[addr].hasBought) {
-                    if (holders[addr].tag == 'SNIPER') {
-                        continue
-                    }
-                    holders[addr].tag = 'TRANSFER';
-                    //console.log('Found Transfer: ', holders[addr].address)
-
-                } else if (holders[addr].hasBought && !holders[addr].hasSold) {
-                    if (holders[addr].tag == 'SNIPER') {
-                        continue
-                    }
-                    holders[addr].tag = 'HOLDER';
-                } else if (holders[addr].hasBought && holders[addr].hasSold) {
-                    if (holders[addr].tag == 'SNIPER') {
-                        continue
-                    }
-                    holders[addr].tag = 'DEGEN';
-                }
-
-                if (holders[addr].address == devWallet)
-                    holders[addr].tag = 'DEV'
-
-                holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
-                holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
-                // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
-                //     .worthOfTokensSol
-            }
-
-            // Convert the object to an array of values (objects)
-            let holdersArray = Object.values(holders);
-
-            // Sort the array based on PnL (bigger losers first)
-            const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
-            const newHolders = {};
-            sortedHolders.forEach(holder => {
-                newHolders[holder.address] = holder;
-            });
-            const maxInsiderCheck = 50
-            let insidersChecked = 0
-            const INSIDER_HARD_CAP = 25
-
-            // check if top pnl losers are insiders or not
-            // console.log('started fetching sigs: ', new Date())
-            for (const addr in newHolders) {
-                if (insidersChecked >= maxInsiderCheck) continue
-                const walletData = await fetchSignatures(newHolders[addr].address);
-                if (walletData && walletData[1] !== undefined && walletData[1] < INSIDER_HARD_CAP) {
-                    holders[addr].isInsider = true
-                } else {
-                    holders[addr].isInsider = false
-                }
-
-                insidersChecked++
-            }
-
-            console.log("-- Finished fetching data for coin: ", _CA)
-            // console.log('ended fetching sigs: ', new Date())
-
-            const collection = _DBs.Holders.collection(_CA)
-            const collectionExists = await collection.estimatedDocumentCount() > 0
-            if (!collectionExists) {
-                // If the collection doesn't exist, create it
-                await _DBs.Holders.createCollection(_CA)
-            } else {
-                // If the collection does exist, clear all the old doucments (holders) and enter new ones
-                await collection.deleteMany({});
-            }
-
-            holdersArray = Object.values(holders);
-            const result = await collection.insertMany(holdersArray);
-            return "Trades Parsed"
+        if(!allTrades || !allTrades[0] || !allTrades[0].slot) {
+            console.log('Issue with trades fetched....')
+            console.log('Printing trade 0 :', allTrades[0])
+            
         }
+        const sniperSlot = allTrades[0].slot
+        const devWallet = _theCoin.creator
+        const _tokenPriceSol = _theCoin.market_cap / 1e9
+
+        let holders = {}
+
+        for (var i = 0; i < allTrades.length; i++) {
+            const trade = allTrades[i]
+
+            if (!holders[allTrades[i].user])
+                holders[allTrades[i].user] = {
+                    address: allTrades[i].user,
+                    totalSolBought: 0,
+                    totalSolSold: 0,
+                    PnL: 0,
+                    totalTokensBought: 0,
+                    totalTokensSold: 0,
+                    worthOfTokensSol: 0,
+                    TXs: [],
+                    tag: '',
+                    hasBought: false,
+                    hasSold: false,
+                    isInsider: void 0
+                }
+
+            if (allTrades[i].is_buy) {
+                // find snipers
+                if (trade.slot == sniperSlot) {
+                    //console.log('Sniper Bought: ', trade.user)
+                    holders[trade.user].tag = 'SNIPER'
+                }
+                holders[trade.user].totalTokensBought += trade.token_amount;
+                holders[trade.user].totalSolBought += trade.sol_amount / 1e9;
+                holders[trade.user].hasBought = true;
+            } else {
+                if (trade.slot == sniperSlot) {
+                    //console.log('Sniper Sold: ', trade.user)
+
+                    holders[trade.user].tag = 'SNIPER'
+                }
+                holders[trade.user].totalTokensSold -= trade.token_amount;
+                holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
+                holders[trade.user].hasSold = true;
+            }
+
+            holders[trade.user].TXs.push(allTrades[i].signature)
+        }
+
+        for (const addr in holders) {
+            if (holders[addr].hasSold && !holders[addr].hasBought) {
+                if (holders[addr].tag == 'SNIPER') {
+                    continue
+                }
+                holders[addr].tag = 'TRANSFER';
+                //console.log('Found Transfer: ', holders[addr].address)
+
+            } else if (holders[addr].hasBought && !holders[addr].hasSold) {
+                if (holders[addr].tag == 'SNIPER') {
+                    continue
+                }
+                holders[addr].tag = 'HOLDER';
+            } else if (holders[addr].hasBought && holders[addr].hasSold) {
+                if (holders[addr].tag == 'SNIPER') {
+                    continue
+                }
+                holders[addr].tag = 'DEGEN';
+            }
+
+            if (holders[addr].address == devWallet)
+                holders[addr].tag = 'DEV'
+
+            holders[addr].worthOfTokensSol = (holders[addr].tokens / 1e6) * _tokenPriceSol
+            holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought)
+            // holders[addr].PnL = (holders[addr].totalSolSold - holders[addr].totalSolBought) + holders[addr]
+            //     .worthOfTokensSol
+        }
+
+        // Convert the object to an array of values (objects)
+        let holdersArray = Object.values(holders);
+
+        // Sort the array based on PnL (bigger losers first)
+        const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
+        const newHolders = {};
+        sortedHolders.forEach(holder => {
+            newHolders[holder.address] = holder;
+        });
+        const maxInsiderCheck = 50
+        let insidersChecked = 0
+        const INSIDER_HARD_CAP = 25
+
+        // check if top pnl losers are insiders or not
+        // console.log('started fetching sigs: ', new Date())
+        for (const addr in newHolders) {
+            if (insidersChecked >= maxInsiderCheck) continue
+            const walletData = await fetchSignatures(newHolders[addr].address);
+            if (walletData && walletData[1] !== undefined && walletData[1] < INSIDER_HARD_CAP) {
+                holders[addr].isInsider = true
+            } else {
+                holders[addr].isInsider = false
+            }
+
+            insidersChecked++
+        }
+
+        console.log("-- Finished fetching data for coin: ", _CA)
+        // console.log('ended fetching sigs: ', new Date())
+
+        const collection = _DBs.Holders.collection(_CA)
+        const collectionExists = await collection.estimatedDocumentCount() > 0
+        if (!collectionExists) {
+            // If the collection doesn't exist, create it
+            await _DBs.Holders.createCollection(_CA)
+        } else {
+            // If the collection does exist, clear all the old doucments (holders) and enter new ones
+            await collection.deleteMany({});
+        }
+
+        holdersArray = Object.values(holders);
+        const result = await collection.insertMany(holdersArray);
+        return "Trades Parsed"
     } catch (e) {
         console.error('Error parsing trades: ', e)
         return "Parse Failed"
