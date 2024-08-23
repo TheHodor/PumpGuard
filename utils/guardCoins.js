@@ -191,6 +191,7 @@ async function updateLockAddressBalance(_CA) {
                     balance_allTimeHight: 0, 
                     allowedSell: false,
                     firstDeposit: 0,
+                    refundProcessed: true, 
                 }
             })
         }
