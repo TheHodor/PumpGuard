@@ -147,11 +147,7 @@ async function PrepareCoinsForFE() {
         }
 
         for (const coin of pumpfunCoins) {
-          //  saveImage("5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump", `https://pump.mypinata.cloud/ipfs/${"5cESeFSaeDv9VWSmssbEQdV11dfkFdkZTLtqWN6apump"}`);
-
-          console.log(coin.mint)
           await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
-
         }
 
         return pumpfunCoins
