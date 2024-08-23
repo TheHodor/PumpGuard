@@ -50,7 +50,7 @@ const PLATFORM_FEE = 0.2
 
 const SUPPLY_RUG_THRESHOLD = 10
 const MAX_WALLET_REFUND = 25
-const MIN_DEPOSIT_SOL = 0.1
+const MIN_DEPOSIT_SOL = 2.5
 const TOTALSUPPLY = 1e9
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
