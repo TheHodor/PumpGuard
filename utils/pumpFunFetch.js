@@ -205,7 +205,7 @@ async function getAllTradesPump(ca) {
             if (response) {
                 const result = await response.json();
                 if (result.length === 0) {
-                    console.log('got back 0: ', result.length)
+                    // console.log('got back 0: ', result.length)
                     break;
                 }
                 allTrades.push(...result);

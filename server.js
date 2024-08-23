@@ -179,8 +179,13 @@ app.get('/parse_trades', async (req, res) => {
             error: 'Passed address must be a solana address'
         });
     }
-
     try {
+        const data = await isCoinGuarded(ca); 
+        if (!data.isGuarded) {
+            return res.status(500).json({
+                error: 'Token not guarded. Not parsing trades.....'
+            })
+        }
         await parseTokenTrades(ca);
         res.send(`Trades parsed for contract address: ${ca}`);
     } catch (error) {
@@ -201,6 +206,12 @@ app.get('/verify_rugged', async (req, res) => {
         });
     }
     try {
+        const data = await isCoinGuarded(ca); 
+        if (!data.isGuarded) {
+            return res.status(500).json({
+                error: 'Token not guarded. Not checking any status...'
+            })
+        }
         const response = await verifyIfRugged(ca);
         res.send(`Response ${response} for contract address: ${ca}`);
     } catch (error) {
@@ -342,6 +353,15 @@ app.post('/get_coin_status', async (req, res) => {
             ..._theCoin
         }
 
+        await _Collections.GuardedCoins.updateOne({
+            ca: req.body.ca
+        }, {
+            $set: {
+                devCanClaimLockedSol: true,
+                days7PassedWithNoRug: true,
+            }
+        })
+
         res.status(200).send(_theCoin);
     } catch (error) {
         console.error('Error getting coin status:', error);
@@ -355,12 +375,12 @@ app.post('/get_coin_status', async (req, res) => {
 app.post('/claim_dev_refund', async (req, res) => {
     if (!req.body.address) {
         return res.status(400).json({
-            error: 'Wallet address is required.'
+            error: 'Ca to claim against must be passed'
         });
     }
     if (!isSolanaAddress(req.body.address)) {
         return res.status(400).json({
-            error: 'Passed address must be a valid wallet address'
+            error: 'Passed address must be a valid contract'
         });
     }
 
@@ -374,6 +394,31 @@ app.post('/claim_dev_refund', async (req, res) => {
         });
     }
 
+    if(_theCoin.devCanClaimLockedSol == false || _theCoin.days7PassedWithNoRug == false) {
+        return res.status(500).json({
+            error: 'Dev cannot claim sol yet..'
+        })
+    }
+    if(_theCoin.hasRuged == true) {
+        return res.status(500).json({
+            error: 'Dev rugged. Not valid.'
+        })
+    }
+
+    if(_theCoin.devBeenRefunded == true) {
+        return res.status(500).json({
+            error: 'Dev has already been refunded.'
+        })
+    }
+    
+
+    const walletBalance = await getSolBalance(_theCoin.lockAddress)
+    
+    if(walletBalance < 0.01) {
+        return res.status(500).json({
+            error: 'Insufficient Sol balance. '
+        })  
+    }
     // transfer dev's refund
     const decryptedPrivKey = decrypt(_theCoin.lockPVK)
     const keyPair = initializeKeypair(decryptedPrivKey)
@@ -382,12 +427,15 @@ app.post('/claim_dev_refund', async (req, res) => {
 
     // if transfer was successful update the user's refund state
     if (transferResTX && transferResTX.length > 30) {
+        const walletBalance = await getSolBalance(_theCoin.lockAddress)
+
         await _Collections.GuardedCoins.updateOne({
             ca: req.body.ca
         }, {
             $set: {
                 devRefundTX: transferResTX,
-                devBeenRefunded: true
+                devBeenRefunded: true,
+                balance: walletBalance
             }
         })
     }
