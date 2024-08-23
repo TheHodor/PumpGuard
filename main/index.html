@@ -46,6 +46,8 @@
                 <a class="header-p check-state-mod"
                     style="margin-right: 7px;border-bottom: 2px solid #4c805c;line-height: 20px;padding: 0px 2px;">Refunds
                     List</a>
+                <a class="header-p dev-refund-b"
+                    style="margin-right: 9px;/* border-bottom: 2px solid #4c805c; */line-height: 20px;">Dev Refund</a>
                 <a href="" target="_blank" class="header-p" style="margin-right: 9px;">Contact Us</a><a href=""
                     target="_blank" class="header-p" style="">Learn More</a>
                 <a href="https://bscscan.com" target="_blank" class="header-p" style="padding-right: 13px;">Terms</a>
@@ -1241,7 +1243,7 @@ display: block;
             <p
                 style="font-size: 15px;color: #edeef654;margin-top: 50px;margin-bottom: 0; position: relative; z-index: 1;">
                 If a coin guarded by PumpGuard fails to reach Raydium due to dumping by the dev or insiders, investors
-                will be refunded a portion of the locked Solana, based on their losses.</p><a class="modal__close"
+                will be refunded with the locked Solana, based on their losses.</p><a class="modal__close"
                 style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"
                     style="
                     width: 14px;
@@ -1556,6 +1558,93 @@ display: block;
                 </svg></a>
         </div>
     </div>
+
+
+
+    <div id="demo-modal" class="modal modal-devrefund drop-in-q"
+        style="visibility: visible; opacity: 0; display: none;">
+        <div class="modal__content" style="
+        height: auto;
+        max-width: unset;
+    ">
+            <p
+                style="font-size: 26px;font-weight: 700;color: #edeef6de;margin-top: 2px;text-align: center;margin-bottom: 1px;">
+                Devs: Claim back your locked solana</p>
+
+
+
+
+
+            <p style="font-size: 18px;color: #edeef6cc;font-weight: 600;margin-bottom: 0;text-align: center;">As
+                developer of a guarded coin, you can request a full refund if either your guarded coin has migrated to
+                Raydium or if more than 7 days have passed since you guarded your coin, but it has not migrated.</p>
+
+
+
+
+
+
+
+            <div style="
+        text-align: center;
+        margin-top: 30px;
+        display: block;
+        padding: 10px 15px 10px 15px;
+        background: #4848480d;
+    ">
+
+
+
+                <input placeholder="Enter Your Coin CA"
+                    class="log-in-btn floating-btn custom-button btn-m dev-refund-inp"
+                    style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button
+                    onclick="validateDevRefund()" class="log-in-btn floating-btn custom-button btn-m"
+                    style="margin-top: 0;background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 25px;">Check
+                    Coin State</button>
+            </div>
+
+            <div class="dev-refund-wr" style="
+    overflow: auto;
+    max-height: 45vh;
+    padding: 10px;
+    margin-top: 30px;
+    display: none;
+    overflow: hidden;
+">
+
+
+
+
+
+            </div>
+
+            <p style="font-size: 14px;color: #edeef6cc;margin-top: 38px;margin-bottom: 0;width: max-content;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> The locked solana will be refunded only to
+                the dev's wallet.
+            </p>
+            <p
+                style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;width: max-content;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> You need to sign a message with your dev
+                address to authenticate your refund request.
+            </p>
+            <p
+                style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;width: max-content;margin-bottom: 10px;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> If your coin has migrated to raydium, you
+                will be able to request for refund immediately.
+            </p>
+
+            <a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 384 512" style="
+                        width: 14px;
+                        fill: #d4d4d44f;
+                    ">
+                    <path
+                        d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
+                    </path>
+                </svg></a>
+        </div>
+    </div>
+
 
     <div class="toast-message drop-in success" style="display: block; width: 40%;">
         <span class="close" style="

@@ -1,8 +1,13 @@
+const fs = require('fs');
+const path = require('path');
+const axios = require('axios');
 const {
     Keypair,
     PublicKey
 } = require('@solana/web3.js');
-const { connection_helius } = require('../config');
+const {
+    connection_helius
+} = require('../config');
 
 
 function isSolanaAddress(_CA) {
@@ -52,8 +57,41 @@ async function getSolBalance(_address) {
 }
 
 
+async function saveImage(ca, _URL) {
+    const fileName = `ico_${ca}.jpg`
+    const filePath = path.join('main/imgs', fileName)
+
+    // Check if the file already exists
+    const fileExists = fs.existsSync(filePath)
+    if (fileExists) {
+        const savedImageUrl = `https://pumpguard.fun/imgs/${fileName}`
+        return savedImageUrl
+    }
+
+    // If the file doesn't exist, download and save it
+    try {
+        const response = await axios.get(_URL, {
+            responseType: 'stream'
+        });
+
+        await new Promise((resolve, reject) => {
+            const fileStream = fs.createWriteStream(filePath)
+            response.data.pipe(fileStream)
+
+            fileStream.on('error', reject)
+            response.data.on('end', resolve)
+        });
+
+        const savedImageUrl = `https://pumpguard.fun/imgs/${fileName}`
+        return savedImageUrl
+    } catch (err) {
+        console.error(`Error saving image for ${ca}`)
+        throw err
+    }
+}
 
 module.exports = {
     isSolanaAddress,
-    getSolBalance
+    getSolBalance,
+    saveImage
 }
