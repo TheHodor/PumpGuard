@@ -254,7 +254,7 @@ function renderCoins(data, wrapperEl) {
         let inf_tg_op = 0.3
         let inf_x_op = 0.3
 
-        
+
         if (data[i].website) {
             inf_web = data[i].website
             inf_web_op = 1
@@ -775,13 +775,15 @@ async function validateDevRefund() {
         console.log(data, "data7")
 
         let txt
-        if (data.verifyRug == "RUGGED" || data.hasRuged == true) {
+        if (data.verifyRug == true || data.hasRuged == true) {
             if (data.rugDetectDate) {
                 txt = data.symbol +
                     ` was detected as a rug in ${timeConverter(data.rugDetectDate)}. The locked solana cannot be claimed.`
             } else {
                 txt = data.symbol + " is detected as a rug. The locked solana cannot be claimed."
             }
+        } else {
+            txt = data.symbol + " is not known as a rug."
         }
 
         if (data.hasMigrated) {
@@ -797,7 +799,7 @@ async function validateDevRefund() {
             <div style="   text-align: center;   display: flex; ">
                 <div class="w2" style="display: flex;width: 100%;justify-content: space-between;">
                     <div style=" display: flex; "><img src="https://pumpguard.fun/imgs/ico_${data.ca}.jpg" style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
-                        <div style=margin: 0px 10px;text-align: left;position: relative;width: 150px;">
+                        <div style="margin-left: 10px;">
                             <div style="     display: flex;     position: absolute; ">
                                 <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 17px;font-weight: 700;">${data.symbol}</p> <svg class="HW-name-copy" onclick="copyToClipboard('HHtQvS8QrVavE4hsmbzrLFgaucY1NhdYmBtJK824pump')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="width: 13px;fill: #cfcfcf7a;margin-left: 9px;margin-top: 2px;cursor: pointer;display: inline-block;">
                                     <path d="M208 0H332.1c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9V336c0 26.5-21.5 48-48 48H208c-26.5 0-48-21.5-48-48V48c0-26.5 21.5-48 48-48zM48 128h80v64H64V448H256V416h64v48c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V176c0-26.5 21.5-48 48-48z">
@@ -848,7 +850,7 @@ async function devClaimLockedSol() {
         },
         body: JSON.stringify({
             ca: $('.dev-refund-inp')[0].value,
-            publicKey: userAddress,
+            // publicKey: window.solana.publicKey.toString(),
             signature: signature.signature.toString('base64'),
             message: message,
         }),
