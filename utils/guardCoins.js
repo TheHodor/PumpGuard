@@ -101,6 +101,7 @@ async function getCoinLockAddress(_CA) {
             devBeenRefunded: false,
             holdersRefunded: false,
             devCanClaimLockedSol: false,
+            days7PassedWithNoRug: false,
             devRefundTX: "",
         })
 

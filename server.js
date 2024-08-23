@@ -353,6 +353,15 @@ app.post('/get_coin_status', async (req, res) => {
             ..._theCoin
         }
 
+        await _Collections.GuardedCoins.updateOne({
+            ca: req.body.ca
+        }, {
+            $set: {
+                devCanClaimLockedSol: true,
+                days7PassedWithNoRug: true,
+            }
+        })
+
         res.status(200).send(_theCoin);
     } catch (error) {
         console.error('Error getting coin status:', error);
@@ -366,12 +375,12 @@ app.post('/get_coin_status', async (req, res) => {
 app.post('/claim_dev_refund', async (req, res) => {
     if (!req.body.address) {
         return res.status(400).json({
-            error: 'Wallet address is required.'
+            error: 'Ca to claim against must be passed'
         });
     }
     if (!isSolanaAddress(req.body.address)) {
         return res.status(400).json({
-            error: 'Passed address must be a valid wallet address'
+            error: 'Passed address must be a valid contract'
         });
     }
 
@@ -385,7 +394,7 @@ app.post('/claim_dev_refund', async (req, res) => {
         });
     }
 
-    if(_theCoin.devCanClaimLockedSol == false) {
+    if(_theCoin.devCanClaimLockedSol == false || _theCoin.days7PassedWithNoRug == false) {
         return res.status(500).json({
             error: 'Dev cannot claim sol yet..'
         })
