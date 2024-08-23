@@ -459,7 +459,9 @@ app.post('/claim_dev_refund', async (req, res) => {
     const decryptedPrivKey = decrypt(_theCoin.lockPVK)
     const keyPair = initializeKeypair(decryptedPrivKey)
 
-    const transferResTX = await transferSOL(_theCoin.dev, _theCoin.balance - (PLATFORM_FEE * 1e9), keyPair)
+    const amountInSol = (_theCoin.balance/1e9) - PLATFORM_FEE
+    
+    const transferResTX = await transferSOL(_theCoin.dev, amountInSol, keyPair)
 
     // if transfer was successful update the user's refund state
     if (transferResTX && transferResTX.length > 30) {
