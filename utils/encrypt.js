@@ -32,11 +32,3 @@ const decrypt = (encryptedData) => {
 }
 
 module.exports = { encrypt, decrypt };
-
-// const privKey = 'SuperSecretPrivKey' 
-// const encryptedKey = encrypt(privKey)
-// console.log('Encrypted Key: ', encryptedKey)
-
-
-// const decrypted = decrypt('b253328ca7058fe6a841e8cb2f3ce4e4acab9ecdd1456bf0aca069cb81b37b9d0564060ae20ed1fbfd473aa1a72f64c3')
-// console.log('decrypt: ', decrypted)

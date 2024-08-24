@@ -41,7 +41,7 @@ function initializeKeypair(privKey) {
     }
   }
   const keypair = Keypair.fromSecretKey(privateKey);
-  console.log(`Initialized Keypair: Public Key - ${keypair.publicKey.toString()}`);
+  // console.log(`Initialized Keypair: Public Key - ${keypair.publicKey.toString()}`);
   return keypair;
 }
 
@@ -60,7 +60,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
 
   const balance = await connection.getBalance(fromKeypair.publicKey);
   const sourceBalance = balance / 1e9; 
-  console.log(`Source Account Balance: ${sourceBalance} SOL`);
+  // console.log(`Source Account Balance: ${sourceBalance} SOL`);
 
   if (sourceBalance <= 0) {
     console.log('Insufficient balance to perform transfer.');
@@ -69,7 +69,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
 
   const rentExemptMinimum = await connection.getMinimumBalanceForRentExemption(0) / 1e9;
 
-  const transferAmountInSOL = sourceBalance - rentExemptMinimum - 0.0001; 
+  const transferAmountInSOL = amount - rentExemptMinimum - 0.0001; 
 
   const transferAmountInLamports = Math.floor(transferAmountInSOL * 1e9);
 
@@ -113,17 +113,13 @@ async function transferSOL(wallet, amount, fromKeypair) {
       return null
     }
 
-    console.log(`Transaction Successfully Confirmed! View on SolScan: https://solscan.io/tx/${txid}`);
+    console.log(`Transaction Successfully Confirmed for amount ${amount}! View on SolScan: https://solscan.io/tx/${txid}`);
     return txid
   } catch (error) {
     console.error('Transaction failed', error);
     return null
   }
 }
-
-// const testPair = initializeKeypair(process.env.PRIVATE_KEY)
-// transferSOL('4YofY9785L7MMeqdbB3YTKGTM7TnPqe9WRxMt7GrYNXn', 0.1, testPair);
-// initializeKeypair(privKey)
 
 module.exports = {
   initializeKeypair,
