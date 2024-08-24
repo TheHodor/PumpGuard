@@ -14,7 +14,7 @@ async function TG_alertNewGuard(coinsData, lockedSol, totalLockedSolana) {
     });
 
     let _buyEmojies = BUYEMOJIE
-    for (var i = 0; i < (lockedSol / 0.002); i++) {
+    for (var i = 0; i < (lockedSol / 0.05); i++) {
         _buyEmojies += BUYEMOJIE
     }
 
