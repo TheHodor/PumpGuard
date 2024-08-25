@@ -204,11 +204,13 @@ async function getAllTradesPump(ca) {
             );
             if (response) {
                 const result = await response.json();
+
                 if (result.length === 0) {
                     // console.log('got back 0: ', result.length)
                     break;
                 }
                 allTrades.push(...result);
+                await delay(3000); // 2 sec to avoid getting rate limited + 1 sec to be safe
                 offset = offset + 200;
             }
         }

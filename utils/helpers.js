@@ -6,7 +6,8 @@ const {
     PublicKey
 } = require('@solana/web3.js');
 const {
-    connection_helius
+    connection_helius,
+    RPC_helius
 } = require('../config');
 
 
@@ -57,6 +58,48 @@ async function getSolBalance(_address) {
 }
 
 
+async function getTokenBalance(_userAddress, _tokenAddress) {
+    const response = await fetch(RPC_helius, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 'my-id',
+            method: 'getAssetsByOwner',
+            params: {
+                ownerAddress: _userAddress,
+                page: 1, // Starts at 1
+                limit: 1000,
+                displayOptions: {
+                    showFungible: true //return both fungible and non-fungible tokens
+                }
+            },
+        }),
+    });
+    const {
+        result
+    } = await response.json();
+
+    if (result) {
+        const token = result.items.find(
+            (_itm) =>
+            _itm.interface === "FungibleToken" && _itm.id === _tokenAddress
+        );
+
+        if (token) {
+            return token.token_info.balance;
+        } else {
+            return 0
+        }
+    } else {
+        return 0
+    }
+
+}
+
+
 async function saveImage(ca, _URL) {
     const fileName = `ico_${ca}.jpg`
     const filePath = path.join('main/imgs', fileName)
@@ -93,5 +136,6 @@ async function saveImage(ca, _URL) {
 module.exports = {
     isSolanaAddress,
     getSolBalance,
+    getTokenBalance,
     saveImage
 }
