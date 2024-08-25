@@ -20,7 +20,8 @@ const {
     decrypt
 } = require('./encrypt.js');
 const {
-    getSolBalance
+    getSolBalance,
+    getTokenBalance
 } = require('./helpers.js');
 
 const {
@@ -50,7 +51,7 @@ const PLATFORM_FEE = 0.2
 
 const SUPPLY_RUG_THRESHOLD = 10
 const MAX_WALLET_REFUND = 25
-const MIN_DEPOSIT_SOL = 2.5
+const MIN_DEPOSIT_SOL = 0.1
 const TOTALSUPPLY = 1e9
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
@@ -104,7 +105,7 @@ async function getCoinLockAddress(_CA) {
             holdersRefunded: false,
             devCanClaimLockedSol: false,
             days7PassedWithNoRug: false,
-            refundProcessed: false, 
+            refundProcessed: false,
             devRefundTX: "",
         })
 
@@ -140,7 +141,7 @@ async function updateLockAddressBalance(_CA) {
     // fetch sol balance for the lock address
     const balance = await getSolBalance(_theCoinInDB.lockAddress)
     let newlyAddedBalance = balance
-    
+
     let firstDepositDate = _theCoinInDB.firstDeposit
     if (_theCoinInDB.balance == 0) {
         firstDepositDate = Date.now()
@@ -148,7 +149,7 @@ async function updateLockAddressBalance(_CA) {
         newlyAddedBalance = balance - _theCoinInDB.balance
     }
 
-    if (balance /1e9 >= MIN_DEPOSIT_SOL) {
+    if (balance / 1e9 >= MIN_DEPOSIT_SOL) {
         if (newlyAddedBalance > 0) {
             // Get holders now
             // const allHolders = await getTokenHolders(_CA, _theCoinInDB.totalSupply)
@@ -157,12 +158,12 @@ async function updateLockAddressBalance(_CA) {
             }, {
                 $set: {
                     balance: balance,
-                    balance_allTimeHight: Math.max(balance, _theCoinInDB.balance), 
+                    balance_allTimeHight: Math.max(balance, _theCoinInDB.balance),
                     allowedSell: false,
                     firstDeposit: firstDepositDate,
                 }
             })
-    
+
             if (res.matchedCount > 0) {
                 // console.log('Updated document ID:', _CA);
                 TG_alertNewGuard(await fetchCoinData(_CA), newlyAddedBalance / 1e9, balance / 1e9)
@@ -186,15 +187,15 @@ async function updateLockAddressBalance(_CA) {
                 error: 'Dev rugged. Not valid.'
             })
         }
-    
+
         if (_theCoin.devBeenRefunded == true) {
             return res.status(500).json({
                 error: 'Dev has already been refunded.'
             })
         }
-    
+
         console.log("-- Lower than min: Refunding dev...")
-        
+
         // refund the user
         const decryptedPrivKey = decrypt(_theCoinInDB.lockPVK)
         const keyPair = initializeKeypair(decryptedPrivKey)
@@ -206,7 +207,7 @@ async function updateLockAddressBalance(_CA) {
             }, {
                 $set: {
                     balance: 0,
-                    balance_allTimeHight: 0, 
+                    balance_allTimeHight: 0,
                     allowedSell: false,
                     firstDeposit: 0,
                     refundProcessed: true, 
@@ -214,6 +215,8 @@ async function updateLockAddressBalance(_CA) {
             })
         }
     }
+
+
     return balance
 }
 
@@ -372,7 +375,7 @@ async function verifyIfRugged(_CA) {
                 // Refund other wallets
                 const refunded = await refundHolders(refundWallets, _CA)
                 return true
-            } else  {
+            } else {
                 console.log('Token has not rugged yet....')
                 return false
             }
@@ -442,10 +445,13 @@ async function parseTokenTrades(_CA) {
         }
 
         for (const addr in holders) {
-            const remainingTokens = Number(holders[addr].totalTokensSold) - Number(holders[addr].totalTokensBought)
-            holders[addr].worthOfTokensSol = (remainingTokens / 1e6) * Number(_tokenPriceSol)
+            const remainingTokens = await getTokenBalance(addr, _CA)
+            await _delay(250)
 
-            holders[addr].PnL = (Number(holders[addr].totalSolSold) - Number(holders[addr].totalSolBought)) + Number(holders[addr].worthOfTokensSol)
+            holders[addr].worthOfTokensSol = Math.abs((remainingTokens / 1e6) * Number(_tokenPriceSol))
+
+            holders[addr].PnL = (Number(holders[addr].totalSolSold) - Number(holders[addr].totalSolBought)) +
+                Number(holders[addr].worthOfTokensSol)
             // console.log(`Address: ${holders[addr].address} - Total Sold: ${holders[addr].totalSolSold} Total Bought: ${holders[addr].totalSolBought} - PNL: ${holders[addr].PnL}`)
 
             // Give priority to the DEV tag
@@ -459,7 +465,8 @@ async function parseTokenTrades(_CA) {
             }
 
             // Added 2nd check incase someone buys to trick the code - relative 
-            if ((holders[addr].hasSold && !holders[addr].hasBought) || (holders[addr].totalSolBought < 0.1 && holders[addr].totalSolSold > 3)) {
+            if ((holders[addr].hasSold && !holders[addr].hasBought) || (holders[addr].totalSolBought < 0.1 &&
+                    holders[addr].totalSolSold > 3)) {
                 holders[addr].tag = 'TRANSFER';
             } else if (holders[addr].hasBought && !holders[addr].hasSold) {
                 holders[addr].tag = 'HOLDER';
@@ -471,12 +478,12 @@ async function parseTokenTrades(_CA) {
         let holdersArray = Object.values(holders);
 
         // Sort the array based on PnL (bigger losers first)
-        const sortedHolders = holdersArray.sort((a, b) => a.PnL - b.PnL);
+        const sortedHolders = holdersArray.sort((a, b) => b.PnL - a.PnL);
         const newHolders = {};
         sortedHolders.forEach(holder => {
             newHolders[holder.address] = holder;
         });
-        const maxInsiderCheck = 50
+        const maxInsiderCheck = 1000
         let insidersChecked = 0
         const INSIDER_HARD_CAP = 25
 
@@ -487,6 +494,7 @@ async function parseTokenTrades(_CA) {
             const walletData = await fetchSignatures(newHolders[addr].address);
             if (walletData && walletData[1] !== undefined && walletData[1] < INSIDER_HARD_CAP) {
                 holders[addr].isInsider = true
+                holders[addr].tag = 'INSIDER'
             } else {
                 holders[addr].isInsider = false
             }
@@ -508,6 +516,8 @@ async function parseTokenTrades(_CA) {
         }
 
         holdersArray = Object.values(holders);
+        holdersArray = holdersArray.sort((a, b) => b.PnL - a.PnL);
+
         const result = await collection.insertMany(holdersArray);
         if (result.insertedCount > 0) {
             console.log('New holders inserted: ', result.insertedCount);
@@ -558,7 +568,9 @@ async function refundHolders(holders, _CA) {
 
         const refundRatio = (amountToReturn / totalSolLostByTraders)
 
-        console.log(`Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}`)
+        console.log(
+            `Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}`
+            )
         // update the db and identify the coin as rugged
         await _Collections.GuardedCoins.updateOne({
             ca: _CA,
@@ -572,11 +584,11 @@ async function refundHolders(holders, _CA) {
 
         if (tokenData.platformFeeTaken == false) {
             // handle platform fee seperately
-            try{
+            try {
                 const decryptedPrivKey = decrypt(tokenData.lockPVK)
                 const keyPair = initializeKeypair(decryptedPrivKey)
-                await takePumpGuardFee(keyPair, _CA)       
-            }catch(e) {
+                await takePumpGuardFee(keyPair, _CA)
+            } catch (e) {
                 console.error('Error during platform fee transfer:', error.message);
                 return
             }
@@ -641,6 +653,9 @@ function roundDownToThirdDecimal(value) {
     return Math.floor(value * 1000) / 1000;
 }
 
+function _delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 module.exports = {
     getCoinLockAddress,
