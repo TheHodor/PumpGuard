@@ -177,7 +177,7 @@ app.post('/get_top_coins', async (req, res) => {
 });
 // front end request to get the top coins - Top Guarded Coins - and Recently guarded coins
 app.post('/get_all_coins', async (req, res) => {
-    if (!topGuardedCoins) return
+   if (!topProgressCoins || !topGuardedCoins || !recentlyGuardedCoins) 
 
     res.json({
         topCoins: topProgressCoins.slice(0, 20),
