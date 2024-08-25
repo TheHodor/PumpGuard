@@ -104,7 +104,7 @@ async function serverStarted() {
 async function PrepareCoinsForFE() {
     allGuardedCoins_byPumpGuard = await _Collections.GuardedCoins.find({}).toArray()
 
-    let topProgress = await PumpFunFetch.getTopProgressCoins()
+    let topProgress = (await PumpFunFetch.getTopProgressCoins()) || topProgress
     if (!topProgress) {
         return null;
     }
@@ -118,7 +118,7 @@ async function PrepareCoinsForFE() {
     }
 
     setTimeout(async () => {
-        const topGuarded = await PumpFunFetch.getTopGuardedCoins()
+        const topGuarded = (await PumpFunFetch.getTopGuardedCoins()) || topGuarded
         if (!topGuarded) {
             return
         }
@@ -132,7 +132,7 @@ async function PrepareCoinsForFE() {
     }, 3000)
 
     setTimeout(async () => {
-        const guardedTokens = await PumpFunFetch.getRecentlyGuardedCoins()
+        const guardedTokens = (await PumpFunFetch.getRecentlyGuardedCoins()) || guardedTokens
         if (!guardedTokens) {
             return
         }
