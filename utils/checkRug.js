@@ -13,7 +13,7 @@ async function callParseTradesAPI() {
     const _Collections = _DBSetup.Collections
     const _UnMigratedCoins = await _Collections.GuardedCoins.find({
         hasMigrated: false,
-        devRefunded: false,
+        devBeenRefunded : false,
         hasRuged: false
     }).toArray();
 
