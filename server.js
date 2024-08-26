@@ -637,6 +637,12 @@ app.post('/_verify_rug', authMiddleware, async (req, res) => {
 // verify coin rug 
 app.post('/_parse_ca', authMiddleware, async (req, res) => {
     try {
+        const data = await isCoinGuarded(req.body.ca);
+        if (!data.isGuarded) {
+            return res.status(500).json({
+                error: 'Token not guarded. Not parsing trades.....'
+            })
+        }
         const _res = await parseTokenTrades(req.body.ca, req.body.fetchDelay)
         res.json({
             res: _res
