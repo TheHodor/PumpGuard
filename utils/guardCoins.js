@@ -566,7 +566,7 @@ async function refundHolders(holders, _CA) {
             return total + Math.abs(wallet.PnL)
         }, 0)
 
-        const refundRatio = (amountToReturn / totalSolLostByTraders)
+        const refundRatio = Math.abs(amountToReturn) / Math.abs(totalSolLostByTraders);
 
         console.log(
             `Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}`
