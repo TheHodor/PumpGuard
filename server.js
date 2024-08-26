@@ -89,6 +89,20 @@ async function serverStarted() {
     PrepareCoinsForFE()
 
 
+    // check migration fir guarded coins
+    setInterval(async () => {
+        const coinsToCheckMigration = await _Collections.GuardedCoins.find({}, {
+            hasMigrated: false,
+        })
+
+        for (var i = 0; i < coinsToCheckMigration.length; i++) {
+            await hasCoinMigrated(coinsToCheckMigration[i].ca)
+            await delay(5000)
+        }
+    }, ONE_MINUTE * 15)
+
+
+
     // await _Collections.GuardedCoins.updateMany({}, {
     //     $set: {
     //         hasMigrated: false
@@ -158,7 +172,8 @@ async function PrepareCoinsForFE() {
         }
 
         for (const coin of pumpfunCoins) {
-            const res_img = await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
+            const res_img = await saveImage(coin.mint,
+                `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
             if (!res_img) await saveImage(coin.mint, coin.image_uri)
         }
 
@@ -257,7 +272,9 @@ app.post('/is_coin_guarded', async (req, res) => {
             error: 'Passed address must be a solana address'
         });
     }
+
     try {
+        await hasCoinMigrated(req.body.ca)
         const data = await isCoinGuarded(req.body.ca);
         res.status(200).send(data);
     } catch (error) {
