@@ -20,7 +20,8 @@ function isSolanaAddress(_CA) {
     }
 }
 
-
+const ONE_HOUR = 1000 * 60 * 60
+let tries = {}
 
 // get solana balance of an address (through shyft api)
 async function getSolBalance(_address) {
@@ -101,6 +102,8 @@ async function getTokenBalance(_userAddress, _tokenAddress) {
 
 
 async function saveImage(ca, _URL) {
+    if (tries[ca]) return 
+
     const fileName = `ico_${ca}.jpg`
     const filePath = path.join('main/imgs', fileName)
 
@@ -128,6 +131,11 @@ async function saveImage(ca, _URL) {
         const savedImageUrl = `https://pumpguard.fun/imgs/${fileName}`
         return savedImageUrl
     } catch (err) {
+        tries[ca] = true
+        setTimeout(() => {
+            tries[ca] = false
+        }, ONE_HOUR )
+        
         console.error(`Error saving image for ${ca}`)
     }
 }
