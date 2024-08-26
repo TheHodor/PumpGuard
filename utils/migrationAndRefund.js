@@ -125,6 +125,15 @@ async function hasCoinMigrated(_CA) {
         if (data.complete == false && data.raydium_pool == null) {
             return false
         } else {
+            await _Collections.GuardedCoins.updateOne({
+                ca: _CA
+            }, {
+                $set: {
+                    hasMigrated: true
+                }
+            })
+
+            console.log("coin has migrated: ", _CA)
             return true
         }
 
