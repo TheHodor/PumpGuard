@@ -158,7 +158,8 @@ async function PrepareCoinsForFE() {
         }
 
         for (const coin of pumpfunCoins) {
-            await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
+            const res_img = await saveImage(coin.mint, `https://pump.mypinata.cloud/ipfs/${extractAddress(coin.image_uri)}`)
+            if (!res_img) await saveImage(coin.mint, coin.image_uri)
         }
 
         return pumpfunCoins
