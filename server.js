@@ -71,6 +71,7 @@ let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuar
 const ONE_MINUTE = 1000 * 60
 const ONE_HOUR = 1000 * 60 * 60
 const PLATFORM_FEE = 0.2
+const ADMIN_SECRET_KEY = "132" //"Gu@rd132"
 
 const startServer = async () => {
     console.log("Server Started :D")
@@ -177,7 +178,12 @@ app.post('/get_top_coins', async (req, res) => {
 });
 // front end request to get the top coins - Top Guarded Coins - and Recently guarded coins
 app.post('/get_all_coins', async (req, res) => {
-   if (!topProgressCoins || !topGuardedCoins || !recentlyGuardedCoins) 
+    if (!topProgressCoins || !topGuardedCoins || !recentlyGuardedCoins) {
+        console.log("-- Tokens Data not ready yet !!")
+        return res.status(403).json({
+            error: 'Not ready!'
+        })
+    }
 
     res.json({
         topCoins: topProgressCoins.slice(0, 20),
@@ -458,8 +464,8 @@ app.post('/claim_dev_refund', async (req, res) => {
     // Transfer cash to our wallets
     await takePumpGuardFee(keyPair, req.body.ca)
 
-    const amountInSol = (_theCoin.balance/1e9) - PLATFORM_FEE
-    
+    const amountInSol = (_theCoin.balance / 1e9) - PLATFORM_FEE
+
     const transferResTX = await transferSOL(_theCoin.dev, amountInSol, keyPair)
 
     // if transfer was successful update the user's refund state
@@ -595,6 +601,98 @@ app.post('/get_coin_refund_eligible_users', async (req, res) => {
 })
 
 
+// ****************************************** \\
+// *************** ADMIN REQS *************** \\
+const authMiddleware = (req, res, next) => {
+    const secretKey = ADMIN_SECRET_KEY
+    const providedKey = req.headers['x-admin-key']
+
+    if (providedKey === secretKey) {
+        next()
+    } else {
+        res.status(403).json({
+            error: 'Unauthorized access'
+        })
+    }
+}
+
+app.post('/_processing_txes_active', async (req, res) => {
+    res.json(PumpFunFetch.beingFetchedCoins())
+})
+
+// verify coin rug 
+app.post('/_verify_rug', authMiddleware, async (req, res) => {
+    try {
+        const _res = await verifyIfRugged(req.body.ca)
+        res.json({
+            isRugged: _res
+        })
+    } catch (error) {
+        return res.status(400).json({
+            error: 'error fetching'
+        });
+    }
+})
+
+// verify coin rug 
+app.post('/_parse_ca', authMiddleware, async (req, res) => {
+    try {
+        const _res = await parseTokenTrades(req.body.ca, req.body.fetchDelay)
+        res.json({
+            res: _res
+        })
+    } catch (error) {
+        return res.status(400).json({
+            error: 'error fetching'
+        });
+    }
+})
+
+// get holders of a coin from DB + their eligible refund
+app.post('/_get_coin_holders', authMiddleware, async (req, res) => {
+    try {
+        const collection = _DBs.Holders.collection(req.body.ca)
+        const collectionExists = await collection.estimatedDocumentCount() > 0
+
+        if (collectionExists) {
+            const _res = await collection.find({}).sort({
+                PnL: -1
+            }).toArray()
+
+            const usersRefunds = await _Collections.UsersRefunds.find({}).toArray();
+            const refundEligibleUsers = usersRefunds.flatMap(user => {
+                const eligibleRefunds = user.refunds
+                if (eligibleRefunds.length > 0) {
+                    return {
+                        address: user.address,
+                        refunds: eligibleRefunds
+                    };
+                }
+                return [];
+            });
+
+            for (var i = 0; i < _res.length; i++) {
+                const userRefunds = refundEligibleUsers.find(user => user.address === _res[i].address);
+                if (userRefunds) {
+                    const totalRefundAmount = userRefunds.refunds.reduce((sum, refund) => sum + refund
+                        .refundAmount, 0);
+                    _res[i].refundAmount = totalRefundAmount;
+                }
+            }
+
+            res.json(_res)
+        } else {
+            return res.status(400).json({
+                error: 'not found'
+            });
+        }
+    } catch (error) {
+        return res.status(400).json({
+            error: 'error fetching'
+        });
+    }
+})
+// ****************************************** \\
 
 
 // *************** HELPERS *************** \\
@@ -606,6 +704,7 @@ function authSigner(userAddress, signature, message) {
         bs58.decode(userAddress)
     )
 
+    if (verified) console.log("Admin Access Granted")
     return verified ? true : false
 }
 

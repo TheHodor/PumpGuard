@@ -13,6 +13,8 @@ let holdersCount = {
     // }
 }
 let volume1h = {}
+let _beingFetchedCoins = []
+let _beingFetchedCoins_txs = {}
 
 const HOLDERS_UPDATERATE_MIN = 10
 const VOLUME_UPDATERATE_MIN = 20
@@ -175,12 +177,15 @@ async function setVolume(coins) {
 
 
 
-
-
-
-async function getAllTradesPump(ca) {
+async function getAllTradesPump(ca, _fetchDelay) {
     let offset = 0;
     const allTrades = [];
+
+    console.log("-- fetching trades for ", ca)
+    if (!_beingFetchedCoins.includes(ca)) {
+        _beingFetchedCoins.push(ca)
+    }
+
     try {
         while (true) {
             const response = await fetch(
@@ -209,9 +214,13 @@ async function getAllTradesPump(ca) {
                     // console.log('got back 0: ', result.length)
                     break;
                 }
+
                 allTrades.push(...result);
-                await delay(3000); // 2 sec to avoid getting rate limited + 1 sec to be safe
-                offset = offset + 200;
+                await delay((_fetchDelay || 3) * 1000); // 2 sec to avoid getting rate limited + 1 sec to be safe
+                offset = offset + 200
+
+                _beingFetchedCoins_txs[ca] = allTrades.length
+                console.log("-- fetched trades length: ", allTrades.length, )
             }
         }
         // got back all trades
@@ -223,8 +232,11 @@ async function getAllTradesPump(ca) {
             } else {
                 return a.tx_index - b.tx_index;
             }
-        });
+        })
+
         console.log(`Total trades for ca ${ca} - ${orderedTrades.length}`)
+        _beingFetchedCoins = _beingFetchedCoins.filter(coin => coin !== ca)
+
         // console.log('First trade: ', orderedTrades[0])
         // console.log('2nd trade: ', orderedTrades[1])
 
@@ -233,10 +245,15 @@ async function getAllTradesPump(ca) {
         return orderedTrades
     } catch (e) {
         console.log('Error occured: ', e)
+        _beingFetchedCoins = _beingFetchedCoins.filter(coin => coin !== ca)
         return []
     }
 }
 
+
+function beingFetchedCoins() {
+    return [_beingFetchedCoins, _beingFetchedCoins_txs]
+}
 
 function _getCoinHolders(_CA) {
     const holders = holdersCount[_CA]
@@ -262,5 +279,6 @@ module.exports = {
     getRecentlyGuardedCoins,
     getAllTradesPump,
     _getCoinHolders,
-    _getCoinVolume1h
+    _getCoinVolume1h,
+    beingFetchedCoins
 }

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1024, initial-scale=1.0">
+    <title>_admn</title>
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/menu.css">
+    <link rel="stylesheet" href="./css/type-write.css">
+    <link rel="stylesheet" href="./css/dash-utils.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Train+One">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans+KR">
+</head>
+
+<body>
+    <div class="container" style="overflow: auto;">
+        <div class="pw page-wrapper-1">
+            <div class="header" style="z-index: 1000;position: relative;">
+                <p class="tittle drop-in title-p3" style="float: left;scale: 0.4;margin-top: -13px;margin-left: -69px;opacity: 0.7;"><span class="image-span"> <span class="title-p2 tittle drop-in title-p3 text-span" style="     position: relative;     font-weight: 700;     padding-bottom: 12px; ">Pump</span>
+                    </span> <span style="     margin-left: -5px; ">Guard</span> </p>
+                <p class="tittle drop-in title-p3" style="float: right;margin-top: -25px;margin-right: 12px;opacity: 0.7;"> <span style="     margin-left: -5px;     font-size: 13px;     font-weight: 200;     opacity: 0.7; ">[
+                        Shown data don't have auto update. refresh the page for new data ]</span> </p>
+            </div>
+            <div class="sec-1" style="display: inline-block;width: -webkit-fill-available;margin-top: 80px;margin: -10px 50px;">
+                <div class="overflow-hidden" style="     margin: 0px 50px;     margin-top: 40px; ">
+                    <div style="text-align: center;margin-top: 20px;display: block;padding: 10px 15px 10px 15px;background: #4848480d;">
+                        <input placeholder="Enter CA to parse TXs and holders" class="log-in-btn floating-btn custom-button btn-m inp-admin-1" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><input placeholder="Interval sec" class="log-in-btn floating-btn custom-button btn-m inp-admin-2" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 100px;margin-right: 20px;border-radius: 3px;"><button onclick="parseCA()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 45px;">Parse
+                            CA</button> </div>
+                    <div style="         text-align: center;         background: #4848480d;         display: flex;         justify-content: space-evenly;     ">
+                        
+                        <p style="color: #f0f8ff9c;margin-bottom: 0;margin-top: 5px;">Coins that are being parsed ATM:</p>
+                    </div>
+                <div style="         text-align: center;         background: #4848480d;         display: flex;         justify-content: space-evenly;     ">
+                        
+                        <p class="parsing-ls" style="color: #f0f8ff9c;margin-top: 5px;">[[[ -- ]]]</p>
+                    </div></div>
+                <div class="overflow-hidden" style="     margin: 0px 50px;     margin-top: 40px; ">
+                    <div style="text-align: center;margin-top: 0px;display: block;padding: 10px 15px 10px 15px;background: #4848480d;">
+                        <input placeholder="Enter CA to verifyIfRugged and calc refund for it's users" class="log-in-btn floating-btn custom-button btn-m inp-admin-5" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button onclick="verifyRug_calcRefund()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 45px;">Verify Rug &amp; Calc Refunds</button> </div>
+                    
+                </div><div class="overflow-hidden" style="     margin: 0px 50px;     margin-top: 40px; ">
+                    <div style="         text-align: center;         margin-top: 30px;         display: block;         padding: 10px 15px 10px 15px;         background: #4848480d;     ">
+                        <input placeholder="A parsed Coin CA" class="log-in-btn floating-btn custom-button btn-m inp-admin-4" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button onclick="getCoinHolders()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 45px;">Get
+                            Coin Holders and refund info from DB</button> </div>
+                </div>
+                <div style="     display: flex;     margin-bottom: 70px; ">
+                    <div style="height: 100%;margin: 4px;margin-top: 50px;width: 50%;">
+                        <div class="" style="     box-shadow: 0px 4px 10px 5px #00000042;     clip-path: inset(0px 18px -20px 13px); ">
+                            <div class="active" style="     font-size: 16px;     color: #bfbfbfcc;     font-weight: 600;     padding: 5px 20px;     /* width: 90.2%; */     text-align: center;     border-bottom: 3px solid #4d956a;     box-shadow: inset 0 -14px 15px -13px rgb(84 134 98 / 59%);     2: 200;     margin-bottom: 18px; ">
+                                Coin Holders <p class="coin-ca-db" style="     margin: 0;     font-size: 13px;     opacity: 0.6; ">
+                                    0000000000000000000000000000000000000000</p>
+                            </div>
+                        </div>
+                        <div class="coins-holders-db"> </div>
+                    </div>
+                    <div style="height: 100%;margin: 4px;margin-top: 50px;width: 50%;">
+                        <div class="" style="     box-shadow: 0px 4px 10px 5px #00000042;     clip-path: inset(0px 18px -20px 13px); ">
+                            <div class="active" style="     font-size: 16px;     color: #bfbfbfcc;     font-weight: 600;     padding: 5px 20px;     /* width: 90.2%; */     text-align: center;     border-bottom: 3px solid #4d956a;     box-shadow: inset 0 -14px 15px -13px rgb(84 134 98 / 59%);     2: 200;     margin-bottom: 18px; ">
+                                Top Guarded Coins</div>
+                        </div>
+                        <div class="top-guarded-coins-wr"> </div>
+                    </div>
+                    <div style="height: 100%;margin: 4px;margin-top: 50px;width: 50%;">
+                        <div class="" style="     box-shadow: 0px 4px 10px 5px #00000042;     clip-path: inset(0px 18px -20px 13px); ">
+                            <div class="active" style="     font-size: 16px;     color: #bfbfbfcc;     font-weight: 600;     padding: 5px 20px;     /* width: 90.2%; */     text-align: center;     border-bottom: 3px solid #4d956a;     box-shadow: inset 0 -14px 15px -13px rgb(84 134 98 / 59%);     2: 200;     margin-bottom: 18px; ">
+                                Recently Guarded Coins</div>
+                        </div>
+                        <div class="new-guarded-coins-wr"> </div>
+                    </div>
+                    <div style="height: 100%;margin: 4px;margin-top: 50px;width: 50%;margin-left: 10px;display: none;">
+                        <div class="tabs" style="     margin-bottom: 18px;     margin: 0px 0px 16px 3px; ">
+                            <div class="tab active" onclick="openTab(event, 'tab1')" style="font-size: 15px;color: #bfbfbfcc;font-weight: 600;padding: 5px 20px;">Top Guarded
+                                Coins</div>
+                            <div class="tab" onclick="openTab(event, 'tab2')" style="     font-size: 15px;     color: #bfbfbfcc;     font-weight: 600;     padding: 5px 20px; ">
+                                Recently Guarded Coins</div>
+                            <div class="tab" onclick="openTab(event, 'tab3')" style="     font-size: 15px;     color: #bfbfbfcc;     font-weight: 600;     padding: 5px 20px; ">
+                                Refunded Coins</div>
+                        </div>
+                        <div id="tab1" class="tab-content scroll1" style="overflow: auto; display: block; margin: 0px;">
+                            <div style="overflow: auto; display: block;" class="+ scroll1">
+                                <div style="/* display:inline-block; */margin: 5px;box-shadow: rgb(0 0 0 / 15%) 2px 2px 9px;width: auto;margin-bottom: 10px;background: #0f111359;">
+                                    <div class="UI-ww6 card flex space-x-3" style="/* height: 120px; */padding: 0;border: 2px solid rgb(121 131 153 / 15%);border-radius: 7px;color: rgba(52, 57, 63, 0.3);flex-direction: column;min-width: 1px;overflow-wrap: break-word;position: relative;display: flex;backdrop-filter: blur(2px);">
+                                        <div class="flex-1 space-y-2" style=" flex: 1 1 0%; display: block; ">
+                                            <div class="w2" style="     display: flex;     width: 65%;     justify-content: space-between; ">
+                                                <div style="     display: flex; "><img src="https://pump.mypinata.cloud/ipfs/QmcjKVE4KKyiDi3tv2vHArxQXYg9f2hZHa1nKadA1zTp16?img-width=256&amp;img-dpr=2&amp;img-onerror=redirect" style="     width: 57px;     height: 57px;     margin: 6px 0px 0px 6px;     border-radius: 7px; ">
+                                                    <div style="     margin: 0px 10px;     text-align: left; ">
+                                                        <p style="     color: #f0f8ffb5;     margin: 3px 0px 0px 0px;     font-size: 16px;     font-weight: 700; ">
+                                                            Save Sol [SOS]</p>
+                                                        <p style="     color: #f0f8ff8c;     margin: 0px 0px;     font-size: 13px;     /* font-weight: 700; */     margin-top: -4px; ">
+                                                            dFhsC...sEDff</p>
+                                                        <p style="     color: #f0f8ffb5;     margin: 6px 0px 0px 0px;     font-size: 13px; ">
+                                                            MarketCap: <span style="     font-weight: 700; ">$14.6K</span></p>
+                                                    </div>
+                                                </div>
+                                                <div style="     margin: 0px 10px;     text-align: left; ">
+                                                    <p style="     color: #f0f8ffb5;     margin: 3px 0px 0px 0px;     font-size: 13px; ">
+                                                        Volume 1H: <span style="     font-weight: 700; ">$112.3k</span>
+                                                    </p>
+                                                    <p style="     color: #f0f8ffb5;     margin: 3px 0px 0px 0px;     font-size: 13px; ">
+                                                        Holders: <span style="     font-weight: 700; ">55</span></p>
+                                                </div>
+                                                <div style="     margin: 0px 10px;     margin-top: 10px;     position: absolute;     right: 0px; ">
+                                                    <div class="btn-3" style="     color: #e7fff4c4;     font-size: 12px;     padding: 2px 17px;     border: 1.5px solid #54866a;     border-radius: 6px;     cursor: pointer;     display: flex;     align-items: center;     justify-content: center;     background-color: #536c5929;     margin-top: 4px; ">
+                                                        Buy on BullX</div>
+                                                    <div class="btn-3" style="     color: #e7fff4c4;     font-size: 12px;     padding: 2px 10px;     border: 1.5px solid #54866a;     border-radius: 6px;     cursor: pointer;     display: flex;     align-items: center;     justify-content: center;     background-color: #536c5929;     margin-top: 9px; ">
+                                                        Buy on Trojan</div>
+                                                </div>
+                                            </div>
+                                            <div style="     display: flex;     justify-content: space-between;     padding: 0px 4px 0px 1px; ">
+                                
+                                                <p class=" title-p4" style="font-size: 16px;color: #f4f4f4e3;opacity: 0.8;text-align: center;margin-bottom: 4px;margin-top: 1px;width: 85%;padding-right: 7.5%;">
+                                                    Guarded by <span class="guarded-by-sol" style="color: #60af6b;font-weight: 900;font-size: 13px;">14.5
+                                                        SOL</span></p>
+                                            </div>
+                                            <div style=" /* background: #37414c; */ /* border-top: 2px solid gray; */ ">
+                                                <div style="color: aliceblue;font-size: 12px;/* background: #9eb8cf0f; */height: 10px;line-height: 25px;box-shadow: inset 0 0 10px rgb(249 249 249 / 7%);padding-top: 2px;">
+                                                    <div style="     background: #78a77a;     height: 9px;     /* margin-top: 1px; */     width: 50%;     border-bottom-left-radius: 4.5px; ">
+                                                    </div>
+                                                    <p style="     position: absolute;     bottom: 2px;     right: 2px;     padding: 0;     margin: 0;     height: 15px;     font-size: 12px;     font-weight: 900;     color: #f0f8ff8a; ">
+                                                        46%</p>
+                                                </div>
+                                                <div></div>
+                                                <div></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="tab2" class="tab-content" style="display: none;"> Content for Tab 2 </div>
+                        <div id="tab3" class="tab-content" style="display: none;"> Content for Tab 3 </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    
+    <div class="toast-message drop-in success" style="display: block; width: 40%; background: #3f454d66;">
+        <span class="close" style="color: white; transform: scaleX(1.3);font-weight: 300;right: 0px; top: 8px;scale: 0.8;opacity: 0.4;">X</span>
+        <div class="message msg-tst" style="padding: 10px 20px;color: rgb(255 255 255 / 64%);font-size: 15px; display: none; ">-------</div>
+    </div>
+
+
+    
+    <script src="./libs/solanaweb3.js"></script>
+    <script src="./js/admin.js"></script> <!-- <script src="./js/randomText.js"></script> -->
+    <!-- <script src="./js/dashboard.js"></script> -->
+
+
+
+
+</body>
+
+</html>
