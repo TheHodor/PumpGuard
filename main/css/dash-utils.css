@@ -53,8 +53,22 @@
   /* margin-top: 200px; */
   color: #edededd9;
   font-weight: 700;
-  background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgba(255, 105, 105, 1) 5%, rgb(204 30 70) 95%, rgba(255, 61, 103, 0) 95%);
-  clip-path: polygon(100% 0, 100% 0, 100% 100%, 0 100%, 0 0);
+  background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);
+}
+
+
+/* Clicked State */
+.btn-m:active {
+  background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(43, 110, 83) 95%, rgba(255, 61, 103, 0) 95%);
+  transform: scale(0.95);
+}
+
+/* Hover State */
+.btn-m:hover,
+a.btn-m:hover,
+button.btn-m:hover {
+  background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(126, 173, 120) 5%, rgb(57, 135, 104) 95%, rgba(255, 61, 103, 0) 95%);
+
 }
 
 .long-arrow-right {
