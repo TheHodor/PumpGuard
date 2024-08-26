@@ -129,7 +129,6 @@ async function saveImage(ca, _URL) {
         return savedImageUrl
     } catch (err) {
         console.error(`Error saving image for ${ca}`)
-        throw err
     }
 }
 
