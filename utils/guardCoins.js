@@ -389,10 +389,10 @@ async function verifyIfRugged(_CA) {
 }
 
 
-async function parseTokenTrades(_CA) {
+async function parseTokenTrades(_CA, _fetchDelay) {
     try {
         const _theCoin = await fetchCoinData(_CA)
-        const allTrades = await getAllTradesPump(_CA)
+        const allTrades = await getAllTradesPump(_CA, _fetchDelay || 3)
 
         if (!allTrades || !allTrades[0] || !allTrades[0].slot) {
             console.log('Issue with trades fetched....')
@@ -596,7 +596,7 @@ async function refundHolders(holders, _CA) {
         }
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
-            const refundAmount = Math.abs(wallet.PnL) * refundRatio
+            const refundAmount = wallet.PnL * refundRatio
             return {
                 address: wallet.address,
                 originalLoss: Math.abs(wallet.PnL.toFixed(3)),
@@ -632,7 +632,7 @@ async function refundHolders(holders, _CA) {
                 $addToSet: {
                     refunds: {
                         ca: _CA,
-                        refundAmount: refund.refundAmount,
+                        refundAmount: Math.abs(refund.refundAmount),
                         originalLoss: refund.originalLoss,
                         paid: false,
                         paymentTx: null,
