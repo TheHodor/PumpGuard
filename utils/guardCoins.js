@@ -207,10 +207,9 @@ async function updateLockAddressBalance(_CA) {
             }, {
                 $set: {
                     balance: 0,
-                    balance_allTimeHight: 0,
                     allowedSell: false,
                     firstDeposit: 0,
-                    refundProcessed: true, 
+                    refundProcessed: true,
                 }
             })
         }
@@ -570,7 +569,7 @@ async function refundHolders(holders, _CA) {
 
         console.log(
             `Setting refund logic for ${_CA} - Current Sol for refund: ${amountToReturn.toFixed(2)} - Total Lost by traders: ${totalSolLostByTraders.toFixed(2)} - Refund Ratio: ${refundRatio.toFixed(3)}`
-            )
+        )
         // update the db and identify the coin as rugged
         await _Collections.GuardedCoins.updateOne({
             ca: _CA,
