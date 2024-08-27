@@ -644,6 +644,7 @@ async function refundHolders(holders, _CA) {
                 },
             });
         }
+        console.log('Refund collection created')
     } catch (e) {
         console.log('Error processing holders refund', e)
     }
