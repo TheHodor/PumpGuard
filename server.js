@@ -545,28 +545,25 @@ app.post('/pay_user_refund', async (req, res) => {
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.publicKey
     })
-
-    for (var i = 0; i < _res.refunds; i++) {
+    for (var i = 0; i < _res.refunds.length; i++) {
         if (_res.refunds[i].ca == req.body.ca) {
             if (_res.refunds[i].refundAmount && _res.refunds[i].paid == false) {
 
                 // get the refund lock address
                 const _theCoin = await _Collections.GuardedCoins.findOne({
-                    address: req.body.ca
+                    ca: req.body.ca
                 })
-
                 const decryptedPrivKey = decrypt(_theCoin.lockPVK)
                 const keyPair = initializeKeypair(decryptedPrivKey)
 
-                const transferResTX = await transferSOL(req.body.publicKey, _res.refunds[i].refundAmount *
-                    1e9, keyPair)
+                const transferResTX = await transferSOL(req.body.publicKey, _res.refunds[i].refundAmount, keyPair)
 
                 // if transfer was successful update the user's refund state
                 if (transferResTX && transferResTX.length > 30) {
                     await _Collections.UsersRefunds.updateOne({
                         address: req.body.publicKey,
                         'refunds.ca': {
-                            $eq: _CA
+                            $eq: req.body.ca
                         }
                     }, {
                         $addToSet: {
