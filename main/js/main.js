@@ -232,7 +232,9 @@ async function updateLockedBalance() {
     const data = await response.json();
 
     if (typeof data.balance == "number") {
-        $('.dt-lock-2')[0].innerHTML = (data.balance / 1e9).toFixed(3) + " Solana"
+        if (data.balance / 1e9 < 0.001) data.balance = 0
+
+        $('.dt-lock-2')[0].innerHTML = (data.balance / 1e9).toFixed(2) + " Solana"
     }
 }
 
@@ -432,6 +434,10 @@ async function checkIfCoinGuarded() {
     const _ca = $('.ca-check-inp')[0].value
     selectedCoinCa = _ca
 
+    setTimeout(() => {
+        doNotif("Fetching Data...", 3000)
+    }, 500)
+
     const response = await fetch('https://pumpguard.fun/is_coin_guarded', {
         method: 'POST',
         headers: {
@@ -446,16 +452,17 @@ async function checkIfCoinGuarded() {
         const data = await response.json()
         console.log(data)
 
+        if (data.DBdata.balance < 0.001) data.DBdata.balance = 0
 
         if (data.isGuarded) {
             let _actualText
 
             if (data.DBdata.hasMigrated) {
                 _actualText =
-                    `<div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Was Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance_allTimeHight / 1e9).toFixed(3)}</span> Solana And Has Successfully Migrated!</p></div>`
+                    `<div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Was Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance_allTimeHight / 1e9).toFixed(2)}</span> Solana And Has Successfully Migrated!</p></div>`
             } else {
                 _actualText =
-                    `<div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Is Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance / 1e9).toFixed(3)}</span> Solana!</p></div>
+                    `<div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #6bac77f0;margin: 19px 0px 0px 0px;font-size: 22px;font-weight: 700;">Is Guarded with <span style="font-size: 24px;padding: 0px 3px;filter: drop-shadow(0px 0px 4px #6bac77f0);">${(data.DBdata.balance / 1e9).toFixed(2)}</span> Solana!</p></div>
                     
                     <div style="display: flex;text-align: center;place-content: space-around;"><p style="color: #ffffffbf;margin: 0px 0px 0px 0px;font-size: 17px;font-weight: 500;">As anti-rug assurance. Invest with peace of mind.</p>`
             }
@@ -521,6 +528,10 @@ async function checkCA() {
     const _ca = $('.ca-check-inp')[1].value
     selectedCoinCa = _ca
 
+    setTimeout(() => {
+        doNotif("Fetching Data...", 3000)
+    }, 500)
+
     const response = await fetch('https://pumpguard.fun/get_coin_lock_address', {
         method: 'POST',
         headers: {
@@ -540,7 +551,9 @@ async function checkCA() {
             $('.dt-lock-name-1')[0].innerHTML = $('.dt-lock-name-2')[0].innerHTML = data.symbol
 
             $('.dt-lock-1')[0].innerHTML = data.lockAddress
-            $('.dt-lock-2')[0].innerHTML = (data.balance / 1e9).toFixed(3) + " Solana"
+
+            if (data.balance / 1e9 < 0.001) data.balance = 0
+            $('.dt-lock-2')[0].innerHTML = (data.balance / 1e9).toFixed(2) + " Solana"
             $('.dt-lock-3')[0].innerHTML = data.dev.slice(0, 6) + "...." + data.dev.slice(data.dev.length - 6,
                 10000)
 
@@ -557,6 +570,10 @@ async function checkCA() {
 
 async function checkForRefunds() {
     $('.refunds-u-main-wr')[0].innerHTML = ""
+
+    setTimeout(() => {
+        doNotif("Fetching Data...", 3000)
+    }, 500)
 
     const response = await fetch('https://pumpguard.fun/get_user_refunds', {
         method: 'POST',
@@ -588,6 +605,14 @@ async function checkForRefunds() {
             $('.no-refunds-tx')[0].style.display = "none"
 
             data.refunds.forEach(itm => {
+                let _btn =
+                    `<button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 25px;">Claim${itm.refundAmount} SOL Refund For ${itm.symbol}</button>`
+
+                if (itm.paid) {
+                    _btn =
+                        `<button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 25px; background:linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(88 88 88) 5%, rgb(47 58 54) 95%, rgba(255, 61, 103, 0) 95%)">Refund Been Claimed</button>`
+                }
+
                 $('.refunds-u-main-wr')[0].innerHTML +=
                     `<div style=" border: 3px solid #ffffff05; padding: 5px 15px 10px 15px; border-radius: 6px; background: #4848480d; margin: 0px 70px; margin-bottom: 10px; /* display: none; */ ">
                     <div style="   text-align: center;   display: flex; ">
@@ -597,7 +622,7 @@ async function checkForRefunds() {
                                     style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
                                 <div style="margin: 0px 10px;text-align: left;position: relative;">
                                     <div style="     display: flex;     position: absolute; ">
-                                        <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 17px;font-weight: 700;"> ${itm.name}
+                                        <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 17px;font-weight: 700;    width: max-content;"> ${itm.name}
                                             [${itm.symbol}]</p> <svg class="HW-name-copy"
                                             onclick="copyToClipboard('${itm.ca}')"
                                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
@@ -617,10 +642,7 @@ async function checkForRefunds() {
                                 <p style="color: #f0f8ffb5;margin: 8px 0px 0px 0px;font-size: 14px;">Your Refund: <span
                                         style="font-weight: 700;color: #5e946e;">${itm.refundAmount} SOL</span></p>
                             </div>
-                            <div style="margin: 0px 9px;margin-top: 16px;right: 0px;"> <button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')"
-                                    class=" floating-btn custom-button btn-m"
-                                    style="width: auto;padding: 0px 15px;">Claim
-                                    ${itm.refundAmount} SOL Refund For ${itm.symbol}</button> </div>
+                            <div style="margin: 0px 9px;margin-top: 16px;right: 0px;"> ${_btn} </div>
                         </div>
                     </div>
                 </div>
@@ -723,7 +745,7 @@ async function fetchRecentlyRefunded() {
                                             </path>
                                         </svg>
                                     </div>
-                                    <p style="margin: 26px 0px 0px 0px;font-size: 14px;">Was guarded with <span style="color: #5e9e71;font-weight: 900;">${(data[i].balance / 1e9).toFixed(3)} Sol</span></p>
+                                    <p style="margin: 26px 0px 0px 0px;font-size: 14px;">Was guarded with <span style="color: #5e9e71;font-weight: 900;">${(data[i].balance / 1e9).toFixed(2)} Sol</span></p>
                                 </div>
                             </div>
                             <div style="text-align: left;margin-top: 10px;">
@@ -733,7 +755,7 @@ async function fetchRecentlyRefunded() {
                             <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */width: 20vw;">
                                 <p style="color: #f0f8ffb5;margin: 1px 0px 0px 0px;font-size: 16px;text-align: center;"> <span
                                         style="     font-weight: 800; ">25 Investors</span> are eligible to share a total refund of
-                                    <span style="     font-weight: 800; ">${(data[i].balance / 1e9).toFixed(3)} Solana</span> </p>
+                                    <span style="     font-weight: 800; ">${(data[i].balance / 1e9).toFixed(2)} Solana</span> </p>
                             </div>
                         </div>
                     </div>
@@ -769,7 +791,7 @@ async function showEligibleRefunds(_CA, randomeClassName) {
         $(`.${randomeClassName}`)[0].innerHTML = ""
         data.forEach(itm => {
             $(`.${randomeClassName}`)[0].innerHTML += `
-                <div style=" display: flex; background: #ffffff0d; border-radius: 5px; padding: 2px 10px; margin: 5px 10px;"><p style=" margin: 10px 15px 10px 4px; color: #f0f8ff73; font-weight: 800; font-size: 15px; border-right: 2px solid #ffffff6e; padding-right: 10px; width: 150px;">${itm.userAddress.slice(0, 6) + "...." + itm.userAddress.slice(itm.userAddress.length - 6, 10000)}</p><div style=" width: 130px;text-align: left;"><p style=" margin: 0px; font-size: 12px; color: #f0f8ffb5; padding-top: 4px;">PnL: <span style=" font-weight: 900;">-${(itm.originalLoss).toFixed(3)} SOL</span></p><p style=" margin: 0px; font-size: 12px; color: #f0f8ffb5;">Refund: <span style=" font-weight: 900;">${(itm.refundAmount).toFixed(3)} SOL</span></p></div></div>
+                <div style=" display: flex; background: #ffffff0d; border-radius: 5px; padding: 2px 10px; margin: 5px 10px;"><p style=" margin: 10px 15px 10px 4px; color: #f0f8ff73; font-weight: 800; font-size: 15px; border-right: 2px solid #ffffff6e; padding-right: 10px; width: 150px;">${itm.userAddress.slice(0, 6) + "...." + itm.userAddress.slice(itm.userAddress.length - 6, 10000)}</p><div style=" width: 130px;text-align: left;"><p style=" margin: 0px; font-size: 12px; color: #f0f8ffb5; padding-top: 4px;">PnL: <span style=" font-weight: 900;">-${(itm.originalLoss).toFixed(2)} SOL</span></p><p style=" margin: 0px; font-size: 12px; color: #f0f8ffb5;">Refund: <span style=" font-weight: 900;">${(itm.refundAmount).toFixed(2)} SOL</span></p></div></div>
             `
         })
     }
@@ -780,6 +802,10 @@ async function validateDevRefund() {
     $('.dev-refund-wr')[0].style.display = "block"
     $(`.dev-refund-wr`)[0].innerHTML =
         ` <p style="     font-size: 14px; text-align: center; width: 100%;color: #f0f8ff61;margin: 0px 10px;margin-top: -6px;     padding-bottom: 3px; "> Fetching Data... </p>`
+
+    setTimeout(() => {
+        doNotif("Fetching Data...", 3000)
+    }, 500)
 
     const response = await fetch('https://pumpguard.fun/get_coin_status', {
         method: 'POST',
@@ -823,12 +849,12 @@ async function validateDevRefund() {
                     <div style=" display: flex; "><img src="https://pumpguard.fun/imgs/ico_${data.ca}.jpg" style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
                         <div style="margin-left: 10px;">
                             <div style="     display: flex;     position: absolute; ">
-                                <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 17px;font-weight: 700;">${data.symbol}</p> <svg class="HW-name-copy" onclick="copyToClipboard('HHtQvS8QrVavE4hsmbzrLFgaucY1NhdYmBtJK824pump')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="width: 13px;fill: #cfcfcf7a;margin-left: 9px;margin-top: 2px;cursor: pointer;display: inline-block;">
+                                <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 17px;font-weight: 700;    width: max-content;">${data.symbol}</p> <svg class="HW-name-copy" onclick="copyToClipboard('HHtQvS8QrVavE4hsmbzrLFgaucY1NhdYmBtJK824pump')" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" style="width: 13px;fill: #cfcfcf7a;margin-left: 9px;margin-top: 2px;cursor: pointer;display: inline-block;">
                                     <path d="M208 0H332.1c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9V336c0 26.5-21.5 48-48 48H208c-26.5 0-48-21.5-48-48V48c0-26.5 21.5-48 48-48zM48 128h80v64H64V448H256V416h64v48c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V176c0-26.5 21.5-48 48-48z">
                                     </path>
                                 </svg>
                             </div>
-                            <p style="color: #ffffffbd;margin: 36px 0px 0px 0px;font-size: 14px;">Locked Solana: <span style=" font-weight: 700; ">${(data.balance / 1e9).toFixed(3)}</span></p>
+                            <p style="color: #ffffffbd;margin: 36px 0px 0px 0px;font-size: 14px;">Locked Solana: <span style=" font-weight: 700; ">${(data.balance / 1e9).toFixed(2)}</span></p>
                         </div>
                     </div>
                     <div style="text-align: unset;">
@@ -999,12 +1025,12 @@ function extractAddress(url) {
     return address;
 }
 
-function doNotif(data) {
+function doNotif(data, timeout) {
     $('.msg-tst')[0].style.display = "block"
     $('.msg-tst')[0].innerHTML = data
     setTimeout(() => {
         $('.msg-tst')[0].style.display = "none"
-    }, 8000)
+    }, timeout || 8000)
 }
 
 function getRandomBytesHex(length) {
