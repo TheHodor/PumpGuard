@@ -540,7 +540,7 @@ app.post('/claim_dev_refund', async (req, res) => {
 
     const amountInSol = (_theCoin.balance / 1e9) - PLATFORM_FEE
 
-    if (amountInSol <= 0) {
+    if (amountInSol <= 0.001) {
         console.error("-- Insufficient Sol balance for dev!")
         return res.status(500).json({
             error: 'Insufficient Sol balance for dev!'
@@ -612,6 +612,7 @@ app.post('/pay_user_refund', async (req, res) => {
     })
     for (var i = 0; i < _res.refunds.length; i++) {
         if (_res.refunds[i].ca == req.body.ca) {
+            console.log('_res_refunds[i].paid: ', _res.refunds[i].paid)
             if (_res.refunds[i].refundAmount && _res.refunds[i].paid == false) {
 
                 // get the refund lock address

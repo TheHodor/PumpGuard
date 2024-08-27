@@ -62,7 +62,7 @@ async function transferSOL(wallet, amount, fromKeypair) {
   const sourceBalance = balance / 1e9; 
   // console.log(`Source Account Balance: ${sourceBalance} SOL`);
 
-  if (sourceBalance <= 0) {
+  if (sourceBalance <= 0.001) {
     console.log('Insufficient balance to perform transfer.');
     return;
   }
