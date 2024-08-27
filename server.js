@@ -529,7 +529,7 @@ app.post('/claim_dev_refund', async (req, res) => {
 
     // Transfer cash to our wallets
     const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-        ca: _CA
+        ca: req.body.ca
     })
 
     if (_theCoinInDB.platformFeeTaken !== true) {
