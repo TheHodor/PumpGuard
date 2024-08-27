@@ -87,18 +87,43 @@ async function doDevRefund(devAddress, lockAddress, lockPVK, ca) {
 }
 
 async function takePumpGuardFee(keyPair, _CA) {
-    const lonetraderHash = await transferSOL(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
-    const lymnHash = await transferSOL(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
+    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        ca: _CA
+    })
 
-    if (!lonetraderHash) {
-        console.log('Lonetrader transfer failed.');
-        throw new Error('Failed to take platform fee: Lonetrader transfer failed.');
-    } 
+    if (!_theCoinInDB.loneTrader_hash || !_theCoinInDB.loneTrader_hash.length < 30) {
+        const lonetraderHash = await transferSOL(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
 
-    if (!lymnHash) {
-        console.log('Lymn transfer failed.');
-        throw new Error('Failed to take platform fee: Lymn transfer failed.');
-    } 
+        if (!lonetraderHash) {
+            console.log('Lonetrader transfer failed.');
+            throw new Error('Failed to take platform fee: Lonetrader transfer failed.');
+        } else {
+            await _Collections.GuardedCoins.updateOne({
+                ca: _CA
+            }, {
+                $set: {
+                    loneTrader_hash: lonetraderHash
+                }
+            });
+        }
+    }
+
+    if (!_theCoinInDB.lymnQ_hash || !_theCoinInDB.lymnQ_hash.length < 30) {
+        const lymnHash = await transferSOL(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
+
+        if (!lymnHash) {
+            console.log('Lymn transfer failed.');
+            throw new Error('Failed to take platform fee: Lymn transfer failed.');
+        } else {
+            await _Collections.GuardedCoins.updateOne({
+                ca: _CA
+            }, {
+                $set: {
+                    lymnQ_hash: lymnHash
+                }
+            });
+        }
+    }
 
     console.log(`Platform fee taken - Lonetrader Hash: ${lonetraderHash} - Lymn Hash: ${lymnHash}`);
 
