@@ -39,7 +39,8 @@ const {
 const {
     isSolanaAddress,
     saveImage,
-    getSolBalance
+    getSolBalance,
+    fetchCoinData
 } = require('./utils/helpers.js')
 
 
@@ -72,6 +73,7 @@ const ONE_MINUTE = 1000 * 60
 const ONE_HOUR = 1000 * 60 * 60
 const PLATFORM_FEE = 0.2
 const ADMIN_SECRET_KEY = "132" //"Gu@rd132"
+const MIN_GUARDED_AMOUNT = 0.1 // 2.5
 
 const startServer = async () => {
     console.log("Server Started :D")
@@ -133,7 +135,7 @@ async function PrepareCoinsForFE() {
     }
 
     setTimeout(async () => {
-        const topGuarded = (await PumpFunFetch.getTopGuardedCoins()) || topGuarded
+        const topGuarded = (await PumpFunFetch.getTopGuardedCoins(MIN_GUARDED_AMOUNT)) || topGuarded
         if (!topGuarded) {
             return
         }
@@ -147,7 +149,7 @@ async function PrepareCoinsForFE() {
     }, 3000)
 
     setTimeout(async () => {
-        const guardedTokens = (await PumpFunFetch.getRecentlyGuardedCoins()) || guardedTokens
+        const guardedTokens = (await PumpFunFetch.getRecentlyGuardedCoins(MIN_GUARDED_AMOUNT)) || guardedTokens
         if (!guardedTokens) {
             return
         }
@@ -274,9 +276,37 @@ app.post('/is_coin_guarded', async (req, res) => {
     }
 
     try {
+        let _isGuarded = false
+
         await hasCoinMigrated(req.body.ca)
-        const data = await isCoinGuarded(req.body.ca);
-        return res.status(200).send(data);
+
+        const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+            ca: req.body.ca
+        })
+        const lockAddressBalance = await getSolBalance(_theCoinInDB.lockAddress)
+
+        await _Collections.GuardedCoins.updateOne({
+            ca: req.body.ca,
+        }, {
+            $set: {
+                balance: lockAddressBalance,
+                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance),
+            }
+        })
+
+        if (lockAddressBalance /1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
+
+        return res.status(200).send({
+            isGuarded: _isGuarded,
+            DBdata: {
+                hasMigrated: _theCoinInDB?.hasMigrated,
+                balance: lockAddressBalance,
+                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance),
+                lockAddress: _theCoinInDB?.lockAddress
+            },
+            coinData: await fetchCoinData(req.body.ca)
+        })
+
     } catch (error) {
         console.error('Error checking if coin is guarded:', error);
         return res.status(500).json({
@@ -322,12 +352,21 @@ app.post('/update_lock_address_balance', async (req, res) => {
         });
     }
     try {
-        const _balance = await updateLockAddressBalance(req.body.ca);
-        return res.status(200).json({
-            balance: _balance
-        });
+        // delay the balance check to make sure the deposit is recorded on chain
+        setTimeout(async () => {
+            const _balance = await updateLockAddressBalance(req.body.ca)
+            return res.status(200).json({
+                balance: _balance
+            })
+        }, 1000 * 8)
+
+        // to make sure, recheck the balance again 
+        setTimeout(async () => {
+            await updateLockAddressBalance(req.body.ca)
+        }, 1000 * 35)
+
     } catch (error) {
-        console.error('Error updating lock address balance:', error);
+        console.error('Error updating lock address balance:', error)
         return res.status(500).json({
             error: 'An error occurred while updating the lock address balance.'
         });
@@ -425,6 +464,8 @@ app.post('/get_coin_status', async (req, res) => {
 
 // dev request to claim their refund 
 app.post('/claim_dev_refund', async (req, res) => {
+    console.log("-- processing user request to get refunded for: ", req.body.ca)
+
     if (!req.body.ca) {
         return res.status(400).json({
             error: 'Ca to claim against must be passed'
@@ -455,6 +496,7 @@ app.post('/claim_dev_refund', async (req, res) => {
             error: 'Dev cannot claim sol yet..'
         })
     }
+
     if (_theCoin.hasRuged == true) {
         return res.status(500).json({
             error: 'Dev rugged. Not valid.'
@@ -467,6 +509,12 @@ app.post('/claim_dev_refund', async (req, res) => {
         })
     }
 
+    // if coin not migrated but 7 days has passed and COIN HAS NOT RUGGED => dev can claim
+    if (_theCoin.firstDeposit < Date.now() - ONE_HOUR * 24 * 7) {
+        return res.status(500).json({
+            error: 'At least 7 days since first lock deposit must be passed.'
+        })
+    }
 
     const walletBalance = await getSolBalance(_theCoin.lockAddress)
 
@@ -480,16 +528,33 @@ app.post('/claim_dev_refund', async (req, res) => {
     const keyPair = initializeKeypair(decryptedPrivKey)
 
     // Transfer cash to our wallets
-    await takePumpGuardFee(keyPair, req.body.ca)
+    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+        ca: _CA
+    })
+
+    if (_theCoinInDB.platformFeeTaken !== true) {
+        await takePumpGuardFee(keyPair, req.body.ca)
+    } else {
+        console.log("-- skipping taking platform fee as it's been already taken.")
+    }
 
     const amountInSol = (_theCoin.balance / 1e9) - PLATFORM_FEE
+
+    if (amountInSol <= 0) {
+        console.error("-- Insufficient Sol balance for dev!")
+        return res.status(500).json({
+            error: 'Insufficient Sol balance for dev!'
+        })
+    }
 
     const transferResTX = await transferSOL(_theCoin.dev, amountInSol, keyPair)
 
     // if transfer was successful update the user's refund state
     if (transferResTX && transferResTX.length > 30) {
-        const walletBalance = await getSolBalance(_theCoin.lockAddress)
+        // delay it so we make sure the tx is recorded on chain and new balance can be fetched by our api call
+        await delay(20)
 
+        const walletBalance = await getSolBalance(_theCoin.lockAddress)
         await _Collections.GuardedCoins.updateOne({
             ca: req.body.ca
         }, {
@@ -502,7 +567,7 @@ app.post('/claim_dev_refund', async (req, res) => {
     }
 
     return res.send(transferResTX)
-});
+})
 
 // user request to get all their refunds
 app.post('/get_user_refunds', async (req, res) => {
@@ -556,7 +621,8 @@ app.post('/pay_user_refund', async (req, res) => {
                 const decryptedPrivKey = decrypt(_theCoin.lockPVK)
                 const keyPair = initializeKeypair(decryptedPrivKey)
 
-                const transferResTX = await transferSOL(req.body.publicKey, _res.refunds[i].refundAmount, keyPair)
+                const transferResTX = await transferSOL(req.body.publicKey, _res.refunds[i].refundAmount,
+                    keyPair)
 
                 // if transfer was successful update the user's refund state
                 if (transferResTX && transferResTX.length > 30) {
@@ -624,6 +690,7 @@ const authMiddleware = (req, res, next) => {
 
     if (providedKey === secretKey) {
         next()
+        console.log("Admin Access Granted")
     } else {
         return res.status(403).json({
             error: 'Unauthorized access'
@@ -725,7 +792,6 @@ function authSigner(userAddress, signature, message) {
         bs58.decode(userAddress)
     )
 
-    if (verified) console.log("Admin Access Granted")
     return verified ? true : false
 }
 

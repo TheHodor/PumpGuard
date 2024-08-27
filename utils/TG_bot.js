@@ -24,20 +24,19 @@ async function TG_alertNewGuard(coinsData, lockedSol, totalLockedSolana) {
     if (coinsData.twitter) socials += `[Twitter](${coinsData.twitter})`
 
     const holders = _getCoinHolders(coinsData.mint)
-    const volume1h = _getCoinVolume1h(coinsData.mint)
+   // const volume1h = _getCoinVolume1h(coinsData.mint)
 
     // Message to send
     const message = `
 *New Solana Locked In!*
     
-*${lockedSol.toFixed(4)}* Solana was just locked for *${coinsData.name} [${coinsData.symbol}]*:
+*${lockedSol.toFixed(2)}* Solana was just locked for *${coinsData.name} [${coinsData.symbol}]*:
 ${_buyEmojies}
 
-*${coinsData.name}* is now being guarded with ${totalLockedSolana.toFixed(4)} Solana.
+*${coinsData.name}* is now being guarded with ${totalLockedSolana.toFixed(2)} Solana.
 *CA: ${(coinsData.mint).toString()}*
 
 - MarketCap: *${parseInt(coinsData.usd_market_cap).toLocaleString()} USD*
-- Volume.1h: *${volume1h}*
 - Holders: *${holders}*
 - Coin Age: *${timeDifference(Date.now(), coinsData.created_timestamp)}*
 - Socials: ${socials}

@@ -263,26 +263,26 @@ async function getTokenHolders(_CA, totalSupply) {
 
 
 // this checks and returns if a particular coin is guarded or not and it's data if it is
-async function isCoinGuarded(_CA) {
-    let _isGuarded = false
+// async function isCoinGuarded(_CA) {
+//     let _isGuarded = false
 
-    const _theCoinInDB = await _Collections.GuardedCoins.findOne({
-        ca: _CA
-    })
+//     const _theCoinInDB = await _Collections.GuardedCoins.findOne({
+//         ca: _CA
+//     })
 
-    if (_theCoinInDB && _theCoinInDB.balance > 0) _isGuarded = true
+//     if (_theCoinInDB && _theCoinInDB.balance > 0) _isGuarded = true
 
-    return {
-        isGuarded: _isGuarded,
-        DBdata: {
-            hasMigrated: _theCoinInDB?.hasMigrated,
-            balance: _theCoinInDB?.balance,
-            balance_allTimeHight: _theCoinInDB?.balance_allTimeHight,
-            lockAddress: _theCoinInDB?.lockAddress
-        },
-        coinData: await fetchCoinData(_CA)
-    }
-}
+//     return {
+//         isGuarded: _isGuarded,
+//         DBdata: {
+//             hasMigrated: _theCoinInDB?.hasMigrated,
+//             balance: _theCoinInDB?.balance,
+//             balance_allTimeHight: _theCoinInDB?.balance_allTimeHight,
+//             lockAddress: _theCoinInDB?.lockAddress
+//         },
+//         coinData: await fetchCoinData(_CA)
+//     }
+// }
 
 // verify if the ca provided by user blongs to an uncomplete pump.fun coin
 async function isPumpFunCoin(_CA) {

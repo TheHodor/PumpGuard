@@ -92,6 +92,8 @@ jQuery(document).ready(function ($) {
         modal.style.visibility = "invisible";
         modal.style.display = "none";
         modal.style.opacity = 0;
+
+        if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
     });
 
     $(".modal__close")[1].addEventListener("click", function () {
@@ -101,6 +103,8 @@ jQuery(document).ready(function ($) {
         modal.style.visibility = "invisible";
         modal.style.display = "none";
         modal.style.opacity = 0;
+
+        if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
     });
 
     $(".modal__close")[2].addEventListener("click", function () {
@@ -110,6 +114,8 @@ jQuery(document).ready(function ($) {
         modal.style.visibility = "invisible";
         modal.style.display = "none";
         modal.style.opacity = 0;
+
+        if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
     });
 
     $(".modal__close")[3].addEventListener("click", function () {
@@ -119,6 +125,8 @@ jQuery(document).ready(function ($) {
         modal.style.visibility = "invisible";
         modal.style.display = "none";
         modal.style.opacity = 0;
+
+        if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
     });
 
     $(".modal__close")[4].addEventListener("click", function () {
@@ -128,6 +136,8 @@ jQuery(document).ready(function ($) {
         modal.style.visibility = "invisible";
         modal.style.display = "none";
         modal.style.opacity = 0;
+
+        if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
     });
 
     getTopPumpfunCoins()
@@ -204,6 +214,12 @@ setTimeout(() => {
 
 
 async function updateLockedBalance() {
+    if (selectedCoinCa) {
+        setTimeout(() => {
+            doNotif("Balance update requested. Please allow a little time for this to process...")
+        }, 1000)
+    }
+
     const response = await fetch('https://pumpguard.fun/update_lock_address_balance', {
         method: 'POST',
         headers: {
@@ -236,7 +252,7 @@ async function getTopPumpfunCoins() {
 
     renderCoins(data.topCoins, $('.top-coins-wr')[0])
     renderCoins(data.topGuarded, $('.top-guarded-coins-wr')[0])
-    renderCoins(data.recentlyGuarded, $('.new-guarded-coins-wr')[0])
+    renderCoins((data.recentlyGuarded).reverse(), $('.new-guarded-coins-wr')[0])
 }
 
 function renderCoins(data, wrapperEl) {
@@ -272,16 +288,20 @@ function renderCoins(data, wrapperEl) {
         if (progress > 100) progress = 100
 
         let lockedSol = data[i].lockedSol || 0
-        lockedSol = (lockedSol / 1e9).toFixed(4)
+        lockedSol = (lockedSol / 1e9).toFixed(2)
 
-        let lockedSolColor = "#ea4e6fd9"
-        if (lockedSol > 0) lockedSolColor = "#548662"
+        let lockedSolColor = "#dd5c77c4"
+        let textShadow = ""
+        if (lockedSol > 0) {
+            lockedSolColor = "#5f976a"
+            textShadow = "text-shadow: 0px 0px 14px #468847;"
+        }
 
         let holders = "--"
         if (data[i].holders) holders = data[i].holders
 
         tBody += `
-        <div style="overflow: auto; display: block;" class="+ scroll1">
+        <div style=" display: block;" class="+ scroll1">
             <div
                 style="/* display:inline-block; */margin: 5px;box-shadow: rgb(0 0 0 / 15%) 2px 2px 9px;width: auto;margin-bottom: 10px;background: #0f111380;">
                 <div class="UI-ww6 card flex space-x-3"
@@ -292,8 +312,8 @@ function renderCoins(data, wrapperEl) {
                                      src="https://pumpguard.fun/imgs/ico_${data[i].mint}.jpg"
                                     style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
                                 <div style=" margin: 0px 10px; text-align: left; ">
-                                    <div style="     display: flex;     position: absolute; ">
-                                        <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 16px;font-weight: 700;">
+                                    <div style="     display: flex;     position: absolute;     width: calc(100% - 30px);">
+                                        <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 16px;font-weight: 700;     max-width: 50%;     white-space: nowrap;     overflow: hidden;     text-overflow: ellipsis; }">
                                              ${data[i].name} [${data[i].symbol}]</p>
                                              <svg class="HW-name-copy"
                                             onclick="copyToClipboard('${data[i].mint}')"
@@ -308,16 +328,19 @@ function renderCoins(data, wrapperEl) {
                                             style=" font-weight: 700; ">$${lgNUM(data[i].usd_market_cap, 1)}</span></p>
                                 </div>
                             </div>
+
                             <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
-                                <p style="color: #f0f8ffb5;margin: 36px 0px 0px 0px;font-size: 13px;">Vol.1h: <span
-                                        style=" font-weight: 700; ">$${lgNUM(data[i].usd_market_cap, 1)}</span></p>
+                                <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 34.5px;width: max-content;">
+                                Guarded by <span class="guarded-by-sol" style="color: ${lockedSolColor}; ${textShadow}font-weight: 900;font-size: 14px;">${lockedSol} SOL</span></p>
                             </div>
-                            <div style="margin: 0px 9px;margin-top: 8px;/* position: absolute; */right: 0px;">
+
+
+                            <div style="margin: 0px 9px;margin-top: 8px;/* position: absolute; */right: 0px;    z-index: 10;">
                                 <div class="btn-3"
-                                    style="color: #e7fff4c4;font-size: 12px;padding: 1px 17px;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 1px;">
+                                    style="color: #e7fff4c4;font-size: 12px;padding: 1px 5px;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 1px;">
                                     Buy on BullX</div>
                                 <div class="btn-3"
-                                    style="color: #e7fff4c4;font-size: 12px;padding: 1px 10px;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 7px;">
+                                    style="color: #e7fff4c4;font-size: 12px;padding: 1px 5px;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 7px;">
                                     Buy on Trojan</div>
                             </div>
                         </div>
@@ -331,9 +354,7 @@ function renderCoins(data, wrapperEl) {
                                 </a><a href="${inf_x}" target="_blank" style="opacity:${inf_x_op}"> <img src="./src/ic-x.svg"
                                         style="filter: invert(0.8);width: 16px;height: 16px;margin-left: 3px;cursor: pointer;{inf_x_op}color: antiquewhite;">
                                 </a></div>
-                            <p class=" title-p4"
-                                style="font-size: 16px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 1px;padding-right: 7.5%;">
-                                Guarded by <span class="guarded-by-sol" style="color: ${lockedSolColor};font-weight: 900;font-size: 13px;">${lockedSol} SOL</span></p>
+                   
                             <div style="     display: flex; ">
                                 <div style="     display: flex;     margin-left: 10px; "><svg xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 256 256" style="     width: 19px;     filter: invert(0.75); ">
@@ -598,7 +619,7 @@ async function checkForRefunds() {
                             </div>
                             <div style="margin: 0px 9px;margin-top: 16px;right: 0px;"> <button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')"
                                     class=" floating-btn custom-button btn-m"
-                                    style="background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 15px;">Claim
+                                    style="width: auto;padding: 0px 15px;">Claim
                                     ${itm.refundAmount} SOL Refund For ${itm.symbol}</button> </div>
                         </div>
                     </div>
@@ -783,7 +804,8 @@ async function validateDevRefund() {
                 txt = data.symbol + " is detected as a rug. The locked solana cannot be claimed."
             }
         } else {
-            txt = data.symbol + " is not known as a rug."
+            txt = data.ca.slice(0, 6) + "..." + data.ca.slice(data.ca.length - 6, 10000) + " [" + data.symbol +
+                "]" + " has not rugged."
         }
 
         if (data.hasMigrated) {
@@ -813,7 +835,7 @@ async function validateDevRefund() {
                         <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 16px;"><span style="font-weight: 700;/* color: #c9717c; */">${txt}</span></p>
                         <p style="color: #f0f8ffb5;margin: 8px 0px 0px 0px;font-size: 13px;">Dev Refund TX: <span style="/* font-weight: 700; */">${data.devRefundTX}</span></p>
                     </div>
-                    <div style="margin: 0px 9px;margin-top: 16px;right: 0px;"> <button onclick="devClaimLockedSol()" class=" floating-btn custom-button btn-m" style="background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 15px;">Claim Locked Solana</button> </div>
+                    <div style="margin: 0px 9px;margin-top: 16px;right: 0px;"> <button onclick="devClaimLockedSol()" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 15px;">Claim Locked Solana</button> </div>
                 </div>
             </div>
         </div>
@@ -864,7 +886,8 @@ async function devClaimLockedSol() {
 
         }
 
-        // console.log(data, "a2")
+    } else {
+        console.log('Error:', (await response.json()).error);
     }
 }
 
@@ -974,6 +997,14 @@ function extractAddress(url) {
 
     const address = urlParts[addressIndex + 1];
     return address;
+}
+
+function doNotif(data) {
+    $('.msg-tst')[0].style.display = "block"
+    $('.msg-tst')[0].innerHTML = data
+    setTimeout(() => {
+        $('.msg-tst')[0].style.display = "none"
+    }, 8000)
 }
 
 function getRandomBytesHex(length) {

@@ -52,9 +52,13 @@ async function getTopProgressCoins() {
 }
 
 
-async function getTopGuardedCoins() {
+async function getTopGuardedCoins(MIN_GUARDED_AMOUNT) {
     let topGuarded = []
-    const _topGuarded = await _Collections.GuardedCoins.find({}).sort({
+    const _topGuarded = await _Collections.GuardedCoins.find({
+        balance: {
+            $gte: MIN_GUARDED_AMOUNT * 1e9
+        }
+    }).sort({
         balance: -1
     }).limit(20).toArray()
 
@@ -84,9 +88,13 @@ async function getTopGuardedCoins() {
 }
 
 
-async function getRecentlyGuardedCoins() {
+async function getRecentlyGuardedCoins(MIN_GUARDED_AMOUNT) {
     let recentlyGuarded = []
-    const _recentlyGuarded = await _Collections.GuardedCoins.find({}).sort({
+    const _recentlyGuarded = await _Collections.GuardedCoins.find({
+        balance: {
+            $gte: 0 // MIN_GUARDED_AMOUNT * 1e9
+        }
+    }).sort({
         firstDeposit: 1
     }).limit(20).toArray()
 
