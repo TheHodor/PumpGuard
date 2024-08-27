@@ -295,6 +295,7 @@ app.post('/is_coin_guarded', async (req, res) => {
         })
 
         if (lockAddressBalance /1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
+        if (_theCoinInDB.hasMigrated) _isGuarded = true
 
         return res.status(200).send({
             isGuarded: _isGuarded,
