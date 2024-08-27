@@ -140,9 +140,27 @@ async function saveImage(ca, _URL) {
     }
 }
 
+async function fetchCoinData(_CA) {
+    let _data = {}
+
+    try {
+        let response = await fetch(`https://frontend-api.pump.fun/coins/${_CA}`)
+        let data = await response.json()
+
+        if (data.creator && data.creator.length > 39 && data.creator.length < 49) {
+            _data = data
+        }
+    } catch (error) {
+        console.log("E.102: ", error)
+    }
+
+    return _data
+}
+
 module.exports = {
     isSolanaAddress,
     getSolBalance,
     getTokenBalance,
-    saveImage
+    saveImage,
+    fetchCoinData
 }
