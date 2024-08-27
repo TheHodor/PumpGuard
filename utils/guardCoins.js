@@ -177,18 +177,18 @@ async function updateLockAddressBalance(_CA) {
             console.log("-- Refund already processed for this coin.");
             return;
         }
-        if (_theCoin.devCanClaimLockedSol == false || _theCoin.days7PassedWithNoRug == false) {
+        if (_theCoinInDB.devCanClaimLockedSol == false || _theCoinInDB.days7PassedWithNoRug == false) {
             return res.status(500).json({
                 error: 'Dev cannot claim sol yet..'
             })
         }
-        if (_theCoin.hasRuged == true) {
+        if (_theCoinInDB.hasRuged == true) {
             return res.status(500).json({
                 error: 'Dev rugged. Not valid.'
             })
         }
 
-        if (_theCoin.devBeenRefunded == true) {
+        if (_theCoinInDB.devBeenRefunded == true) {
             return res.status(500).json({
                 error: 'Dev has already been refunded.'
             })
