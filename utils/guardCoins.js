@@ -275,10 +275,10 @@ async function isCoinGuarded(_CA) {
     return {
         isGuarded: _isGuarded,
         DBdata: {
-            hasMigrated: _theCoinInDB.hasMigrated,
-            balance: _theCoinInDB.balance,
-            balance_allTimeHight: _theCoinInDB.balance_allTimeHight,
-            lockAddress: _theCoinInDB.lockAddress
+            hasMigrated: _theCoinInDB?.hasMigrated,
+            balance: _theCoinInDB?.balance,
+            balance_allTimeHight: _theCoinInDB?.balance_allTimeHight,
+            lockAddress: _theCoinInDB?.lockAddress
         },
         coinData: await fetchCoinData(_CA)
     }
