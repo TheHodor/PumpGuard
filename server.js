@@ -201,7 +201,7 @@ app.post('/get_all_coins', async (req, res) => {
         })
     }
 
-    res.json({
+    return res.json({
         topCoins: topProgressCoins.slice(0, 20),
         topGuarded: topGuardedCoins.slice(0, 20),
         recentlyGuarded: recentlyGuardedCoins.slice(0, 20),
@@ -227,10 +227,10 @@ app.get('/parse_trades', async (req, res) => {
             })
         }
         await parseTokenTrades(ca);
-        res.send(`Trades parsed for contract address: ${ca}`);
+        return res.send(`Trades parsed for contract address: ${ca}`);
     } catch (error) {
         console.error('Error parsing token trades:', error);
-        res.status(500).send('An error occurred while parsing token trades.');
+        return res.status(500).send('An error occurred while parsing token trades.');
     }
 });
 
@@ -253,10 +253,10 @@ app.get('/verify_rugged', async (req, res) => {
             })
         }
         const response = await verifyIfRugged(ca);
-        res.send(`Response ${response} for contract address: ${ca}`);
+        return res.send(`Response ${response} for contract address: ${ca}`);
     } catch (error) {
         console.error('Error parsing token trades:', error);
-        res.status(500).send('An error occurred while checking rug.');
+        return res.status(500).send('An error occurred while checking rug.');
     }
 })
 
@@ -276,10 +276,10 @@ app.post('/is_coin_guarded', async (req, res) => {
     try {
         await hasCoinMigrated(req.body.ca)
         const data = await isCoinGuarded(req.body.ca);
-        res.status(200).send(data);
+        return res.status(200).send(data);
     } catch (error) {
         console.error('Error checking if coin is guarded:', error);
-        res.status(500).json({
+        return res.status(500).json({
             error: 'An error occurred while checking if the coin is guarded.'
         });
     }
@@ -300,10 +300,10 @@ app.post('/get_coin_lock_address', async (req, res) => {
     }
     try {
         const _addressAndData = await getCoinLockAddress(req.body.ca);
-        res.status(200).send(_addressAndData);
+        return res.status(200).send(_addressAndData);
     } catch (error) {
         console.error('Error getting coin lock address:', error);
-        res.status(500).json({
+        return res.status(500).json({
             error: 'An error occurred while retrieving the coin lock address.'
         });
     }
@@ -323,12 +323,12 @@ app.post('/update_lock_address_balance', async (req, res) => {
     }
     try {
         const _balance = await updateLockAddressBalance(req.body.ca);
-        res.status(200).json({
+        return res.status(200).json({
             balance: _balance
         });
     } catch (error) {
         console.error('Error updating lock address balance:', error);
-        res.status(500).json({
+        return res.status(500).json({
             error: 'An error occurred while updating the lock address balance.'
         });
     }
@@ -352,7 +352,7 @@ app.post('/get_coin_status', async (req, res) => {
         _hasMigrated = await hasCoinMigrated(req.body.ca)
     } catch (error) {
         console.error('Error verifying rug:', error);
-        res.status(500).json({
+        return res.status(500).json({
             error: 'An error occurred while verifying coin rug.'
         });
     }
@@ -362,7 +362,7 @@ app.post('/get_coin_status', async (req, res) => {
             verifyRug = await verifyIfRugged(req.body.ca)
         } catch (error) {
             console.error('Error verifying rug:', error);
-            res.status(500).json({
+            return res.status(500).json({
                 error: 'An error occurred while verifying coin rug.'
             });
         }
@@ -404,7 +404,7 @@ app.post('/get_coin_status', async (req, res) => {
             }
         })
 
-        res.status(200).send({
+        return res.status(200).send({
             ca: _theCoin.ca,
             hasRuged: _theCoin.hasRuged,
             verifyRug: _theCoin.verifyRug,
@@ -501,7 +501,7 @@ app.post('/claim_dev_refund', async (req, res) => {
         })
     }
 
-    res.send(transferResTX)
+    return res.send(transferResTX)
 });
 
 // user request to get all their refunds
@@ -520,7 +520,7 @@ app.post('/get_user_refunds', async (req, res) => {
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.address
     })
-    res.send(_res)
+    return res.send(_res)
 });
 
 // user request to be paid for one of their refunds
@@ -591,7 +591,7 @@ app.post('/get_rugged_coins', async (req, res) => {
         rugDetectDate: -1
     }).limit(30).toArray()
 
-    res.send(_res)
+    return res.send(_res)
 })
 
 // get refund eligible users for a coin
@@ -615,7 +615,7 @@ app.post('/get_coin_refund_eligible_users', async (req, res) => {
             }
         });
     }
-    res.send(_newRes)
+    return res.send(_newRes)
 })
 
 
@@ -628,7 +628,7 @@ const authMiddleware = (req, res, next) => {
     if (providedKey === secretKey) {
         next()
     } else {
-        res.status(403).json({
+        return res.status(403).json({
             error: 'Unauthorized access'
         })
     }
@@ -642,7 +642,7 @@ app.post('/_processing_txes_active', async (req, res) => {
 app.post('/_verify_rug', authMiddleware, async (req, res) => {
     try {
         const _res = await verifyIfRugged(req.body.ca)
-        res.json({
+        return res.json({
             isRugged: _res
         })
     } catch (error) {
@@ -662,7 +662,7 @@ app.post('/_parse_ca', authMiddleware, async (req, res) => {
             })
         }
         const _res = await parseTokenTrades(req.body.ca, req.body.fetchDelay)
-        res.json({
+        return res.json({
             res: _res
         })
     } catch (error) {
