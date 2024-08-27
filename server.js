@@ -510,10 +510,12 @@ app.post('/claim_dev_refund', async (req, res) => {
     }
 
     // if coin not migrated but 7 days has passed and COIN HAS NOT RUGGED => dev can claim
-    if (_theCoin.firstDeposit >= Date.now() - ONE_HOUR * 24 * 7) {
-        return res.status(500).json({
-            error: 'At least 7 days since first lock deposit must be passed.'
-        })
+    if (!_theCoin.hasMigrated) {
+        if (_theCoin.firstDeposit < Date.now() - ONE_HOUR * 24 * 7) {
+            return res.status(500).json({
+                error: 'At least 7 days since first lock deposit must be passed.'
+            })
+        }
     }
 
     const walletBalance = await getSolBalance(_theCoin.lockAddress)
