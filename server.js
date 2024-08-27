@@ -629,16 +629,12 @@ app.post('/pay_user_refund', async (req, res) => {
                 if (transferResTX && transferResTX.length > 30) {
                     await _Collections.UsersRefunds.updateOne({
                         address: req.body.publicKey,
-                        'refunds.ca': {
-                            $eq: req.body.ca
-                        }
+                        'refunds.ca': req.body.ca
                     }, {
-                        $addToSet: {
-                            refunds: {
-                                paid: true,
-                                paymentTx: transferResTX,
-                            },
-                        },
+                        $set: {
+                            'refunds.$.paid': true,
+                            'refunds.$.paymentTx': transferResTX,
+                        }
                     });
                 }
             }
