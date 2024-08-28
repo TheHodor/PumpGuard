@@ -189,7 +189,7 @@ async function getAllTradesPump(ca, _fetchDelay) {
     let offset = 0;
     const allTrades = [];
 
-    console.log("-- fetching trades for ", ca)
+    console.log("-- [1/5] fetching trades for ", ca)
     if (!_beingFetchedCoins.includes(ca)) {
         _beingFetchedCoins.push(ca)
     }
@@ -228,7 +228,7 @@ async function getAllTradesPump(ca, _fetchDelay) {
                 offset = offset + 200
 
                 _beingFetchedCoins_txs[ca] = allTrades.length
-                console.log("-- fetched trades length: ", allTrades.length, )
+                console.log("-- [2/5] fetched trades length: ", allTrades.length, )
             }
         }
         // got back all trades
@@ -242,7 +242,7 @@ async function getAllTradesPump(ca, _fetchDelay) {
             }
         })
 
-        console.log(`Total trades for ca ${ca} - ${orderedTrades.length}`)
+        // console.log(`Total trades for ca ${ca} - ${orderedTrades.length}`)
         _beingFetchedCoins = _beingFetchedCoins.filter(coin => coin !== ca)
 
         // console.log('First trade: ', orderedTrades[0])
