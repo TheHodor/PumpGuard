@@ -136,7 +136,7 @@ async function saveImage(ca, _URL) {
             tries[ca] = false
         }, ONE_HOUR )
         
-        console.error(`Error saving image for ${ca}`)
+       // console.error(`Error saving image for ${ca}`)
     }
 }
 
