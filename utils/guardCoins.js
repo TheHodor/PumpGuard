@@ -222,44 +222,44 @@ async function updateLockAddressBalance(_CA) {
 
 
 
-async function getTokenHolders(_CA, totalSupply) {
-    try {
+// async function getTokenHolders(_CA, totalSupply) {
+//     try {
 
-        let tokenHolders = []
-        const tokenData = await getCoinHolders(_CA)
-        // find signatures for all holders
-        const holders = tokenData.allHolders
-        const currentHoldersCount = tokenData.allHolders.length
-        if (holders && currentHoldersCount > 0) {
-            const holderPromises = holders.map(async (holder) => {
-                const walletData = await fetchSignatures(holder.owner);
-                let tokenHolder;
+//         let tokenHolders = []
+//         const tokenData = await getCoinHolders(_CA)
+//         // find signatures for all holders
+//         const holders = tokenData.allHolders
+//         const currentHoldersCount = tokenData.allHolders.length
+//         if (holders && currentHoldersCount > 0) {
+//             const holderPromises = holders.map(async (holder) => {
+//                 const walletData = await fetchSignatures(holder.owner);
+//                 let tokenHolder;
 
-                if (walletData && walletData[1] !== undefined && walletData[1] < 25) {
-                    // definitely dev/insider
-                    tokenHolder = {
-                        address: holder.owner,
-                        amount: holder.amount,
-                        supplyOwned: ((holder.amount / totalSupply) * 100).toFixed(2),
-                        tag: 'INSIDER',
-                    };
-                    return tokenHolder;
-                } else {
-                    // regular holder - ignore
-                    return null
-                }
-            });
+//                 if (walletData && walletData[1] !== undefined && walletData[1] < 25) {
+//                     // definitely dev/insider
+//                     tokenHolder = {
+//                         address: holder.owner,
+//                         amount: holder.amount,
+//                         supplyOwned: ((holder.amount / totalSupply) * 100).toFixed(2),
+//                         tag: 'INSIDER',
+//                     };
+//                     return tokenHolder;
+//                 } else {
+//                     // regular holder - ignore
+//                     return null
+//                 }
+//             });
 
-            // Wait for all promises to resolve
-            tokenHolders = await Promise.all(holderPromises);
-            tokenHolders = tokenHolders.filter(holder => holder !== null && holder !== undefined);
+//             // Wait for all promises to resolve
+//             tokenHolders = await Promise.all(holderPromises);
+//             tokenHolders = tokenHolders.filter(holder => holder !== null && holder !== undefined);
 
-        }
-        return tokenHolders
-    } catch (e) {
-        console.log('Outer error block: ', e)
-    }
-}
+//         }
+//         return tokenHolders
+//     } catch (e) {
+//         console.log('Outer error block: ', e)
+//     }
+// }
 
 
 // this checks and returns if a particular coin is guarded or not and it's data if it is
@@ -475,7 +475,7 @@ async function parseTokenTrades(_CA, _fetchDelay) {
             }
         }
 
-
+        console.log("-- [3/5] Fetching insiders info...")
         for (const addr in holders) {
             const remainingTokens = await getTokenBalance(addr, _CA)
             await _delay(250)
@@ -519,23 +519,26 @@ async function parseTokenTrades(_CA, _fetchDelay) {
         let insidersChecked = 0
         const INSIDER_HARD_CAP = 50
 
+        let _insiders = 0
+        let _noneInsiders = 0
         // check if top pnl losers are insiders or not
-        // console.log('started fetching sigs: ', new Date())
         for (const addr in newHolders) {
             if (insidersChecked >= maxInsiderCheck) continue
             const walletData = await fetchSignatures(newHolders[addr].address);
+
             if (walletData && walletData[1] !== undefined && walletData[1] < INSIDER_HARD_CAP) {
                 holders[addr].isInsider = true
                 holders[addr].tag = 'INSIDER'
+
+                _insiders ++
             } else {
                 holders[addr].isInsider = false
+                _noneInsiders ++
             }
-
             insidersChecked++
         }
 
-        console.log("-- Finished fetching data for coin: ", _CA)
-        // console.log('ended fetching sigs: ', new Date())
+        console.log("-- [4/5] Finished fetching data for coin: ", _CA)
 
         const collection = _DBs.Holders.collection(_CA)
         const collectionExists = await collection.estimatedDocumentCount() > 0
@@ -552,7 +555,8 @@ async function parseTokenTrades(_CA, _fetchDelay) {
 
         const result = await collection.insertMany(holdersArray);
         if (result.insertedCount > 0) {
-            console.log('New holders inserted: ', result.insertedCount);
+            console.log('-- [5/5] New holders inserted: ', result.insertedCount)
+            console.log(`---------- insider: ${_insiders} || none-insiders: ${_noneInsiders} ----------`)
         } else {
             console.log('No documents were inserted.');
             return "No documents were inserted";
