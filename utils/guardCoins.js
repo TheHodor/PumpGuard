@@ -53,6 +53,7 @@ const SUPPLY_RUG_THRESHOLD = 10
 const MAX_WALLET_REFUND = 25
 const MIN_DEPOSIT_SOL = 0.1
 const TOTALSUPPLY = 1e9
+const DELAYED_BLOCK_SNIPERS_THRESHOLD = 5
 
 // We create a Lock address (aka deposit address) for a coin if a users requests to lock solana for that coin.
 // So by user's request this function checks if a lock address has been created for a coin or not. 
@@ -368,8 +369,25 @@ async function verifyIfRugged(_CA) {
             console.log('Total Team Sol bought: ', totalSolBought.toFixed(2))
             console.log('Total Team Sol Sold: ', totalSolSold.toFixed(2))
 
+
+            // case where dev team owns less than 10%
+            if(totalDevTeamSupplyOwned < 10) {
+                const percentageOfOwnedSupplySold = (totalDevTeamSupplySold / totalDevTeamSupplyOwned) * 100;
+
+                // If the team has sold more than 60% of what they own, consider it a rug
+                if (percentageOfOwnedSupplySold > 60) {
+                    console.log(`Was rugged: ${_CA} ==> calculating refund shares...`)
+                    // Refund other wallets
+                    const refunded = await refundHolders(refundWallets, _CA)
+                    return true
+                } 
+                else {
+                    console.log('Token has not rugged yet....')
+                    return false                    
+                }
+            }
             // RUG Condition
-            if (totalDevTeamSupplySold > SUPPLY_RUG_THRESHOLD) {
+            else if (totalDevTeamSupplySold > SUPPLY_RUG_THRESHOLD) {
                 console.log(`Was rugged: ${_CA} ==> calculating refund shares...`)
                 // Refund other wallets
                 const refunded = await refundHolders(refundWallets, _CA)
@@ -399,9 +417,12 @@ async function parseTokenTrades(_CA, _fetchDelay) {
             return 'Cant parse'
         }
         const sniperSlot = allTrades[0].slot
+        const delayedSniperSlot = allTrades[1].slot
+        const extraDelayedSniperSlot = allTrades[2].slot
+
         const devWallet = _theCoin.creator
         const _tokenPriceSol = _theCoin.market_cap / 1e9
-
+        let delayedSnipingTransactions = [];
         let holders = {}
 
         for (var i = 0; i < allTrades.length; i++) {
@@ -439,9 +460,52 @@ async function parseTokenTrades(_CA, _fetchDelay) {
                 holders[trade.user].totalSolSold += trade.sol_amount / 1e9;
                 holders[trade.user].hasSold = true;
             }
+            
 
             holders[trade.user].TXs.push(allTrades[i].signature)
+            // for 1 block delay - to consider 2nd block delay
+            if (trade.slot === delayedSniperSlot) {
+                delayedSnipingTransactions.push(trade);
+            }
         }
+        
+
+        // SET Number of snipers required in block to be considered snupe
+        if (delayedSnipingTransactions.length > DELAYED_BLOCK_SNIPERS_THRESHOLD) {
+
+            for (const snipeTrade of delayedSnipingTransactions) {
+                if (!holders[snipeTrade.user]) {
+                    holders[snipeTrade.user] = {
+                        address: snipeTrade.user,
+                        totalSolBought: 0,
+                        totalSolSold: 0,
+                        PnL: 0,
+                        totalTokensBought: 0,
+                        totalTokensSold: 0,
+                        worthOfTokensSol: 0,
+                        TXs: [],
+                        tag: '',
+                        hasBought: false,
+                        hasSold: false,
+                        isInsider: void 0
+                    };
+                }
+                holders[snipeTrade.user].tag = 'SNIPER';
+
+                if (snipeTrade.is_buy) {
+                    holders[snipeTrade.user].totalTokensBought += snipeTrade.token_amount;
+                    holders[snipeTrade.user].totalSolBought += snipeTrade.sol_amount / 1e9;
+                    holders[snipeTrade.user].hasBought = true;
+                } else {
+                    holders[snipeTrade.user].totalTokensSold += snipeTrade.token_amount;
+                    holders[snipeTrade.user].totalSolSold += snipeTrade.sol_amount / 1e9;
+                    holders[snipeTrade.user].hasSold = true;
+                }
+
+                holders[snipeTrade.user].TXs.push(snipeTrade.signature);
+            }
+        } 
+
 
         for (const addr in holders) {
             const remainingTokens = await getTokenBalance(addr, _CA)
@@ -484,7 +548,7 @@ async function parseTokenTrades(_CA, _fetchDelay) {
         });
         const maxInsiderCheck = 1000
         let insidersChecked = 0
-        const INSIDER_HARD_CAP = 25
+        const INSIDER_HARD_CAP = 50
 
         // check if top pnl losers are insiders or not
         // console.log('started fetching sigs: ', new Date())
