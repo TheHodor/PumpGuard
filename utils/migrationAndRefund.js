@@ -90,9 +90,11 @@ async function takePumpGuardFee(keyPair, _CA) {
     const _theCoinInDB = await _Collections.GuardedCoins.findOne({
         ca: _CA
     })
+    let lonetraderHash;
+    let lymnHash;
 
     if (!_theCoinInDB.loneTrader_hash || !_theCoinInDB.loneTrader_hash.length < 30) {
-        const lonetraderHash = await transferSOL(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
+        lonetraderHash = await transferSOL(LONETRADER_WALLET, (PLATFORM_FEE / 2), keyPair);
 
         if (!lonetraderHash) {
             console.log('Lonetrader transfer failed.');
@@ -106,10 +108,12 @@ async function takePumpGuardFee(keyPair, _CA) {
                 }
             });
         }
+    } else {
+        lonetraderHash = _theCoinInDB.loneTrader_hash;
     }
 
     if (!_theCoinInDB.lymnQ_hash || !_theCoinInDB.lymnQ_hash.length < 30) {
-        const lymnHash = await transferSOL(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
+        lymnHash = await transferSOL(LYMN_WALLET, (PLATFORM_FEE / 2), keyPair);
 
         if (!lymnHash) {
             console.log('Lymn transfer failed.');
@@ -123,6 +127,8 @@ async function takePumpGuardFee(keyPair, _CA) {
                 }
             });
         }
+    } else {
+        lymnHash = _theCoinInDB.lymnQ_hash;
     }
 
     console.log(`Platform fee taken - Lonetrader Hash: ${lonetraderHash} - Lymn Hash: ${lymnHash}`);
