@@ -469,42 +469,11 @@ async function parseTokenTrades(_CA, _fetchDelay) {
             }
         }
         
-
-        // SET Number of snipers required in block to be considered snupe
         if (delayedSnipingTransactions.length > DELAYED_BLOCK_SNIPERS_THRESHOLD) {
-
             for (const snipeTrade of delayedSnipingTransactions) {
-                if (!holders[snipeTrade.user]) {
-                    holders[snipeTrade.user] = {
-                        address: snipeTrade.user,
-                        totalSolBought: 0,
-                        totalSolSold: 0,
-                        PnL: 0,
-                        totalTokensBought: 0,
-                        totalTokensSold: 0,
-                        worthOfTokensSol: 0,
-                        TXs: [],
-                        tag: '',
-                        hasBought: false,
-                        hasSold: false,
-                        isInsider: void 0
-                    };
-                }
                 holders[snipeTrade.user].tag = 'SNIPER';
-
-                if (snipeTrade.is_buy) {
-                    holders[snipeTrade.user].totalTokensBought += snipeTrade.token_amount;
-                    holders[snipeTrade.user].totalSolBought += snipeTrade.sol_amount / 1e9;
-                    holders[snipeTrade.user].hasBought = true;
-                } else {
-                    holders[snipeTrade.user].totalTokensSold += snipeTrade.token_amount;
-                    holders[snipeTrade.user].totalSolSold += snipeTrade.sol_amount / 1e9;
-                    holders[snipeTrade.user].hasSold = true;
-                }
-
-                holders[snipeTrade.user].TXs.push(snipeTrade.signature);
             }
-        } 
+        }
 
 
         for (const addr in holders) {
