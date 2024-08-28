@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1024, initial-scale=1.0">
-    <title>_admn</title>
+    <title>_admin</title>
     <link rel="stylesheet" href="./css/main.css">
     <link rel="stylesheet" href="./css/menu.css">
     <link rel="stylesheet" href="./css/type-write.css">
@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Train+One">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=IBM+Plex+Sans+KR">
+
+    <link rel="icon" type="image/png" href="./src/pumpguard.png" /> 
 </head>
 
 <body>
@@ -23,7 +25,7 @@
                 <p class="tittle drop-in title-p3" style="float: right;margin-top: -25px;margin-right: 12px;opacity: 0.7;"> <span style="     margin-left: -5px;     font-size: 13px;     font-weight: 200;     opacity: 0.7; ">[
                         Shown data don't have auto update. refresh the page for new data ]</span> </p>
             </div>
-            <div class="sec-1" style="display: inline-block;width: -webkit-fill-available;margin-top: 80px;margin: -10px 50px;">
+            <div class="sec-1" style="display: inline-block;width: -moz-available; width: -webkit-fill-available;margin-top: 80px;margin: -10px 50px;">
                 <div class="overflow-hidden" style="     margin: 0px 50px;     margin-top: 40px; ">
                     <div style="text-align: center;margin-top: 20px;display: block;padding: 10px 15px 10px 15px;background: #4848480d;">
                         <input placeholder="Enter CA to parse TXs and holders" class="log-in-btn floating-btn custom-button btn-m inp-admin-1" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><input placeholder="Interval sec" class="log-in-btn floating-btn custom-button btn-m inp-admin-2" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 100px;margin-right: 20px;border-radius: 3px;"><button onclick="parseCA()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;background: linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(114 174 106) 5%, rgb(45 106 82) 95%, rgba(255, 61, 103, 0) 95%);width: auto;padding: 0px 45px;">Parse
