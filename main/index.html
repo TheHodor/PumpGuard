@@ -465,152 +465,122 @@
 
     <div id="demo-modal" class="modal modal-guardCA drop-in-q" style="visibility: visible; opacity: 0; display: none;">
         <div class="modal__content" style="
-    height: auto;
-">
-            <p style="font-size: 20px;font-weight: 700;color: #edeef6de;margin-top: -2px;padding-right: 100px;">By
-                locking solana you can assure your investors about your intentions and future of your coin.</p>
-
-
-
-
-
-            <p
-                style="font-size: 15px;color: #edeef6cc;font-weight: 600;margin-top: 10px;padding-right: 170px;margin-bottom: 0;">
-                Terms for guarding a coin at PumpGuard by locking Solana:</p>
-            <p style="font-size: 15px;color: #edeef691;margin-top: 5px;padding-right: 170px;margin-bottom: 0;">-
-                PumpGuard charges total of <span style="
-    color: #5e946e;
-    font-weight: 600;
-">0.2</span> Solana as fee which is taken from the locked solana at the end of the service.</p>
-            <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;">- The
-                minimum lock amount [in total] is <span style="
-    color: #5e946e;
-    font-weight: 600;
-">2.5</span> Solana and any lower amounts will be refunded.</p>
-            <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;">- Any
-                address can deposit Solana to the lock address of a coin but at the end of the service [in case of
-                successful migration] all the balance in the lock address will be sent to the developer address of the
-                coin [dev on pump.fun].</p>
-            <p
-                style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;display: none;">
-                - The minimum lock amount is <span style="
-    color: #5e946e;
-    font-weight: 600;
-">2.5</span> Solana. however there is no limit on how many times developer may add to the locked amount.</p>
-            <p style="font-size: 15px;color: #edeef691;margin-top: 11px;padding-right: 170px;margin-bottom: 0;">- If the
-                coin migrated to raydium the locked solana will be sent back to developer address instantly and
-                automatically.</p>
-            <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;">- If the
-                coin has not migrated to Raydium within 7 days after the lock, the developer may request a refund.
-                However, the refund will only be processed if there have been no rug pulls. Note that if a majority of
-                insiders dump their tokens on investors, this would also be considered a rug pull. In such cases, the
-                refund will be a portion of the locked amount, based on the percentage of tokens that were dumped.</p>
-
-            <div style="
-    text-align: center;
-    margin-top: 20px;
-    display: block;
-    padding: 10px 15px 10px 15px;
-    background: #4848480d;
-"><input placeholder="Enter Coin CA" class="log-in-btn floating-btn custom-button btn-m ca-check-inp"
-                    style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;">
-
-
-
-                <button onclick="checkCA()" class="log-in-btn floating-btn custom-button btn-m"
-                    style="margin-top: 0;width: auto;padding: 0px 25px;">Check
-                    CA</button>
-            </div>
-
-            <p
-                style="font-size: 14px;color: #edeef6cc;margin-top: 18px;padding-right: 320px;margin-bottom: 0;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span>
-                The 0.2 Solana fee will only be charged once for a coin, no matter how many deposits were made for it.
-            </p>
-            <p
-                style="font-size: 14px;color: #edeef6cc;margin-top: 5px;padding-right: 320px;margin-bottom: 0;width: 95%;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span>
-                The minimum lock amount for a coin is 2.5 Solana. A couple of hours after each deposit, if the balance
-                of the lock address is lower than 2.5 SOL, entire balance will be reverted and sent back to the
-                developer of the coin.
-            </p>
-            <div class="dp-lock-wr" style="
-  margin-top: 20px;
-    border: 3px solid #ffffff05;
-    padding: 10px 15px 10px 15px;
-    border-radius: 6px;
-    background: #4848480d;
-    display: none;
-">
+        height: auto;
+    ">
+                <p style="font-size: 20px;font-weight: 700;color: #edeef6de;margin-top: 5px;/* padding-right: 100px; */text-align: center;">By locking Solana, you can assure your investors about your commitment to your coin’s future.</p>
+    
+    
+    
+    
+    
+                <p style="font-size: 15px;color: #edeef6cc;font-weight: 600;margin-top: 10px;padding-right: 170px;margin-bottom: 0;">Terms for guarding a coin with PumpGuard by locking Solana:</p>
+                <p style="font-size: 15px;color: #edeef691;margin-top: 5px;padding-right: 170px;margin-bottom: 0;">-
+                    PumpGuard charges a <span style="
+        color: #5e946e;
+        font-weight: 600;
+    ">0.2</span> Solana as a platform fee, deducted from the locked amount at the end of the service. </p>
+                <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;">- The minimum lock amount required is <span style="
+        color: #5e946e;
+        font-weight: 600;
+    ">2.5</span> Solana.There is no maximum amount that can be locked.</p>
+                <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;">- Any address can deposit Solana into the lock address of a coin. </p>
+                <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;display: none;">
+                    - The minimum lock amount is <span style="
+        color: #5e946e;
+        font-weight: 600;
+    ">2.5</span> Solana. however there is no limit on how many times developer may add to the locked amount.</p>
+                <p style="font-size: 15px;color: #edeef691;margin-top: 11px;padding-right: 170px;margin-bottom: 0;">- If the coin migrates to Raydium, the locked Solana can be claimed by the developer’s wallet immediately.</p>
+                <p style="font-size: 15px;color: #edeef691;margin-top: 0px;padding-right: 170px;margin-bottom: 0;">- If the coin does not migrate to Raydium within 7 days of the lock, the developer may request a refund, provided no rug pull occurs. In cases where insiders dump tokens on investors, this would be considered a rug pull. The refund will then be distributed between investors based on their loss.</p>
+    
                 <div style="
-    text-align: center;
-    display: flex;
-">
-                    <p style="
-    color: aliceblue;
-    margin-top: 3px;
-    margin-bottom: 0;
-">Deposit [Lock] address for <span class="dt-lock-name-1"></span>:</p>
-
-
-
-                    <p class="dt-lock-1" style="
-    background: #272729cc;
-    color: #f0f8ffba;
-    padding: 3px 10px;
-    border-radius: 6px;
-    margin: 0px 10px;
-    height: max-content;
-">000000000000000000000000000000000000</p><button class=" floating-btn custom-button btn-m copy-d-addr"
-                        style="width: auto;padding: 0px 15px;">Copy
-                        Deposit Address</button>
+        text-align: center;
+        margin-top: 20px;
+        display: block;
+        padding: 10px 15px 10px 15px;
+        background: #4848480d;
+    "><input placeholder="Enter Coin CA" class="log-in-btn floating-btn custom-button btn-m ca-check-inp" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;">
+    
+    
+    
+                    <button onclick="checkCA()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;width: auto;padding: 0px 25px;">Check
+                        CA</button>
                 </div>
-                <div style="
-    text-align: center;
-    display: flex;
-    margin-top: 10px;
-">
-                    <p style="
-    color: aliceblue;
-    margin-top: 3px;
-    margin-bottom: 0;
-">Current Locked Solana for <span class="dt-lock-name-2"></span>:</p>
-
-
-
-                    <p class="dt-lock-2" style="
-    background: #272729cc;
-    color: #f0f8ffba;
-    padding: 3px 25px;
-    border-radius: 6px;
-    margin: 0px 10px 0px 12px;
-    height: max-content;
-">-- Solana</p><button onclick="updateLockedBalance()" class=" floating-btn custom-button btn-m"
-                        style="width: auto;padding: 0px 15px;">Update
-                        Balance</button>
+    
+                <p style="font-size: 14px;color: #edeef6cc;margin-top: 18px;padding-right: 320px;margin-bottom: 0;">
+                    <span style="color: #5e946e;font-weight: 700;">NOTE: </span> The 0.2 Solana fee is a one-time charge per coin, regardless of the number of deposits made. </p>
+                <p style="font-size: 14px;color: #edeef6cc;margin-top: 5px;padding-right: 320px;margin-bottom: 0;width: 95%;">
+                    <span style="color: #5e946e;font-weight: 700;">NOTE: </span> The minimum lock amount is 2.5 Solana. If the balance of the lock address falls below this amount, the entire balance will be reverted and returned to the developer.</p>
+                <p style="font-size: 14px;color: #edeef6cc;margin-top: 5px;padding-right: 320px;margin-bottom: 0;width: 95%;">
+                    <span style="color: #5e946e;font-weight: 700;">NOTE: </span> The 0.2 platform fee is applicable only while the product is in beta. This price may increase in the future and will be announced in advance.</p><div class="dp-lock-wr" style="
+      margin-top: 20px;
+        border: 3px solid #ffffff05;
+        padding: 10px 15px 10px 15px;
+        border-radius: 6px;
+        background: #4848480d;
+        display: none;
+    ">
+                    <div style="
+        text-align: center;
+        display: flex;
+    ">
+                        <p style="
+        color: aliceblue;
+        margin-top: 3px;
+        margin-bottom: 0;
+    ">Deposit [Lock] address for <span class="dt-lock-name-1"></span>:</p>
+    
+    
+    
+                        <p class="dt-lock-1" style="
+        background: #272729cc;
+        color: #f0f8ffba;
+        padding: 3px 10px;
+        border-radius: 6px;
+        margin: 0px 10px;
+        height: max-content;
+    ">000000000000000000000000000000000000</p><button class=" floating-btn custom-button btn-m copy-d-addr" style="width: auto;padding: 0px 15px;">Copy
+                            Deposit Address</button>
+                    </div>
+                    <div style="
+        text-align: center;
+        display: flex;
+        margin-top: 10px;
+    ">
+                        <p style="
+        color: aliceblue;
+        margin-top: 3px;
+        margin-bottom: 0;
+    ">Current Locked Solana for <span class="dt-lock-name-2"></span>:</p>
+    
+    
+    
+                        <p class="dt-lock-2" style="
+        background: #272729cc;
+        color: #f0f8ffba;
+        padding: 3px 25px;
+        border-radius: 6px;
+        margin: 0px 10px 0px 12px;
+        height: max-content;
+    ">-- Solana</p><button onclick="updateLockedBalance()" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 15px;">Update
+                            Balance</button>
+                    </div>
+                    <p style="font-size: 14px;color: #edeef6cc;margin-top: 14px;padding-right: 320px;margin-bottom: 0;">
+                        At the end of service [in case of successful migration or dev's refund request] all the balance of
+                        this address will be sent
+                        to <span style="color: #5e946e;font-weight: 700;">Devloper
+                        </span> of this coin which is <span class="dt-lock-3" style="color: #5e946e;font-weight: 700;">000000...000000</span>.
+                    </p>
                 </div>
-                <p
-                    style="font-size: 14px;color: #edeef6cc;margin-top: 14px;padding-right: 320px;margin-bottom: 0;">
-                    At the end of service [in case of successful migration or dev's refund request] all the balance of
-                    this address will be sent
-                    to <span style="color: #5e946e;font-weight: 700;">Devloper
-                    </span> of this coin which is <span class="dt-lock-3"
-                        style="color: #5e946e;font-weight: 700;">000000...000000</span>.
-                </p>
+                <p style="font-size: 15px;color: #edeef654;margin-top: 50px;width: 99%;padding-right: 350px;margin-bottom: 0;">
+                    If the total locked Solana for a coin reaches 5 Solana there will be a review post about the coin in our
+                    telegram channel and twitter.</p><a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="
+                        width: 14px;
+                        fill: #d4d4d44f;
+                    ">
+                        <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
+                        </path>
+                    </svg></a>
             </div>
-            <p
-                style="font-size: 15px;color: #edeef654;margin-top: 50px;width: 99%;padding-right: 350px;margin-bottom: 0;">
-                If the total locked Solana for a coin reaches 5 Solana there will be a review post about the coin in our
-                telegram channel and twitter.</p><a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg
-                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="
-                    width: 14px;
-                    fill: #d4d4d44f;
-                ">
-                    <path
-                        d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
-                    </path>
-                </svg></a>
-        </div>
     </div>
 
     <div id="demo-modal" class="modal modal-refundCA drop-in-q" style="visibility: visible; opacity: 0; display: none;">
@@ -618,24 +588,18 @@
         height: auto;
         max-width: unset;
     ">
-            <p
-                style="font-size: 26px;font-weight: 700;color: #edeef6de;margin-top: 2px;text-align: center;margin-bottom: 1px;">
-                Claim your refunds from rugged coins</p>
+            <p style="font-size: 26px;font-weight: 700;color: #edeef6de;margin-top: 2px;text-align: center;margin-bottom: 1px;">Claim your refunds from rugged coins</p>
 
 
 
 
 
-            <p style="font-size: 18px;color: #edeef6cc;font-weight: 600;margin-bottom: 0;text-align: center;">If you've
-                ever invested in a coin that was guarded by PumpGuard and was rugged, you can claim a refund from them.
-            </p>
+            <p style="font-size: 18px;color: #edeef6cc;font-weight: 600;margin-bottom: 0;text-align: center;">If you invested in a coin protected by PumpGuard that was later rugged, you may be eligible for a refund.</p>
 
 
 
 
-            <p style="font-size: 15px;color: #edeef691;margin-top: 3px;margin-bottom: 0;text-align: center;">The refund
-                amount you can claim for a coin depends on your investment losses and the initial Solana that was locked
-                by the coin's developer.</p>
+            <p style="font-size: 15px;color: #edeef691;margin-top: 3px;margin-bottom: 0;text-align: center;">The refund amount is determined by your investment losses and the initial Solana locked by the coin’s developer.</p>
 
 
             <div style="
@@ -648,11 +612,7 @@
 
 
 
-                <input placeholder="Enter Your Wallet Address"
-                    class="log-in-btn floating-btn custom-button btn-m refund-check-inp"
-                    style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button
-                    onclick="checkForRefunds()" class="log-in-btn floating-btn custom-button btn-m"
-                    style="margin-top: 0;width: auto;padding: 0px 25px;">Check
+                <input placeholder="Enter Your Wallet Address" class="log-in-btn floating-btn custom-button btn-m refund-check-inp" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button onclick="checkForRefunds()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;width: auto;padding: 0px 25px;">Check
                     For Refunds</button>
             </div>
 
@@ -684,33 +644,22 @@
             </div>
 
             <p style="font-size: 14px;color: #edeef6cc;margin-top: 38px;margin-bottom: 0;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> If you can't find your refund from a
-                specific coin try to check if it's been recognized as a rug or not from the <span style="
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> If you can’t find your refund for a specific coin, use the Check the <span style="
         font-weight: 700;
         color: #5e946e;
         cursor: pointer;
         padding: 0px 3px;
-    ">Check
-                    Coin State</span> feature.
-            </p>
-            <p
-                style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> To be eligible for a refund from a coin you
-                must've lost more or equal to 0.1 Solana.
-            </p>
-            <p
-                style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;margin-bottom: 10px;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> Your refunds will never expire and there is
-                no time limit on when you can claim them.
-            </p>
+    ">Refunds List</span> to make sure of its status.</p>
+            <p style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> To qualify for a refund, your losses must be at least 0.1 Solana.</p>
+            <p style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;margin-bottom: 10px;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> There’s no expiration date for claiming your refunds. You can claim them at any time.</p>
 
-            <a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 384 512" style="
+            <a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="
                         width: 14px;
                         fill: #d4d4d44f;
                     ">
-                    <path
-                        d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
+                    <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
                     </path>
                 </svg></a>
         </div>
@@ -774,17 +723,13 @@
         height: auto;
         max-width: unset;
     ">
-            <p
-                style="font-size: 26px;font-weight: 700;color: #edeef6de;margin-top: 2px;text-align: center;margin-bottom: 1px;">
-                Devs: Claim back your locked solana</p>
+            <p style="font-size: 26px;font-weight: 700;color: #edeef6de;margin-top: 2px;text-align: center;margin-bottom: 1px;">Developers: Retrieve Your Locked Solana</p>
 
 
 
 
 
-            <p style="font-size: 18px;color: #edeef6cc;font-weight: 600;margin-bottom: 0;text-align: center;">As
-                developer of a guarded coin, you can request a full refund if either your guarded coin has migrated to
-                Raydium or if more than 7 days have passed since you guarded your coin, but it has not migrated.</p>
+            <p style="font-size: 18px;color: #edeef6cc;font-weight: 600;margin-bottom: 0;text-align: center;">As the developer of a guarded coin, you're eligible to request a full refund if your coin has either successfully migrated to Raydium or if it has been more than 7 days since the lock without migration.</p>
 
 
 
@@ -802,11 +747,7 @@
 
 
 
-                <input placeholder="Enter Your Coin CA"
-                    class="log-in-btn floating-btn custom-button btn-m dev-refund-inp"
-                    style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button
-                    onclick="validateDevRefund()" class="log-in-btn floating-btn custom-button btn-m"
-                    style="margin-top: 0;width: auto;padding: 0px 25px;">Check
+                <input placeholder="Enter Your Coin CA" class="log-in-btn floating-btn custom-button btn-m dev-refund-inp" style="margin-top: 0;background: #272729;padding: 0px 10px;cursor: unset;outline: none;width: 40%;margin-right: 20px;border-radius: 3px;"><button onclick="validateDevRefund()" class="log-in-btn floating-btn custom-button btn-m" style="margin-top: 0;width: auto;padding: 0px 25px;">Check
                     Coin State</button>
             </div>
 
@@ -826,27 +767,17 @@
             </div>
 
             <p style="font-size: 14px;color: #edeef6cc;margin-top: 38px;margin-bottom: 0;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> The locked solana will be refunded only to
-                the dev's wallet.
-            </p>
-            <p
-                style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> You need to sign a message with your dev
-                address to authenticate your refund request.
-            </p>
-            <p
-                style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;margin-bottom: 10px;">
-                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> If your coin has migrated to raydium, you
-                will be able to request for refund immediately.
-            </p>
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> The locked Solana will only be refunded to the developer's wallet.</p>
+            <p style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> You'll need to sign a message with your developer wallet to verify your refund request.</p>
+            <p style="font-size: 14px;color: #edeef6cc;margin-top: 2px;padding-right: 320px;margin-bottom: 0;margin-bottom: 10px;">
+                <span style="color: #5e946e;font-weight: 700;">NOTE: </span> If your coin has migrated to Raydium, you can request your refund immediately.</p>
 
-            <a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 384 512" style="
+            <a class="modal__close" style="font-size: 30px; cursor: pointer;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="
                         width: 14px;
                         fill: #d4d4d44f;
                     ">
-                    <path
-                        d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
+                    <path d="M376.6 84.5c11.3-13.6 9.5-33.8-4.1-45.1s-33.8-9.5-45.1 4.1L192 206 56.6 43.5C45.3 29.9 25.1 28.1 11.5 39.4S-3.9 70.9 7.4 84.5L150.3 256 7.4 427.5c-11.3 13.6-9.5 33.8 4.1 45.1s33.8 9.5 45.1-4.1L192 306 327.4 468.5c11.3 13.6 31.5 15.4 45.1 4.1s15.4-31.5 4.1-45.1L233.7 256 376.6 84.5z">
                     </path>
                 </svg></a>
         </div>
