@@ -652,7 +652,7 @@ async function refundHolders(holders, _CA) {
                 const keyPair = initializeKeypair(decryptedPrivKey)
                 await takePumpGuardFee(keyPair, _CA)
             } catch (e) {
-                console.error('Error during platform fee transfer:', error.message);
+                console.error('Error during platform fee transfer:', e.message);
                 return
             }
 
