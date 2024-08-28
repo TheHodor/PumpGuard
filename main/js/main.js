@@ -85,6 +85,23 @@ jQuery(document).ready(function ($) {
         currentOpacity = 1;
     });
 
+    $(".how-it-works")[0].addEventListener("click", function () {
+        var modal = document.querySelector(".modal-howworks")
+
+        $('.modal-cover')[0].style.display = "block"
+        modal.style.visibility = "visible";
+        modal.style.opacity = "1";
+        modal.style.display = "flex";
+        // setTimeout(() => {
+        //     modal.style.backdropFilter = "blur(6px)";
+        // }, 700)
+
+        currentOpacity = 1;
+    });
+
+
+
+
     $(".modal__close")[0].addEventListener("click", function () {
         var modal = $(".modal")[0]
 
@@ -139,6 +156,18 @@ jQuery(document).ready(function ($) {
 
         if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
     });
+
+    $(".modal__close")[5].addEventListener("click", function () {
+        var modal = $(".modal")[5]
+
+        $('.modal-cover')[0].style.display = "none"
+        modal.style.visibility = "invisible";
+        modal.style.display = "none";
+        modal.style.opacity = 0;
+
+        if ($('.dp-lock-wr')[0]) $('.dp-lock-wr')[0].style.display = "none"
+    });
+
 
     getTopPumpfunCoins()
     setInterval(() => {
