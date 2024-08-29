@@ -629,6 +629,7 @@ app.post('/pay_user_refund', async (req, res) => {
 
                 // if transfer was successful update the user's refund state
                 if (transferResTX && transferResTX.length > 30) {
+                    console.log(`Refund paid for user: ${req.body.publicKey} - ${_res.refunds[i].refundAmount}`)
                     await _Collections.UsersRefunds.updateOne({
                         address: req.body.publicKey,
                         'refunds.ca': req.body.ca

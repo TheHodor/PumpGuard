@@ -628,7 +628,9 @@ async function refundHolders(holders, _CA) {
                 console.error('Error during platform fee transfer:', e.message);
                 return
             }
-
+        }
+        else {
+            console.log('Platform fee taken already. This is a re-check on verify rugged')
         }
         // Compute each wallet refund
         const refunds = walletsToRefund.map(wallet => {
@@ -661,23 +663,21 @@ async function refundHolders(holders, _CA) {
             // so if we call this whole function multiple times there wouldn't be duplicates created
             await _Collections.UsersRefunds.updateOne({
                 address: refund.address,
-                'refunds.ca': {
-                    $ne: _CA
-                }
+                'refunds.ca': _CA 
             }, {
-                $addToSet: {
-                    refunds: {
-                        ca: _CA,
-                        refundAmount: Math.abs(refund.refundAmount),
-                        originalLoss: refund.originalLoss,
-                        paid: false,
-                        paymentTx: null,
-                        name: _coinData.name,
-                        symbol: _coinData.symbol,
-                        rugDetectDate: Date.now(),
-                        image_uri: _coinData.image_uri,
-                    },
+                $set: {
+                    'refunds.$.ca': _CA,
+                    'refunds.$.refundAmount': Math.abs(refund.refundAmount),
+                    'refunds.$.originalLoss': refund.originalLoss,
+                    'refunds.$.paid': false,
+                    'refunds.$.paymentTx': null,
+                    'refunds.$.name': _coinData.name,
+                    'refunds.$.symbol': _coinData.symbol,
+                    'refunds.$.rugDetectDate': Date.now(),
+                    'refunds.$.image_uri': _coinData.image_uri,
                 },
+            }, {
+                upsert: true
             });
         }
         console.log('Refund collection created')
