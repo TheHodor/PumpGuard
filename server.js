@@ -290,7 +290,7 @@ app.post('/is_coin_guarded', async (req, res) => {
         }, {
             $set: {
                 balance: lockAddressBalance,
-                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance),
+                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance, _theCoinInDB.balance_allTimeHight),
             }
         })
 
@@ -302,7 +302,7 @@ app.post('/is_coin_guarded', async (req, res) => {
             DBdata: {
                 hasMigrated: _theCoinInDB?.hasMigrated,
                 balance: lockAddressBalance,
-                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance),
+                balance_allTimeHight:  Math.max(lockAddressBalance, _theCoinInDB.balance, _theCoinInDB.balance_allTimeHight),
                 lockAddress: _theCoinInDB?.lockAddress
             },
             coinData: await fetchCoinData(req.body.ca)
@@ -434,7 +434,7 @@ app.post('/get_coin_status', async (req, res) => {
             verifyRug: verifyRug,
             ..._theCoin
         }
-
+ 
         await _Collections.GuardedCoins.updateOne({
             ca: req.body.ca
         }, {
@@ -555,16 +555,16 @@ app.post('/claim_dev_refund', async (req, res) => {
     // if transfer was successful update the user's refund state
     if (transferResTX && transferResTX.length > 30) {
         // delay it so we make sure the tx is recorded on chain and new balance can be fetched by our api call
-        await delay(20)
 
-        const walletBalance = await getSolBalance(_theCoin.lockAddress)
+        // await delay(60 * 5)
+        // const walletBalance = await getSolBalance(_theCoin.lockAddress)
         await _Collections.GuardedCoins.updateOne({
             ca: req.body.ca
         }, {
             $set: {
                 devRefundTX: transferResTX,
                 devBeenRefunded: true,
-                balance: walletBalance
+                balance: -1 // walletBalance
             }
         })
     }
@@ -629,7 +629,6 @@ app.post('/pay_user_refund', async (req, res) => {
 
                 // if transfer was successful update the user's refund state
                 if (transferResTX && transferResTX.length > 30) {
-                    console.log(`Refund paid for user: ${req.body.publicKey} - ${_res.refunds[i].refundAmount}`)
                     await _Collections.UsersRefunds.updateOne({
                         address: req.body.publicKey,
                         'refunds.ca': req.body.ca
