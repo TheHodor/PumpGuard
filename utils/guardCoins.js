@@ -90,6 +90,7 @@ async function getCoinLockAddress(_CA) {
         const res = await _Collections.GuardedCoins.insertOne({
             ca: _CA,
             symbol: _coinData.symbol,
+            name: _coinData.name,
             dev: _coinData.creator,
             totalSupply: _coinData.total_supply,
             balance: 0,
@@ -107,7 +108,10 @@ async function getCoinLockAddress(_CA) {
             devCanClaimLockedSol: false,
             days7PassedWithNoRug: false,
             refundProcessed: false,
+
             devRefundTX: "",
+            loneTrader_hash: "",
+            lymnQ_hash: ""
         })
 
         // successfully inserted
@@ -159,7 +163,7 @@ async function updateLockAddressBalance(_CA) {
             }, {
                 $set: {
                     balance: balance,
-                    balance_allTimeHight: Math.max(balance, _theCoinInDB.balance),
+                    balance_allTimeHight: Math.max(balance, _theCoinInDB.balance, _theCoinInDB.balance_allTimeHight),
                     allowedSell: false,
                     firstDeposit: firstDepositDate,
                 }
@@ -179,20 +183,15 @@ async function updateLockAddressBalance(_CA) {
             return;
         }
         if (_theCoinInDB.devCanClaimLockedSol == false || _theCoinInDB.days7PassedWithNoRug == false) {
-            return res.status(500).json({
-                error: 'Dev cannot claim sol yet..'
-            })
+            return 'Dev cannot claim sol yet..'
+       
         }
         if (_theCoinInDB.hasRuged == true) {
-            return res.status(500).json({
-                error: 'Dev rugged. Not valid.'
-            })
+            return  'Dev rugged. Not valid.'
         }
 
         if (_theCoinInDB.devBeenRefunded == true) {
-            return res.status(500).json({
-                error: 'Dev has already been refunded.'
-            })
+            return 'Dev has already been refunded.'
         }
 
         console.log("-- Lower than min: Refunding dev...")
