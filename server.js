@@ -69,6 +69,7 @@ app.use(cors());
 
 
 let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
+let userRefundClaimRateLimit = {}
 const ONE_MINUTE = 1000 * 60
 const ONE_HOUR = 1000 * 60 * 60
 const PLATFORM_FEE = 0.2
@@ -295,7 +296,7 @@ app.post('/is_coin_guarded', async (req, res) => {
         })
 
         if (lockAddressBalance /1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
-        if (_theCoinInDB.hasMigrated) _isGuarded = true
+        // if (_theCoinInDB.hasMigrated) _isGuarded = true
 
         return res.status(200).send({
             isGuarded: _isGuarded,
@@ -591,6 +592,7 @@ app.post('/get_user_refunds', async (req, res) => {
     return res.send(_res)
 });
 
+
 // user request to be paid for one of their refunds
 app.post('/pay_user_refund', async (req, res) => {
     if (!req.body.publicKey) {
@@ -609,6 +611,13 @@ app.post('/pay_user_refund', async (req, res) => {
         });
     }
 
+    // need a rate limit functionality for this end point to avoid users abuse with multiple requests
+    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body.publicKey] < ONE_MINUTE * 3) {
+        return res.status(400).json({
+            error: 'Auth Failed!'
+        });
+    }
+    userRefundClaimRateLimit[req.body.publicKey] = Date.now()
 
     const _res = await _Collections.UsersRefunds.findOne({
         address: req.body.publicKey
