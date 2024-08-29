@@ -639,7 +639,7 @@ async function checkForRefunds() {
 
                 if (itm.paid) {
                     _btn =
-                        `<button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 25px; background:linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(88 88 88) 5%, rgb(47 58 54) 95%, rgba(255, 61, 103, 0) 95%)">Refund Been Claimed</button>`
+                        `<button onclick="window.open('https://solscan.io/tx/${itm.paymentTx}', '_blank')" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 25px; background:linear-gradient(135deg, rgba(255, 105, 105, 0) 5%, rgb(88 88 88) 5%, rgb(47 58 54) 95%, rgba(255, 61, 103, 0) 95%)">Refund Been Claimed, Click To Open TX</button>`
                 }
 
                 $('.refunds-u-main-wr')[0].innerHTML +=
@@ -705,6 +705,10 @@ async function claimRefund(userAddress, _CA) {
         console.log("Error on signature: ", err)
     }
 
+    
+    setTimeout(() => {
+        doNotif("Refund claim request sent. this could take a minute or two to process...", 3000)
+    }, 500)
 
     const response = await fetch('https://pumpguard.fun/pay_user_refund', {
         method: 'POST',
@@ -748,7 +752,7 @@ async function fetchRecentlyRefunded() {
     if (response.ok) {
         const data = await response.json()
         $('.refund-list-wr')[0].innerHTML = ""
-        console.log("ddd", data)
+        console.log(data)
 
         for (var i = 0; i < data.length; i++) {
             const randomeClassName = generateRandomInt()
@@ -789,7 +793,7 @@ async function fetchRecentlyRefunded() {
                         </div>
                     </div>
                 </div>
-                <div class="${randomeClassName}" style="text-align: center;display: flex;padding-top: 5px;border-radius: 6px;background: #ffffff0a;border-top: none;margin: 0px 0px;border-top-left-radius: 0;border-top-right-radius: 0;cursor: pointer; display: ruby-text;" onclick="showEligibleRefunds('${data[i].ca}', ${randomeClassName})">
+                <div class="${randomeClassName}" style="text-align: center;display: flex;padding-top: 5px;border-radius: 6px;background: #ffffff0a;border-top: none;margin: 0px 0px;border-top-left-radius: 0;border-top-right-radius: 0;cursor: pointer; flex-wrap: wrap; gap: 10px 0px;justify-content: space-evenly; padding-bottom: 10px;" onclick="showEligibleRefunds('${data[i].ca}', ${randomeClassName})">
                     <p style="     font-size: 14px; text-align: center; width: 100%;color: #f0f8ff61;margin: 0px 10px;margin-top: -6px;     padding-bottom: 3px; "> View eligible users and refunds</p>
                 </div>
             </div>
