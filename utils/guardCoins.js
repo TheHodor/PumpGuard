@@ -657,16 +657,22 @@ async function refundHolders(holders, _CA) {
                 })
             }
 
-            // store the calced refund data of the coin for this user so they can see it in UI and request to get paid
-            // this query only pushes the object in `refunds` array only if there is already no object with the ca for the user
-            // so if we call this whole function multiple times there wouldn't be duplicates created
+            // first query removes the existing refund data for this coins for the users if exists
+            // 2nd query inserts the new refund data of the coin for this user
             await _Collections.UsersRefunds.updateOne({
-                address: refund.address,
-                'refunds.ca': {
-                    $ne: _CA
-                }
+                address: refund.address
             }, {
-                $addToSet: {
+                $pull: {
+                    refunds: {
+                        ca: _CA
+                    }
+                }
+            });
+
+            await _Collections.UsersRefunds.updateOne({
+                address: refund.address
+            }, {
+                $push: {
                     refunds: {
                         ca: _CA,
                         refundAmount: refund.refundAmount,
@@ -677,8 +683,8 @@ async function refundHolders(holders, _CA) {
                         symbol: _coinData.symbol,
                         rugDetectDate: Date.now(),
                         image_uri: _coinData.image_uri,
-                    },
-                },
+                    }
+                }
             });
         }
         console.log('Refund collection created')
