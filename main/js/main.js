@@ -283,10 +283,10 @@ async function getTopPumpfunCoins() {
 
     renderCoins(data.topCoins, $('.top-coins-wr')[0])
     renderCoins(data.topGuarded, $('.top-guarded-coins-wr')[0])
-    renderCoins((data.recentlyGuarded).reverse(), $('.new-guarded-coins-wr')[0])
+    renderCoins((data.guardedAndMigratedCoins).reverse(), $('.new-guarded-coins-wr')[0], true)
 }
 
-function renderCoins(data, wrapperEl) {
+function renderCoins(data, wrapperEl, use_balance_allTimeHight) {
     let maxProgressMKC = 409 // sol
 
     let tBody = ""
@@ -315,10 +315,22 @@ function renderCoins(data, wrapperEl) {
             inf_tg_op = 1
         }
 
+        let borderRight = ""
         let progress = data[i].market_cap * 100 / maxProgressMKC
-        if (progress > 100) progress = 100
+        if (progress >= 100) {
+            progress = 100
+            borderRight = "border-bottom-right-radius: 4.5px;"
+        }
+        let progress_num = progress
+        progress = progress.toFixed(1) + "%"
 
         let lockedSol = data[i].lockedSol || 0
+        if (use_balance_allTimeHight) {
+            progress = ""
+            borderRight = "border-bottom-right-radius: 4.5px;"
+            lockedSol = data[i].balance_allTimeHight
+        }
+
         lockedSol = (lockedSol / 1e9).toFixed(2)
 
         let lockedSolColor = "#dd5c77c4"
@@ -331,6 +343,91 @@ function renderCoins(data, wrapperEl) {
         let holders = "--"
         if (data[i].holders) holders = data[i].holders
 
+
+        let _boter = `
+        <div style="     display: flex; ">
+            <div style="     display: flex;     margin-left: 10px; "><svg xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 256 256" style="     width: 19px;     filter: invert(0.75); ">
+                    <rect width="256" height="256" fill="none"></rect>
+                    <circle cx="88" cy="108" r="52" opacity="0.2"></circle>
+                    <circle cx="88" cy="108" r="52" fill="none" stroke="#000" stroke-miterlimit="10"
+                        stroke-width="16"></circle>
+                    <path d="M155.4,57.9A54.5,54.5,0,0,1,169.5,56a52,52,0,0,1,0,104" fill="none"
+                        stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="16">
+                    </path>
+                    <path d="M16,197.4a88,88,0,0,1,144,0" fill="none" stroke="#000" stroke-linecap="round"
+                        stroke-linejoin="round" stroke-width="16"></path>
+                    <path d="M169.5,160a87.9,87.9,0,0,1,72,37.4" fill="none" stroke="#000"
+                        stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></path>
+                </svg>
+                <p
+                    style="     color: #f0f8ffb5;     font-size: 13px;     padding-left: 3px;     font-weight: 700;     margin: 5px 0px; ">
+                    ${holders}</p>
+            </div>
+            <div style="     display: flex;     margin-left: 10px; "><svg xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24" fill="none" style="     width: 17px;     filter: invert(0.71); ">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M8 18.72C6.339 20.134 4.82 21 2 21c1-1 2.27-2.35 2.801-4.447C3.067 15.114 2 13.157 2 11c0-4.418 4.477-8 10-8 5.1 0 9.308 3.054 9.923 7"
+                        style="     color: rgb(0 0 0 / 83%); "></path>
+                    <path fill="currentColor" stroke="currentColor" stroke-linecap="round"
+                        stroke-linejoin="round" stroke-width="2"
+                        d="M16 19.889c-3.314 0-6-1.99-6-4.445C10 12.99 12.686 11 16 11s6 1.99 6 4.444c0 1.199-.64 2.286-1.68 3.085.317 1.165 1.08 1.915 1.68 2.471-1.8 0-2.716-.544-3.792-1.422-.684.2-1.428.31-2.208.31z">
+                    </path>
+                </svg>
+                <p
+                    style="     color: #f0f8ffb5;     font-size: 13px;     padding-left: 3px;     font-weight: 700;     margin: 5px 0px; ">
+                    ${data[i].reply_count}</p>
+            </div>
+            <div style="     display: flex;     margin-left: 10px;     margin-right: 4px; "><svg
+                    xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
+                    style="     width: 14.5px;     filter: invert(0.65); ">
+                    <path
+                        d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z">
+                    </path>
+                </svg>
+                <p
+                    style="     color: #f0f8ffb5;     font-size: 13px;     padding-left: 4px;     font-weight: 700;     margin: 5px 0px; ">
+                    ${timeDifference(Date.now(), data[i].created_timestamp)}</p>
+            </div>
+        </div>
+        `
+
+        let __booter1 = `
+        <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
+            <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 34.5px;width: max-content;">
+            Guarded by <span class="guarded-by-sol" style="color: #5f976a; text-shadow: 0px 0px 14px #468847;font-weight: 900;font-size: 14px;">3.00 SOL</span></p>
+        </div>                  
+        `
+
+        let __buyOn = `
+        <div style="margin: 0px 9px;margin-top: 8px;/* position: absolute; */right: 0px;    z-index: 10;">
+            <div class="btn-3"
+                style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 1px;">
+                Buy on BullX</div>
+            <div class="btn-3"
+                style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 7px;">
+                Buy on Trojan</div>
+        </div>
+        `
+
+        if (use_balance_allTimeHight) {
+            _boter = `
+            <div style="     display: flex; ">
+                <p style="color: #f0f8ffc4;font-size: 14px;padding-left: 3px;font-weight: 600;margin: 5px 10px 5px 10px;text-shadow: 0px 0px 14px #468847;">Migrated to raydium ${timeDifference(Date.now(), data[i].migrateDate)} ago</p>
+            </div>
+            `
+
+            __booter1 = `
+            <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
+                <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 5px;margin-right: 14px;width: max-content;">Was 
+                guarded by <span class="guarded-by-sol" style="color: #5f976a; text-shadow: 0px 0px 14px #468847;font-weight: 900;font-size: 14px;">${lockedSol} SOL</span></p>
+            <div><div onclick="window.open('https://dexscreener.com/solana/${data[i].ca}', '_blank')" class="btn-3" style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 5px;margin-right: 13px;">View on DexScreener</div></div></div>                   
+            `
+
+            __buyOn = ""
+        }
+
         tBody += `
         <div style=" display: block;" class="+ scroll1">
             <div
@@ -340,14 +437,14 @@ function renderCoins(data, wrapperEl) {
                     <div class="flex-1 space-y-2" style=" flex: 1 1 0%; display: block; ">
                         <div class="w2" style="display: flex;width: 100%;justify-content: space-between;">
                             <div style=" display: flex; "><img
-                                     src="https://pumpguard.fun/imgs/ico_${data[i].mint}.jpg"
+                                     src="https://pumpguard.fun/imgs/ico_${data[i].mint || data[i].ca}.jpg"
                                     style="width: 50px;height: 50px;margin: 6px 0px 0px 6px;border-radius: 7px;">
                                 <div style=" margin: 0px 10px; text-align: left; ">
                                     <div style="     display: flex;     position: absolute;     width: calc(100% - 30px);">
                                         <p style="color: #f0f8ffb5;margin: 6px 0px 0px 0px;font-size: 16px;font-weight: 700;     max-width: 50%;     white-space: nowrap;     overflow: hidden;     text-overflow: ellipsis; }">
                                              ${data[i].name} [${data[i].symbol}]</p>
                                              <svg class="HW-name-copy"
-                                            onclick="copyToClipboard('${data[i].mint}')"
+                                            onclick="copyToClipboard('${data[i].mint || data[i].ca}')"
                                             xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"
                                             style="width: 13px;fill: #cfcfcf7a;margin-left: 9px;margin-top: 2px;cursor: pointer;display: inline-block;">
                                             <path
@@ -360,20 +457,9 @@ function renderCoins(data, wrapperEl) {
                                 </div>
                             </div>
 
-                            <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
-                                <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 34.5px;width: max-content;">
-                                Guarded by <span class="guarded-by-sol" style="color: ${lockedSolColor}; ${textShadow}font-weight: 900;font-size: 14px;">${lockedSol} SOL</span></p>
-                            </div>
+                            ${__booter1}
+                            ${__buyOn}
 
-
-                            <div style="margin: 0px 9px;margin-top: 8px;/* position: absolute; */right: 0px;    z-index: 10;">
-                                <div class="btn-3"
-                                    style="color: #e7fff4c4;font-size: 12px;padding: 1px 5px;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 1px;">
-                                    Buy on BullX</div>
-                                <div class="btn-3"
-                                    style="color: #e7fff4c4;font-size: 12px;padding: 1px 5px;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 7px;">
-                                    Buy on Trojan</div>
-                            </div>
                         </div>
                         <div style="display: flex;justify-content: space-between;padding: 0px 4px 0px 1px;margin-top: 5px;">
                             <div
@@ -384,64 +470,19 @@ function renderCoins(data, wrapperEl) {
                                         style="filter: invert(0.8);width: 18px;height: 18px;margin-left: 3px;cursor: pointer;{inf_tg_op}">
                                 </a><a href="${inf_x}" target="_blank" style="opacity:${inf_x_op}"> <img src="./src/ic-x.svg"
                                         style="filter: invert(0.8);width: 16px;height: 16px;margin-left: 3px;cursor: pointer;{inf_x_op}color: antiquewhite;">
-                                </a></div>
-                   
-                            <div style="     display: flex; ">
-                                <div style="     display: flex;     margin-left: 10px; "><svg xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 256 256" style="     width: 19px;     filter: invert(0.75); ">
-                                        <rect width="256" height="256" fill="none"></rect>
-                                        <circle cx="88" cy="108" r="52" opacity="0.2"></circle>
-                                        <circle cx="88" cy="108" r="52" fill="none" stroke="#000" stroke-miterlimit="10"
-                                            stroke-width="16"></circle>
-                                        <path d="M155.4,57.9A54.5,54.5,0,0,1,169.5,56a52,52,0,0,1,0,104" fill="none"
-                                            stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="16">
-                                        </path>
-                                        <path d="M16,197.4a88,88,0,0,1,144,0" fill="none" stroke="#000" stroke-linecap="round"
-                                            stroke-linejoin="round" stroke-width="16"></path>
-                                        <path d="M169.5,160a87.9,87.9,0,0,1,72,37.4" fill="none" stroke="#000"
-                                            stroke-linecap="round" stroke-linejoin="round" stroke-width="16"></path>
-                                    </svg>
-                                    <p
-                                        style="     color: #f0f8ffb5;     font-size: 13px;     padding-left: 3px;     font-weight: 700;     margin: 5px 0px; ">
-                                        ${holders}</p>
-                                </div>
-                                <div style="     display: flex;     margin-left: 10px; "><svg xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24" fill="none" style="     width: 17px;     filter: invert(0.71); ">
-                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                            stroke-width="2"
-                                            d="M8 18.72C6.339 20.134 4.82 21 2 21c1-1 2.27-2.35 2.801-4.447C3.067 15.114 2 13.157 2 11c0-4.418 4.477-8 10-8 5.1 0 9.308 3.054 9.923 7"
-                                            style="     color: rgb(0 0 0 / 83%); "></path>
-                                        <path fill="currentColor" stroke="currentColor" stroke-linecap="round"
-                                            stroke-linejoin="round" stroke-width="2"
-                                            d="M16 19.889c-3.314 0-6-1.99-6-4.445C10 12.99 12.686 11 16 11s6 1.99 6 4.444c0 1.199-.64 2.286-1.68 3.085.317 1.165 1.08 1.915 1.68 2.471-1.8 0-2.716-.544-3.792-1.422-.684.2-1.428.31-2.208.31z">
-                                        </path>
-                                    </svg>
-                                    <p
-                                        style="     color: #f0f8ffb5;     font-size: 13px;     padding-left: 3px;     font-weight: 700;     margin: 5px 0px; ">
-                                        ${data[i].reply_count}</p>
-                                </div>
-                                <div style="     display: flex;     margin-left: 10px;     margin-right: 4px; "><svg
-                                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"
-                                        style="     width: 14.5px;     filter: invert(0.65); ">
-                                        <path
-                                            d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120V256c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2V120c0-13.3-10.7-24-24-24s-24 10.7-24 24z">
-                                        </path>
-                                    </svg>
-                                    <p
-                                        style="     color: #f0f8ffb5;     font-size: 13px;     padding-left: 4px;     font-weight: 700;     margin: 5px 0px; ">
-                                        ${timeDifference(Date.now(), data[i].created_timestamp)}</p>
-                                </div>
+                                </a>
                             </div>
+                   ${_boter}
                         </div>
                         <div style=" /* background: #37414c; */ /* border-top: 2px solid gray; */ ">
                             <div
                                 style="color: aliceblue;font-size: 12px;/* background: #9eb8cf0f; */height: 7px;line-height: 25px;box-shadow: inset 0 0 10px rgb(249 249 249 / 7%);padding-top: 2px;">
                                 <div
-                                    style=" background: #78a77a; height: 7px; /* margin-top: 1px; */ width: ${progress}%; border-bottom-left-radius: 4.5px; ">
+                                    style=" background: #78a77a; height: 7px; /* margin-top: 1px; */ width: ${progress_num}%; border-bottom-left-radius: 4.5px; ${borderRight}">
                                 </div>
                                 <p
                                     style="position: absolute;bottom: 2px;right: 2px;padding: 0;margin: 0;height: 15px;font-size: 11px;font-weight: 900;color: #f0f8ff8a;">
-                                    ${progress.toFixed(1)}%</p>
+                                    ${progress}</p>
                             </div>
                             <div></div>
                             <div></div>
@@ -705,7 +746,7 @@ async function claimRefund(userAddress, _CA) {
         console.log("Error on signature: ", err)
     }
 
-    
+
     setTimeout(() => {
         doNotif("Refund claim request sent. this could take a minute or two to process...", 3000)
     }, 500)
