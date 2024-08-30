@@ -68,7 +68,7 @@ app.use(cors());
 // ----- setting express app ----- //
 
 
-let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, _Collections, _DBs
+let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, guardedAndMigratedCoins, _Collections, _DBs
 let userRefundClaimRateLimit = {}
 const ONE_MINUTE = 1000 * 60
 const ONE_HOUR = 1000 * 60 * 60
@@ -149,19 +149,33 @@ async function PrepareCoinsForFE() {
 
     }, 3000)
 
-    setTimeout(async () => {
-        const guardedTokens = (await PumpFunFetch.getRecentlyGuardedCoins(MIN_GUARDED_AMOUNT)) || guardedTokens
-        if (!guardedTokens) {
-            return
-        }
-        recentlyGuardedCoins = await addLockedSolForCoins_and_saveImg(guardedTokens)
-        for (const coin of recentlyGuardedCoins) {
-            const _tokenHolders = await getCoinHolders(coin.mint);
-            coin.holders = _tokenHolders.holderCount
-            await delay(250) // avoiding rate limit
-        }
+    // setTimeout(async () => {
+    //     const guardedTokens = (await PumpFunFetch.getRecentlyGuardedCoins(MIN_GUARDED_AMOUNT)) || guardedTokens
+    //     if (!guardedTokens) {
+    //         return
+    //     }
+    //     recentlyGuardedCoins = await addLockedSolForCoins_and_saveImg(guardedTokens)
+    //     for (const coin of recentlyGuardedCoins) {
+    //         const _tokenHolders = await getCoinHolders(coin.mint);
+    //         coin.holders = _tokenHolders.holderCount
+    //         await delay(250) // avoiding rate limit
+    //     }
 
-    }, 5000)
+    // }, 5000)
+
+    let __guardedAndMigratedCoins = await _Collections.GuardedCoins.find({
+        hasMigrated: true
+    }).sort({
+        migrateDate: 1
+    }).limit(20).toArray()
+
+    guardedAndMigratedCoins = __guardedAndMigratedCoins
+    for (const coin of guardedAndMigratedCoins) {
+        const _data = await fetchCoinData(coin.ca)
+        coin.usd_market_cap = _data.usd_market_cap
+        await delay(250) // avoiding rate limit
+    }
+
 
     // adding locked sol to pump.fun coins for front-end display
     async function addLockedSolForCoins_and_saveImg(pumpfunCoins) {
@@ -185,7 +199,7 @@ async function PrepareCoinsForFE() {
 
     setTimeout(() => {
         PrepareCoinsForFE()
-    }, 1000 * 30)
+    }, 1000 * 60)
 }
 
 
@@ -197,7 +211,7 @@ app.post('/get_top_coins', async (req, res) => {
 });
 // front end request to get the top coins - Top Guarded Coins - and Recently guarded coins
 app.post('/get_all_coins', async (req, res) => {
-    if (!topProgressCoins || !topGuardedCoins || !recentlyGuardedCoins) {
+    if (!topProgressCoins || !topGuardedCoins || !guardedAndMigratedCoins) {
         console.log("-- Tokens Data not ready yet !!")
         return res.status(403).json({
             error: 'Not ready!'
@@ -207,7 +221,8 @@ app.post('/get_all_coins', async (req, res) => {
     return res.json({
         topCoins: topProgressCoins.slice(0, 20),
         topGuarded: topGuardedCoins.slice(0, 20),
-        recentlyGuarded: recentlyGuardedCoins.slice(0, 20),
+        guardedAndMigratedCoins: guardedAndMigratedCoins
+        //recentlyGuarded: recentlyGuardedCoins.slice(0, 20),
     })
 });
 
@@ -291,11 +306,12 @@ app.post('/is_coin_guarded', async (req, res) => {
         }, {
             $set: {
                 balance: lockAddressBalance,
-                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance, _theCoinInDB.balance_allTimeHight),
+                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance,
+                    _theCoinInDB.balance_allTimeHight),
             }
         })
 
-        if (lockAddressBalance /1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
+        if (lockAddressBalance / 1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
         // if (_theCoinInDB.hasMigrated) _isGuarded = true
 
         return res.status(200).send({
@@ -303,7 +319,8 @@ app.post('/is_coin_guarded', async (req, res) => {
             DBdata: {
                 hasMigrated: _theCoinInDB?.hasMigrated,
                 balance: lockAddressBalance,
-                balance_allTimeHight:  Math.max(lockAddressBalance, _theCoinInDB.balance, _theCoinInDB.balance_allTimeHight),
+                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance,
+                    _theCoinInDB.balance_allTimeHight),
                 lockAddress: _theCoinInDB?.lockAddress
             },
             coinData: await fetchCoinData(req.body.ca)
@@ -435,7 +452,7 @@ app.post('/get_coin_status', async (req, res) => {
             verifyRug: verifyRug,
             ..._theCoin
         }
- 
+
         await _Collections.GuardedCoins.updateOne({
             ca: req.body.ca
         }, {
@@ -612,7 +629,8 @@ app.post('/pay_user_refund', async (req, res) => {
     }
 
     // need a rate limit functionality for this end point to avoid users abuse with multiple requests
-    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body.publicKey] < ONE_MINUTE * 3) {
+    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body
+            .publicKey] < ONE_MINUTE * 3) {
         return res.status(400).json({
             error: 'Auth Failed!'
         });
@@ -649,11 +667,10 @@ app.post('/pay_user_refund', async (req, res) => {
                     });
                     return res.status(200).send(`Successful refund - ${transferResTX}`)
                 }
-            }
-            else {
+            } else {
                 return res.status(403).json({
                     error: "Refund already claimed"
-                })              
+                })
             }
         }
     }
