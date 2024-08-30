@@ -637,7 +637,7 @@ async function refundHolders(holders, _CA) {
             return {
                 address: wallet.address,
                 originalLoss: Math.abs(wallet.PnL.toFixed(3)),
-                refundAmount: parseFloat(roundDownToThirdDecimal(refundAmount).toFixed(3)),
+                refundAmount: Math.abs(parseFloat(roundDownToThirdDecimal(refundAmount).toFixed(3))),
             };
         })
 
