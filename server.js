@@ -68,8 +68,10 @@ app.use(cors());
 // ----- setting express app ----- //
 
 
-let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, guardedAndMigratedCoins, _Collections, _DBs
+let allGuardedCoins_byPumpGuard, topProgressCoins, topGuardedCoins, recentlyGuardedCoins, guardedAndMigratedCoins,
+    _Collections, _DBs
 let userRefundClaimRateLimit = {}
+let updateBalanceRateLimit = {}
 const ONE_MINUTE = 1000 * 60
 const ONE_HOUR = 1000 * 60 * 60
 const PLATFORM_FEE = 0.2
@@ -370,6 +372,15 @@ app.post('/update_lock_address_balance', async (req, res) => {
             error: 'Passed address must be a solana address'
         });
     }
+
+    // rate limit functionality 
+    if (updateBalanceRateLimit[req.body.ca] && Date.now() - updateBalanceRateLimit[req.body.ca] < ONE_MINUTE * 4) {
+        return res.status(400).json({
+            error: 'Rate limit! try in 5'
+        });
+    }
+    updateBalanceRateLimit[req.body.ca] = Date.now()
+
     try {
         // delay the balance check to make sure the deposit is recorded on chain
         setTimeout(async () => {
@@ -629,10 +640,9 @@ app.post('/pay_user_refund', async (req, res) => {
     }
 
     // need a rate limit functionality for this end point to avoid users abuse with multiple requests
-    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body
-            .publicKey] < ONE_MINUTE * 3) {
+    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body.publicKey] < ONE_MINUTE * 3) {
         return res.status(400).json({
-            error: 'Auth Failed!'
+            error: 'Rate limit! try in 3'
         });
     }
     userRefundClaimRateLimit[req.body.publicKey] = Date.now()
