@@ -662,21 +662,23 @@ async function refundHolders(holders, _CA) {
             // so if we call this whole function multiple times there wouldn't be duplicates created
             await _Collections.UsersRefunds.updateOne({
                 address: refund.address,
-                'refunds.ca': _CA 
+                'refunds.ca': {
+                    $ne: _CA
+                }
             }, {
-                $set: {
-                    'refunds.$.ca': _CA,
-                    'refunds.$.refundAmount': Math.abs(refund.refundAmount),
-                    'refunds.$.originalLoss': refund.originalLoss,
-                    'refunds.$.paid': false,
-                    'refunds.$.paymentTx': null,
-                    'refunds.$.name': _coinData.name,
-                    'refunds.$.symbol': _coinData.symbol,
-                    'refunds.$.rugDetectDate': Date.now(),
-                    'refunds.$.image_uri': _coinData.image_uri,
+                $addToSet: {
+                    refunds: {
+                        ca: _CA,
+                        refundAmount: refund.refundAmount,
+                        originalLoss: refund.originalLoss,
+                        paid: false,
+                        paymentTx: null,
+                        name: _coinData.name,
+                        symbol: _coinData.symbol,
+                        rugDetectDate: Date.now(),
+                        image_uri: _coinData.image_uri,
+                    },
                 },
-            }, {
-                upsert: true
             });
         }
         console.log('Refund collection created')
