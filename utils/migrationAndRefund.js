@@ -160,7 +160,8 @@ async function hasCoinMigrated(_CA) {
                 ca: _CA
             }, {
                 $set: {
-                    hasMigrated: true
+                    hasMigrated: true,
+                    migrateDate: Date.now()
                 }
             })
 
