@@ -14,7 +14,7 @@ const {
     transferSOL
 } = require('./transferSol')
 
-const LONETRADER_WALLET = 'aPL1kDnMXGoG2UWi3HF1Fyfa35kFsSJCfCq8ajdGx6G'
+const LONETRADER_WALLET = '8DPEwwhGgeRwSyQjrd8Sa7J6K8FQNux98AVog1MbrHQc'
 const LYMN_WALLET = 'DSy1oMvMbbLhSNS2Lr3DbBtVqchq6C8ZaF5MpLoDZEst'
 const PLATFORM_FEE = 0.2
 
