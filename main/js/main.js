@@ -396,16 +396,16 @@ function renderCoins(data, wrapperEl, use_balance_allTimeHight) {
         let __booter1 = `
         <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
             <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 34.5px;width: max-content;">
-            Guarded by <span class="guarded-by-sol" style="color: #5f976a; text-shadow: 0px 0px 14px #468847;font-weight: 900;font-size: 14px;">3.00 SOL</span></p>
+            Guarded by <span class="guarded-by-sol" style="color: ${lockedSolColor}; ${textShadow}font-weight: 900;font-size: 14px;">${lockedSol} SOL</span></p>
         </div>                  
         `
 
         let __buyOn = `
         <div style="margin: 0px 9px;margin-top: 8px;/* position: absolute; */right: 0px;    z-index: 10;">
-            <div class="btn-3"
-                style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 1px;">
-                Buy on BullX</div>
-            <div class="btn-3"
+            <div class="btn-3" onclick="window.open('https://pump.fun/${data[i].mint || data[i].ca}', '_blank')" 
+                style="color: #e7fff4c4;font-size: 12px;padding: 1px 5px;white-space: nowrap;border: 1.5px solid #54866a;    border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 1px;">
+                View on Pumpfun</div>
+            <div class="btn-3" onclick="window.open('https://t.me/solana_trojanbot?start=r-lymnq-${data[i].mint || data[i].ca}', '_blank')" 
                 style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 7px;">
                 Buy on Trojan</div>
         </div>
@@ -422,7 +422,7 @@ function renderCoins(data, wrapperEl, use_balance_allTimeHight) {
             <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
                 <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 5px;margin-right: 14px;width: max-content;">Was 
                 guarded by <span class="guarded-by-sol" style="color: #5f976a; text-shadow: 0px 0px 14px #468847;font-weight: 900;font-size: 14px;">${lockedSol} SOL</span></p>
-            <div><div onclick="window.open('https://dexscreener.com/solana/${data[i].ca}', '_blank')" class="btn-3" style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 5px;margin-right: 13px;">View on DexScreener</div></div></div>                   
+            <div><div onclick="window.open('https://dexscreener.com/solana/${data[i].ca}', '_blank')" class="btn-3" style="color: #e7fff4c4;font-size: 12px;padding: 1px 4px;white-space: nowrap;border: 1.5px solid #54866a;border-radius: 6px;cursor: pointer;display: flex;align-items: center;justify-content: center;background-color: #536c5929;margin-top: 11px;margin-right: 13px;">View on DexScreener</div></div></div>                   
             `
 
             __buyOn = ""
@@ -461,7 +461,7 @@ function renderCoins(data, wrapperEl, use_balance_allTimeHight) {
                             ${__buyOn}
 
                         </div>
-                        <div style="display: flex;justify-content: space-between;padding: 0px 4px 0px 1px;margin-top: 5px;">
+                        <div style="display: flex;justify-content: space-between;padding: 0px 4px 0px 1px;margin-top: 20px;">
                             <div
                                 style="text-align: left;opacity: 0.9;margin-top: 4px;height: 16px;/* width: 15%; */scale: 0.9;">
                                 <a href="${inf_web}" target="_blank" style="opacity:${inf_web_op}"> <img src="./src/ic-web.svg"
@@ -676,7 +676,7 @@ async function checkForRefunds() {
 
             data.refunds.forEach(itm => {
                 let _btn =
-                    `<button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 25px;">Claim${itm.refundAmount} SOL Refund For ${itm.symbol}</button>`
+                    `<button onclick="claimRefund('${$('.refund-check-inp')[0].value}', '${itm.ca}')" class=" floating-btn custom-button btn-m" style="width: auto;padding: 0px 25px;">Claim ${itm.refundAmount} SOL Refund For ${itm.symbol}</button>`
 
                 if (itm.paid) {
                     _btn =
@@ -1046,7 +1046,6 @@ function lgNUM(num, decimals) {
 
 
 function timeDifference(current, previous) {
-
     var msPerMinute = 60 * 1000;
     var msPerHour = msPerMinute * 60;
     var msPerDay = msPerHour * 24;
@@ -1060,13 +1059,17 @@ function timeDifference(current, previous) {
     } else if (elapsed < msPerHour) {
         return Math.round(elapsed / msPerMinute) + ' min';
     } else if (elapsed < msPerDay) {
-        return Math.round(elapsed / msPerHour) + ' hours';
+        var hours = Math.round(elapsed / msPerHour);
+        return hours === 1 ? hours + ' hour' : hours + ' hours';
     } else if (elapsed < msPerMonth) {
-        return Math.round(elapsed / msPerDay) + ' days';
+        var days = Math.round(elapsed / msPerDay);
+        return days === 1 ? days + ' day' : days + ' days';
     } else if (elapsed < msPerYear) {
-        return Math.round(elapsed / msPerMonth) + ' months';
+        var months = Math.round(elapsed / msPerMonth);
+        return months === 1 ? months + ' month' : months + ' months';
     } else {
-        return Math.round(elapsed / msPerYear) + ' years';
+        var years = Math.round(elapsed / msPerYear);
+        return years === 1 ? years + ' year' : years + ' years';
     }
 }
 
