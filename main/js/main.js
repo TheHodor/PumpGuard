@@ -395,7 +395,7 @@ function renderCoins(data, wrapperEl, use_balance_allTimeHight) {
 
         let __booter1 = `
         <div style="/* margin: 0px 10px; */text-align: left;/* width: 100%; */">
-            <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 34.5px;width: max-content;">
+            <p class=" title-p4" style="font-size: 14px;color: #f0f8ffb5;text-align: center;margin-bottom: 0px;margin-top: 34.5px;">
             Guarded by <span class="guarded-by-sol" style="color: ${lockedSolColor}; ${textShadow}font-weight: 900;font-size: 14px;">${lockedSol} SOL</span></p>
         </div>                  
         `
