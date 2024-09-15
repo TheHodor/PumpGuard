@@ -295,25 +295,32 @@ app.post('/is_coin_guarded', async (req, res) => {
 
     try {
         let _isGuarded = false
+        let lockAddressBalance
 
         await hasCoinMigrated(req.body.ca)
 
         const _theCoinInDB = await _Collections.GuardedCoins.findOne({
             ca: req.body.ca
         })
-        const lockAddressBalance = await getSolBalance(_theCoinInDB.lockAddress)
 
-        await _Collections.GuardedCoins.updateOne({
-            ca: req.body.ca,
-        }, {
-            $set: {
-                balance: lockAddressBalance,
-                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance,
-                    _theCoinInDB.balance_allTimeHight),
-            }
-        })
+        if (_theCoinInDB) {
+            lockAddressBalance = _theCoinInDB.balance //await getSolBalance(_theCoinInDB.lockAddress)
 
-        if (lockAddressBalance / 1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
+            await _Collections.GuardedCoins.updateOne({
+                ca: req.body.ca,
+            }, {
+                $set: {
+                    balance: lockAddressBalance,
+                    balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance,
+                        _theCoinInDB.balance_allTimeHight),
+                }
+            })
+    
+            if (lockAddressBalance / 1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
+        } else {
+            _isGuarded = false
+        }
+
         // if (_theCoinInDB.hasMigrated) _isGuarded = true
 
         return res.status(200).send({
@@ -321,8 +328,8 @@ app.post('/is_coin_guarded', async (req, res) => {
             DBdata: {
                 hasMigrated: _theCoinInDB?.hasMigrated,
                 balance: lockAddressBalance,
-                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB.balance,
-                    _theCoinInDB.balance_allTimeHight),
+                balance_allTimeHight: Math.max(lockAddressBalance, _theCoinInDB?.balance,
+                    _theCoinInDB?.balance_allTimeHight),
                 lockAddress: _theCoinInDB?.lockAddress
             },
             coinData: await fetchCoinData(req.body.ca)
