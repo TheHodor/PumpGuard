@@ -315,7 +315,7 @@ app.post('/is_coin_guarded', async (req, res) => {
                         _theCoinInDB.balance_allTimeHight),
                 }
             })
-    
+
             if (lockAddressBalance / 1e9 >= MIN_GUARDED_AMOUNT) _isGuarded = true
         } else {
             _isGuarded = false
@@ -381,7 +381,8 @@ app.post('/update_lock_address_balance', async (req, res) => {
     }
 
     // rate limit functionality 
-    if (updateBalanceRateLimit[req.body.ca] && Date.now() - updateBalanceRateLimit[req.body.ca] < ONE_MINUTE * 4) {
+    if (updateBalanceRateLimit[req.body.ca] && Date.now() - updateBalanceRateLimit[req.body.ca] <
+        ONE_MINUTE * 4) {
         return res.status(400).json({
             error: 'Rate limit! try in 5'
         });
@@ -502,7 +503,7 @@ app.post('/get_coin_status', async (req, res) => {
 // dev request to claim their refund 
 app.post('/claim_dev_refund', async (req, res) => {
     console.log("-- processing user request to get refunded for: ", req.body.ca)
-
+return 
     if (!req.body.ca) {
         return res.status(400).json({
             error: 'Ca to claim against must be passed'
@@ -630,6 +631,7 @@ app.post('/get_user_refunds', async (req, res) => {
 
 // user request to be paid for one of their refunds
 app.post('/pay_user_refund', async (req, res) => {
+    return 
     if (!req.body.publicKey) {
         return res.status(400).json({
             error: 'Wallet address is required.'
@@ -647,7 +649,8 @@ app.post('/pay_user_refund', async (req, res) => {
     }
 
     // need a rate limit functionality for this end point to avoid users abuse with multiple requests
-    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body.publicKey] < ONE_MINUTE * 3) {
+    if (userRefundClaimRateLimit[req.body.publicKey] && Date.now() - userRefundClaimRateLimit[req.body
+            .publicKey] < ONE_MINUTE * 3) {
         return res.status(400).json({
             error: 'Rate limit! try in 3'
         });
